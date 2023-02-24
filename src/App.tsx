@@ -1,15 +1,15 @@
-import React from 'react'
-import logo from './logo.svg'
-import './App.css'
+import { Box, Paper, Typography } from '@mui/material'
+import Navbar from './Components/Navbar/Navbar'
+
+// import React from 'react'
+// import logo from './logo.svg';
+// import './App.css';
 
 function App() {
-  const x = (a: number, b: number) => a * 2 + b
+  // const [state, setState] = React.useState('')
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <div>Hello World {x(3, 5)}</div>
-      </header>
+      <Navbar />
     </div>
   )
 }

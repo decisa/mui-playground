@@ -1,5 +1,6 @@
 {
   "extends": [ "wesbos/typescript"],
+  "plugins": ["react"],
   "rules": {
     "prettier/prettier": [
       "error",
