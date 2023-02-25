@@ -9,51 +9,29 @@ import {
   Toolbar,
 } from '@mui/material'
 
-import { Mail, Inbox } from '@mui/icons-material'
+import { mainNavbarItems } from './consts/navBarListItems'
+import { mainNavBarStyles } from './styles'
 
-const drawerWidth = 240
+// const drawerWidth = 240
 
 export default function Navbar() {
+  const mainMenuItems = mainNavbarItems.map((mainMenuItem) => {
+    const { id, icon, label, path } = mainMenuItem
+    return (
+      <ListItem key={id} disablePadding>
+        <ListItemButton>
+          <ListItemIcon sx={mainNavBarStyles.items}>{icon}</ListItemIcon>
+          <ListItemText primary={label} sx={mainNavBarStyles.text} />
+        </ListItemButton>
+      </ListItem>
+    )
+  })
   return (
-    <Drawer
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-        },
-      }}
-      variant="permanent"
-      anchor="left"
-    >
+    <Drawer sx={mainNavBarStyles.drawer} variant="permanent" anchor="left">
       <Toolbar />
       <Divider />
-      <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <Inbox /> : <Mail />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      <List>{mainMenuItems}</List>
       <Divider />
-      <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <Inbox /> : <Mail />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
     </Drawer>
   )
 }
