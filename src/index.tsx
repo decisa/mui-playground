@@ -3,19 +3,44 @@ import ReactDOM from 'react-dom/client'
 import './index.css'
 import { CssBaseline } from '@mui/material'
 import { createBrowserRouter } from 'react-router-dom'
-import { RouterProvider } from 'react-router'
+import { createRoutesFromElements, Route, RouterProvider } from 'react-router'
 import App from './App'
-import reportWebVitals from './reportWebVitals'
 import ErrorPage from './Pages/errorPage'
+import DatabasePage from './Pages/dataBase'
+import CustomerPage, {
+  action as updateCustomer,
+  loader as getCustomerById,
+} from './Pages/customerPage'
+import CustomersPage, { loader as getAllCustomers } from './Pages/customersPage'
+import Index from './Pages'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <App />,
-    errorElement: <ErrorPage />,
-  },
-])
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route
+      path="/"
+      element={<App />}
+      errorElement={
+        <App>
+          <ErrorPage />
+        </App>
+      }
+    >
+      <Route index element={<Index />} />
+      <Route path="database" element={<DatabasePage />} />
+      <Route path="customer">
+        <Route index element={<CustomersPage />} loader={getAllCustomers} />
+        <Route
+          path=":customerId"
+          element={<CustomerPage />}
+          loader={getCustomerById}
+          action={updateCustomer}
+        />
+      </Route>
+    </Route>
+  )
+)
 
 root.render(
   <React.StrictMode>
@@ -27,4 +52,4 @@ root.render(
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals()
+// reportWebVitals()

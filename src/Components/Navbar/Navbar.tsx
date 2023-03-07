@@ -8,6 +8,7 @@ import {
   ListItemText,
   Toolbar,
 } from '@mui/material'
+import { Link } from 'react-router-dom'
 
 import { mainNavbarItems } from './consts/navBarListItems'
 import { mainNavBarStyles } from './styles'
@@ -18,11 +19,13 @@ export default function Navbar() {
   const mainMenuItems = mainNavbarItems.map((mainMenuItem) => {
     const { id, icon, label, path } = mainMenuItem
     return (
-      <ListItem key={id} disablePadding>
-        <ListItemButton>
-          <ListItemIcon sx={mainNavBarStyles.items}>{icon}</ListItemIcon>
-          <ListItemText primary={label} sx={mainNavBarStyles.text} />
-        </ListItemButton>
+      <ListItem key={`nav-${id}`} disablePadding>
+        <Link to={path}>
+          <ListItemButton>
+            <ListItemIcon sx={mainNavBarStyles.items}>{icon}</ListItemIcon>
+            <ListItemText primary={label} sx={mainNavBarStyles.text} />
+          </ListItemButton>
+        </Link>
       </ListItem>
     )
   })

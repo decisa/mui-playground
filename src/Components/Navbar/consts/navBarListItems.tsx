@@ -20,26 +20,32 @@ export const mainNavbarItems = [
   },
   {
     id: 2,
-    label: 'Storage',
-    path: 'storage',
+    label: 'Customer 1',
+    path: 'customer/1',
     icon: <PublicIcon />,
   },
   {
     id: 3,
-    label: 'Hosting',
-    path: 'hosting',
+    label: 'Customer 3',
+    path: 'customer/3',
     icon: <SettingsEthernetIcon />,
   },
   {
     id: 4,
     label: 'Functions',
-    path: 'functions',
+    path: 'order/15',
     icon: <SettingsInputComponentIcon />,
   },
   {
     id: 5,
     label: 'Machine-Learning',
     path: 'signin',
+    icon: <DnsIcon />,
+  },
+  {
+    id: 6,
+    label: 'All Customers',
+    path: 'customer',
     icon: <DnsIcon />,
   },
 ]
