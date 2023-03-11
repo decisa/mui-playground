@@ -1,5 +1,6 @@
 import { useLoaderData } from 'react-router'
 import { Link, json } from 'react-router-dom'
+import FormCheckBoxDataTable from '../Components/Form/FormCheckBoxDataTable'
 
 interface Customer {
   id: number
@@ -50,5 +51,9 @@ export default function CustomersPage() {
   })
   // const { firstName, lastName, email, phone = '' } = customer
   console.log(allCustomers)
-  return <ul>{links}</ul>
+  return (
+    <div>
+      <ul>{links}</ul>
+    </div>
+  )
 }
