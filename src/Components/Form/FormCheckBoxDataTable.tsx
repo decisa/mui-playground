@@ -10,7 +10,8 @@ import TableSortLabel from '@mui/material/TableSortLabel'
 import Paper from '@mui/material/Paper'
 import Checkbox from '@mui/material/Checkbox'
 // import SearchBar from '@components/form/SearchBar'
-import { useEffect, useState, ReactNode } from 'react'
+import { useEffect, useState, ReactNode, useRef } from 'react'
+import { Control, Controller, FieldValues } from 'react-hook-form'
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -148,21 +149,26 @@ interface SelectableData {
 }
 
 // export default function FormCheckBoxDataTable( {headCells} ) {
-export default function FormCheckBoxDataTable<
-  TableData extends SelectableData
->({
+// export default function FormCheckBoxDataTable<
+function FormCheckBoxDataTable<TableData extends SelectableData>({
   isPaginated,
   tableContainerHeight,
   columns,
   data,
   selected,
+  onSelectChange,
 }: {
   isPaginated: boolean
   tableContainerHeight: number
   columns: Head<TableData>[]
   data: TableData[]
   selected: string[]
+  onSelectChange?: any
 }) {
+  console.log('rendering Standard Table')
+  const renderCount = useRef(0)
+  renderCount.current += 1
+
   // type TableHead = Head<TableData>
   const [order, setOrder] = useState<Order>('asc')
   const [orderBy, setOrderBy] = useState<keyof TableData>(columns[0].accessor)
@@ -266,10 +272,13 @@ export default function FormCheckBoxDataTable<
 
   useEffect(() => {
     console.log('selected:', selectedItems)
-  }, [selectedItems])
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    onSelectChange(selectedItems)
+  }, [selectedItems, onSelectChange])
 
   return (
     <Box sx={{ width: '100%' }}>
+      <p>counter: {renderCount.current}</p>
       {/* <SearchBar handleSearch={handleSearchChange} /> */}
       <Paper sx={{ width: '100%', mb: 2 }}>
         <TableContainer style={{ maxHeight: tableContainerHeight }}>
@@ -357,5 +366,51 @@ export default function FormCheckBoxDataTable<
         ) : null}
       </Paper>
     </Box>
+  )
+}
+
+interface TableProps<TableData> {
+  isPaginated: boolean
+  tableContainerHeight: number
+  columns: Head<TableData>[]
+  data: TableData[]
+  // selected?: string[]
+}
+interface ControlledTableProps<TableData> extends TableProps<TableData> {
+  control: Control
+  name: string
+}
+
+export default function ControlledTable<TableData>({
+  isPaginated,
+  tableContainerHeight,
+  columns,
+  data,
+  // selected,
+  control,
+  name,
+}: ControlledTableProps<TableData>) {
+  // const renderCount = useRef(0)
+
+  // renderCount.current += 1
+  console.log('rendering Controlled Table')
+  return (
+    <>
+      {/* <p>counter: {renderCount.current}</p> */}
+      <Controller
+        control={control}
+        name={name}
+        render={({ field: { onChange, value } }) => (
+          <FormCheckBoxDataTable
+            isPaginated={isPaginated}
+            tableContainerHeight={tableContainerHeight}
+            columns={columns as Head<SelectableData>[]}
+            data={data as SelectableData[]}
+            selected={value as string[]}
+            onSelectChange={onChange}
+          />
+        )}
+      />
+    </>
   )
 }

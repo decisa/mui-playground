@@ -1,6 +1,12 @@
+import { Button, darken } from '@mui/material'
+import { FieldValues, useForm } from 'react-hook-form'
 import FormCheckBoxDataTable, {
   Head,
 } from '../Components/Form/FormCheckBoxDataTable'
+
+type FormData = {
+  ['apptTypes']: string[]
+}
 
 export default function DatabasePage() {
   interface Data {
@@ -62,15 +68,47 @@ export default function DatabasePage() {
     },
   ]
 
+  const defaultValues: FieldValues = {
+    apptTypes: ['om', 'aws', 'sv'],
+  }
+
+  const { control, handleSubmit } = useForm({ defaultValues })
+
+  const onSubmit = (formData: FieldValues) => {
+    console.dir(formData)
+  }
+
+  console.log('rendering database page')
   return (
-    <div>
-      <FormCheckBoxDataTable
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <FormCheckBoxDataTable<Data>
         isPaginated
         tableContainerHeight={300}
         columns={headCells}
         data={data}
-        selected={['jtsdfts', 'aws', 'oa']}
+        // selected={['jtsdfts', 'aws', 'oa']}
+        control={control}
+        name="apptTypes"
       />
-    </div>
+      <Button
+        type="submit"
+        sx={{
+          borderRadius: 2,
+          mb: 5,
+          mr: 15,
+          fontSize: 20,
+          lineHeight: 2,
+          width: 100,
+          color: 'white',
+          backgroundColor: '#00749f',
+          '&:hover': {
+            backgroundColor: darken('#00749f', 0.3),
+          },
+        }}
+      >
+        {' '}
+        Save{' '}
+      </Button>
+    </form>
   )
 }
