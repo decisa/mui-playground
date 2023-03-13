@@ -1,38 +1,31 @@
 import { Button, darken } from '@mui/material'
-import { FieldValues, useForm } from 'react-hook-form'
-import FormCheckBoxDataTable, {
-  Head,
-} from '../Components/Form/FormCheckBoxDataTable'
+import { useForm } from 'react-hook-form'
+import type { DefaultValues } from 'react-hook-form'
+import FormCheckBoxDataTable from '../Components/Form/FormCheckBoxDataTable'
+import type { Head } from '../Components/Form/FormCheckBoxDataTable'
 
-type FormData = {
-  ['apptTypes']: string[]
+interface Data {
+  calories: number
+  fat: number
+  name: string
+  value: string
+}
+
+function createData(
+  name: string,
+  calories: number,
+  fat: number,
+  value: string
+): Data {
+  return {
+    name,
+    calories,
+    fat,
+    value,
+  }
 }
 
 export default function DatabasePage() {
-  interface Data {
-    calories: number
-    fat: number
-    name: string
-    value: string
-  }
-
-  // let value = 12
-  function createData(
-    name: string,
-    calories: number,
-    fat: number,
-    value: string
-  ): Data {
-    return {
-      name,
-      calories,
-      fat,
-      value,
-      // eslint-disable-next-line no-plusplus
-      // value: (value++).toString(),
-    }
-  }
-
   const data = [
     createData('Appointment with long name', 305, 3.7, 'awln'),
     createData('Short Appointment', 452, 25.0, 'sa'),
@@ -54,51 +47,55 @@ export default function DatabasePage() {
       accessor: 'name',
       align: 'left',
       label: 'Appointment Type(s)',
-      // primary: true,
+      useAsAriaDescription: true,
+      sortEnabled: true,
     },
     {
       accessor: 'calories',
       label: 'Calories',
       align: 'right',
-      primary: true,
+      // useAsAriaDescription: true,
     },
     {
       accessor: 'fat',
       label: 'Fat (g)',
+      // sortEnabled: true,
+      align: 'right',
     },
   ]
 
-  const defaultValues: FieldValues = {
+  type FormData = {
+    apptTypes: string[]
+    firstName?: string
+  }
+
+  const defaultValues: DefaultValues<FormData> = {
     apptTypes: ['om', 'aws', 'sv'],
   }
 
-  const { control, handleSubmit } = useForm({ defaultValues })
+  const { control, handleSubmit } = useForm<FormData>({
+    defaultValues,
+  })
 
-  const onSubmit = (formData: FieldValues) => {
+  const onSubmit = (formData: FormData) => {
     console.dir(formData)
   }
 
-  console.log('rendering database page')
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <FormCheckBoxDataTable<Data>
-        isPaginated
-        tableContainerHeight={300}
+      <FormCheckBoxDataTable<Data, FormData>
         columns={headCells}
         data={data}
-        // selected={['jtsdfts', 'aws', 'oa']}
+        tableContainerHeight={333}
         control={control}
         name="apptTypes"
+        // isPaginated
       />
       <Button
         type="submit"
         sx={{
-          borderRadius: 2,
-          mb: 5,
-          mr: 15,
-          fontSize: 20,
-          lineHeight: 2,
-          width: 100,
+          width: 130,
+          textTransform: 'none',
           color: 'white',
           backgroundColor: '#00749f',
           '&:hover': {
@@ -106,8 +103,7 @@ export default function DatabasePage() {
           },
         }}
       >
-        {' '}
-        Save{' '}
+        Submit Form
       </Button>
     </form>
   )

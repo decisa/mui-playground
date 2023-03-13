@@ -10,8 +10,10 @@ import TableSortLabel from '@mui/material/TableSortLabel'
 import Paper from '@mui/material/Paper'
 import Checkbox from '@mui/material/Checkbox'
 // import SearchBar from '@components/form/SearchBar'
-import { useEffect, useState, ReactNode, useRef } from 'react'
-import { Control, Controller, FieldValues } from 'react-hook-form'
+import { useEffect, useState, ReactNode } from 'react'
+import { Controller, FieldPath, useController } from 'react-hook-form'
+import type { Control, FieldValues } from 'react-hook-form'
+import { AutocompleteFreeSoloValueMapping } from '@mui/material'
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -23,10 +25,10 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   return 0
 }
 
-type Order = 'asc' | 'desc'
+type SortOrder = 'asc' | 'desc'
 
 function getCompareFunction<Data>(
-  order: Order,
+  order: SortOrder,
   orderBy: keyof Data
 ): (a: Data, b: Data) => number {
   return order === 'desc'
@@ -59,6 +61,18 @@ function getCompareFunction<Data>(
 //   },
 // ]
 
+type TableProps<TableData> = {
+  columns: Head<TableData>[]
+  data: TableData[]
+  tableContainerHeight: number
+  isPaginated?: boolean
+}
+
+type CheckBoxTableProps<TableData> = TableProps<TableData> & {
+  selected: string[]
+  onSelectionChange: (...event: any[]) => void
+}
+
 export type Head<D> = {
   // interface HeadCell {
   //   id: keyof Data
@@ -69,23 +83,24 @@ export type Head<D> = {
   accessor: keyof D
   label: string
   align?: 'left' | 'right' | 'center'
-  primary?: boolean
+  useAsAriaDescription?: boolean
+  sortEnabled?: boolean
 }
 
-interface EnhancedTableProps<TableData> {
+interface TableHeaderProps<TableData> {
+  columns: Head<TableData>[]
+  rowCount: number
   numSelected: number
+  order: SortOrder
+  orderBy: keyof TableData
   onRequestSort: (
     event: React.MouseEvent<unknown>,
     property: keyof TableData
   ) => void
   onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void
-  order: Order
-  orderBy: keyof TableData
-  rowCount: number
-  columns: Head<TableData>[]
 }
 
-function EnhancedTableHead<TableData>(props: EnhancedTableProps<TableData>) {
+function TableHeaderRow<TableData>(props: TableHeaderProps<TableData>) {
   const {
     onSelectAllClick,
     order,
@@ -111,6 +126,7 @@ function EnhancedTableHead<TableData>(props: EnhancedTableProps<TableData>) {
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={onSelectAllClick}
             inputProps={{
+              // 'aria-label': 'select all desserts',
               'aria-label': 'select all appointment types',
             }}
           />
@@ -129,13 +145,17 @@ function EnhancedTableHead<TableData>(props: EnhancedTableProps<TableData>) {
                 }
                 sortDirection={orderBy === headCell.accessor ? order : false}
               >
-                <TableSortLabel
-                  active={orderBy === headCell.accessor}
-                  direction={orderBy === headCell.accessor ? order : 'asc'}
-                  onClick={createSortHandler(headCell.accessor)}
-                >
-                  {headCell.label}
-                </TableSortLabel>
+                {headCell.sortEnabled ? (
+                  <TableSortLabel
+                    active={orderBy === headCell.accessor}
+                    direction={orderBy === headCell.accessor ? order : 'asc'}
+                    onClick={createSortHandler(headCell.accessor)}
+                  >
+                    {headCell.label}
+                  </TableSortLabel>
+                ) : (
+                  headCell.label
+                )}
               </TableCell>
             ) as React.ReactNode
         )}
@@ -144,33 +164,22 @@ function EnhancedTableHead<TableData>(props: EnhancedTableProps<TableData>) {
   )
 }
 
+// for selections to work we need to require value on every row of the table. value should be unique
 interface SelectableData {
   value: string
 }
 
 // export default function FormCheckBoxDataTable( {headCells} ) {
 // export default function FormCheckBoxDataTable<
-function FormCheckBoxDataTable<TableData extends SelectableData>({
-  isPaginated,
-  tableContainerHeight,
+function CheckBoxDataTable<TableData extends SelectableData>({
   columns,
   data,
+  tableContainerHeight,
+  isPaginated,
   selected,
-  onSelectChange,
-}: {
-  isPaginated: boolean
-  tableContainerHeight: number
-  columns: Head<TableData>[]
-  data: TableData[]
-  selected: string[]
-  onSelectChange?: any
-}) {
-  console.log('rendering Standard Table')
-  const renderCount = useRef(0)
-  renderCount.current += 1
-
-  // type TableHead = Head<TableData>
-  const [order, setOrder] = useState<Order>('asc')
+  onSelectionChange,
+}: CheckBoxTableProps<TableData>) {
+  const [order, setOrder] = useState<SortOrder>('asc')
   const [orderBy, setOrderBy] = useState<keyof TableData>(columns[0].accessor)
   const [selectedItems, setSelectedItems] = useState<readonly string[]>(
     selected || []
@@ -186,6 +195,7 @@ function FormCheckBoxDataTable<TableData extends SelectableData>({
     event: React.MouseEvent<unknown>,
     property: keyof TableData
   ) => {
+    console.log('handle request sort')
     // const isAsc = orderBy === property && order === 'asc';
     // setOrder(isAsc ? 'desc' : 'asc');
     setOrder((prevSortOrder) => {
@@ -196,6 +206,7 @@ function FormCheckBoxDataTable<TableData extends SelectableData>({
   }
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handle all click')
     if (event.target.checked) {
       const newSelected = data.map((n) => n.value)
       setSelectedItems(newSelected)
@@ -214,6 +225,7 @@ function FormCheckBoxDataTable<TableData extends SelectableData>({
   // }
 
   const handleSelectRow = (event: React.MouseEvent<unknown>, name: string) => {
+    console.log('handle select row')
     const selectedIndex = selectedItems.indexOf(name)
     setSelectedItems((prevState) => {
       const newState = [...prevState]
@@ -257,7 +269,7 @@ function FormCheckBoxDataTable<TableData extends SelectableData>({
     setPage(0)
   }
 
-  const isSelected = (name: string) => selectedItems.indexOf(name) !== -1
+  const isSelected = (value: string) => selectedItems.indexOf(value) !== -1
 
   // Avoid a layout jump when reaching the last page with empty originalRows.
   const emptyRows =
@@ -271,26 +283,23 @@ function FormCheckBoxDataTable<TableData extends SelectableData>({
   // }
 
   useEffect(() => {
-    console.log('selected:', selectedItems)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    onSelectChange(selectedItems)
-  }, [selectedItems, onSelectChange])
+    onSelectionChange(selectedItems)
+  }, [selectedItems, onSelectionChange])
 
   return (
     <Box sx={{ width: '100%' }}>
-      <p>counter: {renderCount.current}</p>
       {/* <SearchBar handleSearch={handleSearchChange} /> */}
       <Paper sx={{ width: '100%', mb: 2 }}>
         <TableContainer style={{ maxHeight: tableContainerHeight }}>
           <Table stickyHeader aria-labelledby="tableTitle" size="medium">
-            <EnhancedTableHead
+            <TableHeaderRow
+              columns={columns}
+              rowCount={data.length}
               numSelected={selectedItems.length}
               order={order}
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
-              rowCount={data.length}
-              columns={columns}
               // headCells={headCells}
             />
 
@@ -298,18 +307,18 @@ function FormCheckBoxDataTable<TableData extends SelectableData>({
               {filteredRows
                 .sort(getCompareFunction<TableData>(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // todo modify if isPaginated is false
-                .map((row, index) => {
-                  const isItemSelected = isSelected(row?.value)
-                  const labelId = `enhanced-table-checkbox-${index}`
+                .map((row) => {
+                  const isItemSelected = isSelected(row.value)
+                  const labelId = `label-${row.value}`
 
                   return (
                     <TableRow
                       hover
-                      onClick={(event) => handleSelectRow(event, row?.value)}
+                      onClick={(event) => handleSelectRow(event, row.value)}
                       role="checkbox"
                       aria-checked={isItemSelected}
                       tabIndex={-1}
-                      key={row?.value}
+                      key={row.value}
                       selected={isItemSelected}
                     >
                       <TableCell padding="checkbox">
@@ -323,20 +332,22 @@ function FormCheckBoxDataTable<TableData extends SelectableData>({
                       </TableCell>
 
                       {columns.map((headInfo) => {
-                        const { accessor, primary, align } = headInfo
+                        const { accessor, useAsAriaDescription, align } =
+                          headInfo
                         return (
                           <TableCell
                             key={accessor.toString()}
                             align={align || 'left'}
-                            id={primary ? labelId : undefined}
+                            id={useAsAriaDescription ? labelId : undefined}
                             padding={
                               !align || align === 'left' ? 'none' : 'normal'
                             }
                             scope="row"
+                            sx={{ cursor: 'pointer' }}
                           >
                             {row[accessor] as ReactNode}
                           </TableCell>
-                        ) // as React.ReactNode
+                        )
                       })}
                     </TableRow>
                   ) as React.ReactNode
@@ -369,48 +380,66 @@ function FormCheckBoxDataTable<TableData extends SelectableData>({
   )
 }
 
-interface TableProps<TableData> {
-  isPaginated: boolean
-  tableContainerHeight: number
-  columns: Head<TableData>[]
-  data: TableData[]
-  // selected?: string[]
-}
-interface ControlledTableProps<TableData> extends TableProps<TableData> {
-  control: Control
-  name: string
+type ControlledTableProps<TableData, FormData extends FieldValues> = {
+  control: Control<FormData>
+  name: FieldPath<FormData>
+} & TableProps<TableData>
+
+export default function ControlledTable<
+  TableData extends SelectableData,
+  FormData extends FieldValues
+>(props: ControlledTableProps<TableData, FormData>) {
+  const { control, name, ...tableProps } = props
+  const { field } = useController({ control, name })
+  const { onChange, value } = field
+
+  return (
+    <CheckBoxDataTable
+      selected={value}
+      onSelectionChange={onChange}
+      {...tableProps}
+    />
+  )
 }
 
-export default function ControlledTable<TableData>({
+export function ControlledTable2<TableData, FormData extends FieldValues>({
   isPaginated,
   tableContainerHeight,
   columns,
   data,
-  // selected,
   control,
   name,
-}: ControlledTableProps<TableData>) {
-  // const renderCount = useRef(0)
+}: ControlledTableProps<TableData, FormData>) {
+  const { field } = useController({ control, name })
+  const { onChange, value } = field
 
-  // renderCount.current += 1
-  console.log('rendering Controlled Table')
   return (
-    <>
-      {/* <p>counter: {renderCount.current}</p> */}
-      <Controller
-        control={control}
-        name={name}
-        render={({ field: { onChange, value } }) => (
-          <FormCheckBoxDataTable
-            isPaginated={isPaginated}
-            tableContainerHeight={tableContainerHeight}
-            columns={columns as Head<SelectableData>[]}
-            data={data as SelectableData[]}
-            selected={value as string[]}
-            onSelectChange={onChange}
-          />
-        )}
-      />
-    </>
+    <CheckBoxDataTable
+      isPaginated={isPaginated}
+      tableContainerHeight={tableContainerHeight}
+      columns={columns as Head<SelectableData>[]}
+      data={data as SelectableData[]}
+      selected={value}
+      onSelectionChange={onChange}
+    />
   )
+  // return (
+  //   <>
+  //     {/* <p>counter: {renderCount.current}</p> */}
+  //     <Controller
+  //       control={control}
+  //       name={name}
+  //       render={({ field: { onChange, value } }) => (
+  //         <CheckBoxDataTable
+  //           isPaginated={isPaginated}
+  //           tableContainerHeight={tableContainerHeight}
+  //           columns={columns as Head<SelectableData>[]}
+  //           data={data as SelectableData[]}
+  //           selected={value as string[]}
+  //           onSelectionChange={onChange}
+  //         />
+  //       )}
+  //     />
+  //   </>
+  // )
 }
