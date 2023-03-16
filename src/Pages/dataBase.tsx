@@ -2,9 +2,9 @@ import { Button, darken } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import type { DefaultValues } from 'react-hook-form'
 import FormCheckBoxDataTable from '../Components/Form/FormCheckBoxDataTable'
-import type { Head } from '../Components/Form/FormCheckBoxDataTable'
+import type { THead } from '../Components/Form/FormCheckBoxDataTable'
 
-interface Data {
+type TTableData = {
   calories: number
   fat: number
   name: string
@@ -16,7 +16,7 @@ function createData(
   calories: number,
   fat: number,
   value: string
-): Data {
+): TTableData {
   return {
     name,
     calories,
@@ -42,7 +42,7 @@ export default function DatabasePage() {
     createData('Oreo Appointment', 437, 18.0, 'oa'),
   ]
 
-  const headCells: Head<Data>[] = [
+  const headCells: THead<TTableData>[] = [
     {
       accessor: 'name',
       align: 'left',
@@ -64,26 +64,26 @@ export default function DatabasePage() {
     },
   ]
 
-  type FormData = {
+  type TFormData = {
     apptTypes: string[]
     firstName?: string
   }
 
-  const defaultValues: DefaultValues<FormData> = {
+  const defaultValues: DefaultValues<TFormData> = {
     apptTypes: ['om', 'aws', 'sv'],
   }
 
-  const { control, handleSubmit } = useForm<FormData>({
+  const { control, handleSubmit } = useForm<TFormData>({
     defaultValues,
   })
 
-  const onSubmit = (formData: FormData) => {
+  const onSubmit = (formData: TFormData) => {
     console.dir(formData)
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <FormCheckBoxDataTable<Data, FormData>
+      <FormCheckBoxDataTable
         columns={headCells}
         data={data}
         tableContainerHeight={333}

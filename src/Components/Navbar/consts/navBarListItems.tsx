@@ -48,4 +48,16 @@ export const mainNavbarItems = [
     path: 'customer',
     icon: <DnsIcon />,
   },
+  {
+    id: 7,
+    label: 'Orders',
+    path: 'order',
+    icon: <DnsIcon />,
+  },
+  {
+    id: 8,
+    label: 'Multi Checkbox',
+    path: 'multicheckbox',
+    icon: <DnsIcon />,
+  },
 ]

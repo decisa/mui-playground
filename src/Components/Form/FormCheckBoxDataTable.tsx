@@ -25,10 +25,10 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   return 0
 }
 
-type SortOrder = 'asc' | 'desc'
+type TSortOrder = 'asc' | 'desc'
 
 function getCompareFunction<Data>(
-  order: SortOrder,
+  order: TSortOrder,
   orderBy: keyof Data
 ): (a: Data, b: Data) => number {
   return order === 'desc'
@@ -61,19 +61,19 @@ function getCompareFunction<Data>(
 //   },
 // ]
 
-type TableProps<TableData> = {
-  columns: Head<TableData>[]
+type TTableProps<TableData> = {
+  columns: THead<TableData>[]
   data: TableData[]
   tableContainerHeight: number
   isPaginated?: boolean
 }
 
-type CheckBoxTableProps<TableData> = TableProps<TableData> & {
+type TCheckBoxTableProps<TableData> = TTableProps<TableData> & {
   selected: string[]
   onSelectionChange: (...event: any[]) => void
 }
 
-export type Head<D> = {
+export type THead<D> = {
   // interface HeadCell {
   //   id: keyof Data
   //   label: string
@@ -87,11 +87,11 @@ export type Head<D> = {
   sortEnabled?: boolean
 }
 
-interface TableHeaderProps<TableData> {
-  columns: Head<TableData>[]
+type TTableHeaderProps<TableData> = {
+  columns: THead<TableData>[]
   rowCount: number
   numSelected: number
-  order: SortOrder
+  order: TSortOrder
   orderBy: keyof TableData
   onRequestSort: (
     event: React.MouseEvent<unknown>,
@@ -100,7 +100,7 @@ interface TableHeaderProps<TableData> {
   onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-function TableHeaderRow<TableData>(props: TableHeaderProps<TableData>) {
+function TableHeaderRow<TableData>(props: TTableHeaderProps<TableData>) {
   const {
     onSelectAllClick,
     order,
@@ -178,8 +178,8 @@ function CheckBoxDataTable<TableData extends SelectableData>({
   isPaginated,
   selected,
   onSelectionChange,
-}: CheckBoxTableProps<TableData>) {
-  const [order, setOrder] = useState<SortOrder>('asc')
+}: TCheckBoxTableProps<TableData>) {
+  const [order, setOrder] = useState<TSortOrder>('asc')
   const [orderBy, setOrderBy] = useState<keyof TableData>(columns[0].accessor)
   const [selectedItems, setSelectedItems] = useState<readonly string[]>(
     selected || []
@@ -380,15 +380,15 @@ function CheckBoxDataTable<TableData extends SelectableData>({
   )
 }
 
-type ControlledTableProps<TableData, FormData extends FieldValues> = {
-  control: Control<FormData>
-  name: FieldPath<FormData>
-} & TableProps<TableData>
-
 export default function ControlledTable<
   TableData extends SelectableData,
-  FormData extends FieldValues
->(props: ControlledTableProps<TableData, FormData>) {
+  TFormData extends FieldValues
+>(
+  props: TTableProps<TableData> & {
+    control: Control<TFormData>
+    name: FieldPath<TFormData>
+  }
+) {
   const { control, name, ...tableProps } = props
   const { field } = useController({ control, name })
   const { onChange, value } = field
@@ -400,46 +400,4 @@ export default function ControlledTable<
       {...tableProps}
     />
   )
-}
-
-export function ControlledTable2<TableData, FormData extends FieldValues>({
-  isPaginated,
-  tableContainerHeight,
-  columns,
-  data,
-  control,
-  name,
-}: ControlledTableProps<TableData, FormData>) {
-  const { field } = useController({ control, name })
-  const { onChange, value } = field
-
-  return (
-    <CheckBoxDataTable
-      isPaginated={isPaginated}
-      tableContainerHeight={tableContainerHeight}
-      columns={columns as Head<SelectableData>[]}
-      data={data as SelectableData[]}
-      selected={value}
-      onSelectionChange={onChange}
-    />
-  )
-  // return (
-  //   <>
-  //     {/* <p>counter: {renderCount.current}</p> */}
-  //     <Controller
-  //       control={control}
-  //       name={name}
-  //       render={({ field: { onChange, value } }) => (
-  //         <CheckBoxDataTable
-  //           isPaginated={isPaginated}
-  //           tableContainerHeight={tableContainerHeight}
-  //           columns={columns as Head<SelectableData>[]}
-  //           data={data as SelectableData[]}
-  //           selected={value as string[]}
-  //           onSelectionChange={onChange}
-  //         />
-  //       )}
-  //     />
-  //   </>
-  // )
 }
