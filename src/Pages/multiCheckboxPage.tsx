@@ -4,16 +4,25 @@ import Box from '@mui/material/Box'
 import TreeView from '@mui/lab/TreeView'
 import TreeItem, { treeItemClasses } from '@mui/lab/TreeItem'
 import type { TreeItemProps } from '@mui/lab/TreeItem'
-import Typography from '@mui/material/Typography'
-import MailIcon from '@mui/icons-material/Mail'
-import DeleteIcon from '@mui/icons-material/Delete'
-import Label from '@mui/icons-material/Label'
-
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import NestedCheckboxTable from '../Components/Form/NestedTable'
+
+type TNestedCheckboxData = {
+  id: string
+  label: string
+  checked: boolean
+  children?: TNestedCheckboxData[]
+}
+
+type TNestedCheckbox = {
+  id: string
+  checked: boolean
+  children?: TNestedCheckbox[]
+}
 
 type StyledTreeItemProps = TreeItemProps & {
   // bgColor?: string
@@ -22,13 +31,9 @@ type StyledTreeItemProps = TreeItemProps & {
   // labelInfo?: string
   labelText: string
   level?: number
-}
-
-type TNestedCheckboxData = {
-  id: string
-  label: string
   checked: boolean
-  children?: TNestedCheckboxData[]
+  checkBoxInfo: TNestedCheckbox
+  handleCheckToggle: (e: React.SyntheticEvent, id: string) => void
 }
 
 const sampleData: TNestedCheckboxData[] = [
@@ -166,7 +171,9 @@ function StyledTreeItem(props: StyledTreeItemProps) {
     // color,
     // labelIcon: LabelIcon,
     // labelInfo,
+    checkBoxInfo: { checked, id, children },
     labelText,
+    handleCheckToggle,
     level = 0,
     ...other
   } = props
@@ -181,13 +188,15 @@ function StyledTreeItem(props: StyledTreeItemProps) {
             p: 0.5,
             pr: 0,
             ml: 3 * level,
+            borderBottom: '1px solid #eee',
           }}
         >
           <FormControlLabel
             label={labelText}
-            control={<Checkbox />}
+            control={<Checkbox checked={checked} />}
             sx={{ width: '100%' }}
             disableTypography
+            onClick={(e) => handleCheckToggle(e, id)}
           />
         </Box>
       }
@@ -201,31 +210,46 @@ function StyledTreeItem(props: StyledTreeItemProps) {
 }
 
 function renderLevel(
-  items: TNestedCheckboxData[],
+  items: TNestedCheckbox[],
   labels: { [key: string]: string },
+  handleCheckToggle: (e: React.SyntheticEvent, id: string) => void,
+  toggleExpanded: (id: string) => void,
   level = 0
 ): React.ReactNode {
   return items.map((item) => {
-    const { checked, id, label, children } = item
+    const { checked, id, children } = item
     return children ? (
       <StyledTreeItem
-        nodeId={id.toString()}
+        nodeId={id}
         // labelText={`${level} - ${label}`}
         // labelText={`${label}`}
+        checkBoxInfo={item}
         labelText={labels[id]}
         key={id}
         level={level}
+        checked={checked}
+        handleCheckToggle={handleCheckToggle}
+        onClick={() => toggleExpanded(id)}
       >
-        {renderLevel(children, labels, level + 1)}
+        {renderLevel(
+          children,
+          labels,
+          handleCheckToggle,
+          toggleExpanded,
+          level + 1
+        )}
       </StyledTreeItem>
     ) : (
       <StyledTreeItem
-        nodeId={id.toString()}
+        nodeId={id}
         // labelText={`${level} - ${label}`}
         // labelText={`${label}`}
+        checkBoxInfo={item}
         labelText={labels[id]}
         key={id}
         level={level}
+        checked={checked}
+        handleCheckToggle={handleCheckToggle}
       />
     )
   })
@@ -244,25 +268,112 @@ function reduceLabels(
   return destinationObject
 }
 
+function getCheckedState<T extends TNestedCheckbox>(
+  data: T[]
+): TNestedCheckbox[] {
+  if (!data.length) {
+    return []
+  }
+  const extract = <U extends TNestedCheckbox>(
+    dataLevel: U[]
+  ): TNestedCheckbox[] => {
+    if (!dataLevel.length) {
+      return []
+    }
+    const res = dataLevel.map((dataElement) => {
+      const { checked, id, children } = dataElement
+
+      return children
+        ? {
+            checked,
+            id,
+            children: extract(children),
+          }
+        : {
+            checked,
+            id,
+          }
+      // const result: TNestedCheckbox = { checked, id }
+      // if (children) {
+      //   result.children = extract(children)
+      // }
+      // return result
+    })
+
+    return res
+  }
+
+  return extract(data)
+}
+
 export default function MultiCheckboxPage() {
   const labels = reduceLabels(sampleData, {})
-  console.log('labels: ', labels)
+  // console.log('labels: ', labels)
+
+  const [checked, setChecked] = React.useState((): TNestedCheckbox[] =>
+    getCheckedState(sampleData)
+  )
+
+  const [expanded, setExpanded] = React.useState<string[]>([])
+
+  const toggleExpanded = (id: string) => {
+    console.log('expanded toggle! ', id, expanded)
+    setExpanded((oldExpanded) => {
+      const newExpanded = [...oldExpanded]
+      const indexOfId = newExpanded.indexOf(id)
+
+      console.log('index', indexOfId)
+
+      if (indexOfId === -1) {
+        newExpanded.push(id)
+      } else {
+        newExpanded.splice(indexOfId, 1)
+      }
+      return newExpanded
+    })
+  }
+
+  function toggleCheckedById(
+    data: TNestedCheckbox[],
+    id: string
+  ): TNestedCheckbox[] {
+    return data.map((item) => {
+      if (item.id === id) {
+        return { ...item, checked: !item.checked }
+      }
+
+      if (item.children) {
+        return { ...item, children: toggleCheckedById(item.children, id) }
+      }
+      return item
+    })
+  }
+
+  const handleCheckToggle = (e: React.SyntheticEvent, id: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setChecked((prevState) => toggleCheckedById(prevState, id))
+  }
+
+  // console.log('extracted: ', getCheckedState(sampleData))
 
   return (
-    <TreeView
-      aria-label="gmail"
-      // defaultExpanded={['3']}
-      defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpandIcon={<ChevronRightIcon />}
-      // defaultEndIcon={<div style={{ width: 24 }} />}
-      sx={{
-        // height: 264,
-        flexGrow: 1,
-        // maxWidth: 400,
-        overflowY: 'auto',
-      }}
-    >
-      {renderLevel(sampleData, labels)}
-    </TreeView>
+    <>
+      <TreeView
+        defaultCollapseIcon={<ExpandMoreIcon />}
+        defaultExpandIcon={<ChevronRightIcon />}
+        expanded={expanded}
+        sx={{
+          // height: 264,
+          flexGrow: 1,
+          // maxWidth: 400,
+          overflowY: 'auto',
+        }}
+      >
+        {renderLevel(checked, labels, handleCheckToggle, toggleExpanded)}
+      </TreeView>
+
+      <NestedCheckboxTable />
+    </>
   )
 }

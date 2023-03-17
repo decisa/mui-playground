@@ -1,7 +1,7 @@
 // /* eslint-disable @typescript-eslint/no-unsafe-return */
 import React, { FC, ReactNode } from 'react'
 
-import './index.css'
+// import './index.css'
 
 import {
   ColumnDef,
