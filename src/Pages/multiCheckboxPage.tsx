@@ -9,7 +9,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import NestedCheckboxTable from '../Components/Form/NestedTable'
 
 type TNestedCheckboxData = {
   id: string
@@ -24,6 +23,18 @@ type TNestedCheckbox = {
   children?: TNestedCheckbox[]
 }
 
+type TLeafCheckBoxNode = TreeItemProps & {
+  labelText: string
+  checkBoxInfo: TNestedCheckbox
+  offsetLevel?: number
+  handleCheckToggle: (e: React.SyntheticEvent, id: string) => void
+}
+
+type TInternalCheckBoxNode = TLeafCheckBoxNode & {
+  expandTree: (id: string) => void
+  handleToggleExpanded: (e: React.SyntheticEvent, id: string) => void
+}
+
 type StyledTreeItemProps = TreeItemProps & {
   // bgColor?: string
   // color?: string
@@ -34,6 +45,7 @@ type StyledTreeItemProps = TreeItemProps & {
   checked: boolean
   checkBoxInfo: TNestedCheckbox
   handleCheckToggle: (e: React.SyntheticEvent, id: string) => void
+  expandTree?: (id: string) => void
 }
 
 const sampleData: TNestedCheckboxData[] = [
@@ -143,6 +155,9 @@ const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
   //     backgroundColor: theme.palette.action.selected,
   //   },
   [`& .${treeItemClasses.content}`]: {
+    // '> .MuiTreeItem-iconContainer': {
+    //   marginLeft: offsetLevel as number, // theme.spacing(-2),
+    // },
     // '&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused': {
     '&.Mui-selected, &.Mui-focused': {
       backgroundColor: `${theme.palette.background.default}`,
@@ -159,35 +174,32 @@ const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
   },
   [`& .${treeItemClasses.group}`]: {
     marginLeft: 0,
-    [`& .${treeItemClasses.content}`]: {
-      // paddingLeft: theme.spacing(4),
-    },
+    // [`& .${treeItemClasses.content}`]: {
+    //   // paddingLeft: theme.spacing(4),
+    // },
   },
 }))
 
-function StyledTreeItem(props: StyledTreeItemProps) {
+function LeafCheckBoxNode(props: TLeafCheckBoxNode) {
   const {
-    // bgColor,
-    // color,
-    // labelIcon: LabelIcon,
-    // labelInfo,
-    checkBoxInfo: { checked, id, children },
+    checkBoxInfo: { checked, id },
     labelText,
     handleCheckToggle,
-    level = 0,
+    offsetLevel = 0,
     ...other
   } = props
-
   return (
     <StyledTreeItemRoot
+      // offsetLevel={offsetLevel}
       label={
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            p: 0.5,
-            pr: 0,
-            ml: 3 * level,
+            p: 0,
+            // pr: 0,
+
+            ml: 4 * offsetLevel,
             borderBottom: '1px solid #eee',
           }}
         >
@@ -196,14 +208,82 @@ function StyledTreeItem(props: StyledTreeItemProps) {
             control={<Checkbox checked={checked} />}
             sx={{ width: '100%' }}
             disableTypography
-            onClick={(e) => handleCheckToggle(e, id)}
+            onClick={(e) => {
+              handleCheckToggle(e, id)
+            }}
           />
         </Box>
       }
-      // style={{
-      //   '--tree-view-color': color,
-      //   '--tree-view-bg-color': bgColor,
-      // }}
+      {...other}
+    />
+  )
+}
+
+function InternalCheckBoxNode(props: TInternalCheckBoxNode) {
+  const {
+    checkBoxInfo: { checked, id, children = [] },
+    labelText,
+    handleCheckToggle,
+    expandTree,
+    handleToggleExpanded,
+    offsetLevel = 0,
+    ...other
+  } = props
+
+  const checkSomeChecked = (subtree: TNestedCheckbox[]): boolean =>
+    subtree.some((child) => {
+      if (child.children) {
+        return checkSomeChecked(child.children)
+      }
+      return child.checked
+    })
+
+  const atLeastOneChildSelected = checkSomeChecked(children)
+  const indeterminate = !checked && atLeastOneChildSelected
+  return (
+    <StyledTreeItemRoot
+      onClick={(e) => handleToggleExpanded(e, id)}
+      label={
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            p: 0,
+            pr: 0,
+            ml: 4 * offsetLevel,
+            borderBottom: '1px solid #eee',
+          }}
+        >
+          <FormControlLabel
+            label={labelText}
+            control={
+              <Checkbox
+                checked={checked}
+                indeterminate={indeterminate}
+                onClick={(e) => {
+                  handleCheckToggle(e, id)
+                  if (expandTree) {
+                    // when node is internal, selecting the checkbox on or off
+                    // will expand entire subtree to show that everything was toggled
+                    expandTree(id)
+                  }
+                }}
+              />
+            }
+            sx={{ width: '100%' }}
+            disableTypography
+            onClick={(e) => handleToggleExpanded(e, id)}
+            // onClick={(e) => {
+            //   handleCheckToggle(e, id)
+            //   if (expandTree) {
+            //     // whne node is internal, selecting the checkbox on or off
+            //     // will expand entire subtree to show that everything was toggled
+            //     expandTree(id)
+            //   }
+            // }}
+          />
+        </Box>
+      }
       {...other}
     />
   )
@@ -213,42 +293,40 @@ function renderLevel(
   items: TNestedCheckbox[],
   labels: { [key: string]: string },
   handleCheckToggle: (e: React.SyntheticEvent, id: string) => void,
-  toggleExpanded: (id: string) => void,
+  handleToggleExpanded: (e: React.SyntheticEvent, id: string) => void,
+  expandTree: (id: string) => void,
   level = 0
 ): React.ReactNode {
   return items.map((item) => {
-    const { checked, id, children } = item
+    const { id, children } = item
     return children ? (
-      <StyledTreeItem
+      <InternalCheckBoxNode
         nodeId={id}
-        // labelText={`${level} - ${label}`}
-        // labelText={`${label}`}
         checkBoxInfo={item}
         labelText={labels[id]}
         key={id}
-        level={level}
-        checked={checked}
+        offsetLevel={level}
         handleCheckToggle={handleCheckToggle}
-        onClick={() => toggleExpanded(id)}
+        expandTree={expandTree}
+        handleToggleExpanded={handleToggleExpanded}
+        // onClick={() => handleToggleExpanded(id)}
       >
         {renderLevel(
           children,
           labels,
           handleCheckToggle,
-          toggleExpanded,
+          handleToggleExpanded,
+          expandTree,
           level + 1
         )}
-      </StyledTreeItem>
+      </InternalCheckBoxNode>
     ) : (
-      <StyledTreeItem
+      <LeafCheckBoxNode
         nodeId={id}
-        // labelText={`${level} - ${label}`}
-        // labelText={`${label}`}
         checkBoxInfo={item}
         labelText={labels[id]}
         key={id}
-        level={level}
-        checked={checked}
+        offsetLevel={level}
         handleCheckToggle={handleCheckToggle}
       />
     )
@@ -306,56 +384,165 @@ function getCheckedState<T extends TNestedCheckbox>(
   return extract(data)
 }
 
+function getExpandableNodeIds(tree: TNestedCheckbox[]) {
+  // find all expandable node ID in a given tree
+  let ids: string[] = []
+  for (let i = 0; i < tree.length; i += 1) {
+    if (tree[i].children) {
+      ids.push(tree[i].id)
+      ids = ids.concat(
+        getExpandableNodeIds(tree[i].children as TNestedCheckbox[])
+      )
+    }
+  }
+  return ids
+}
+
 export default function MultiCheckboxPage() {
   const labels = reduceLabels(sampleData, {})
-  // console.log('labels: ', labels)
-
   const [checked, setChecked] = React.useState((): TNestedCheckbox[] =>
     getCheckedState(sampleData)
   )
 
-  const [expanded, setExpanded] = React.useState<string[]>([])
+  // const labels = reduceLabels(sampleData, { getall: 'Select All' })
 
-  const toggleExpanded = (id: string) => {
-    console.log('expanded toggle! ', id, expanded)
-    setExpanded((oldExpanded) => {
-      const newExpanded = [...oldExpanded]
-      const indexOfId = newExpanded.indexOf(id)
+  // const [checked, setChecked] = React.useState((): TNestedCheckbox[] =>
+  //   getCheckedState([
+  //     {
+  //       checked: false,
+  //       id: 'getall',
+  //       children: sampleData,
+  //     },
+  //   ])
+  // )
 
-      console.log('index', indexOfId)
+  //
+  const [expanded, setExpanded] = React.useState<string[]>(
+    getExpandableNodeIds(checked)
+  )
 
-      if (indexOfId === -1) {
-        newExpanded.push(id)
-      } else {
-        newExpanded.splice(indexOfId, 1)
+  const toggleExpanded = (prevState: string[], id: string) => {
+    console.log('expanded toggle! ', id, prevState)
+    const newState = [...prevState]
+    const indexOfId = newState.indexOf(id)
+
+    if (indexOfId === -1) {
+      newState.push(id)
+    } else {
+      newState.splice(indexOfId, 1)
+    }
+    return newState
+  }
+
+  const handleToggleExpanded = (e: React.SyntheticEvent, id: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setExpanded((prevState) => toggleExpanded(prevState, id))
+  }
+
+  function getNodeById(
+    tree: TNestedCheckbox[],
+    id: string
+  ): TNestedCheckbox | null {
+    // find a node with a given ID
+    for (let i = 0; i < tree.length; i += 1) {
+      if (tree[i].id === id) {
+        return tree[i]
       }
-      return newExpanded
+      if (tree[i].children) {
+        const result = getNodeById(tree[i].children as TNestedCheckbox[], id)
+        if (result) {
+          return result
+        }
+      }
+    }
+    return null
+  }
+
+  const expandTree = (id: string) => {
+    // find the node to fully expand
+    const nodeToExpand = getNodeById(checked, id)
+    if (!nodeToExpand) return
+
+    // get ids of the node to expand + all of its expandable children
+    const expandableIds = getExpandableNodeIds([nodeToExpand])
+
+    setExpanded((oldExpanded) => {
+      // create a set from both previously expanded elements and all expandable nodes for a given id
+      // set will eliminate all duplicates
+      const newExpanded = new Set(oldExpanded.concat(expandableIds))
+      // convert set back to array
+      return [...newExpanded]
     })
   }
+
+  const setCheckedAll = (
+    subTree: TNestedCheckbox[],
+    checkedValue: boolean
+  ): TNestedCheckbox[] =>
+    // returns a deep copy of array with all values set to checkedValue
+    subTree.map((item) => {
+      if (item.children) {
+        return {
+          ...item,
+          checked: checkedValue,
+          children: setCheckedAll(item.children, checkedValue),
+        }
+      }
+      return {
+        ...item,
+        checked: checkedValue,
+      }
+    })
 
   function toggleCheckedById(
     data: TNestedCheckbox[],
     id: string
   ): TNestedCheckbox[] {
-    return data.map((item) => {
+    // const result =
+    const result = data.map((item) => {
       if (item.id === id) {
+        if (item.children) {
+          return {
+            ...item,
+            checked: !item.checked,
+            children: setCheckedAll(item.children, !item.checked),
+          }
+        }
         return { ...item, checked: !item.checked }
       }
-
       if (item.children) {
         return { ...item, children: toggleCheckedById(item.children, id) }
       }
       return item
     })
+
+    const updateInnerNodes = (subtree: TNestedCheckbox[]): TNestedCheckbox[] =>
+      subtree.map((element) => {
+        if (element.children) {
+          // calculate all children and run update on children level
+          const allChildrenChecked = element.children.every(
+            (child) => child.checked
+          )
+          return {
+            ...element,
+            checked: allChildrenChecked,
+            children: updateInnerNodes(element.children),
+          }
+        }
+        return element
+      })
+
+    return updateInnerNodes(result)
   }
 
   const handleCheckToggle = (e: React.SyntheticEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
+    // parents = []
     setChecked((prevState) => toggleCheckedById(prevState, id))
+    // console.log('parents encountered: ', parents)
   }
-
-  // console.log('extracted: ', getCheckedState(sampleData))
 
   return (
     <>
@@ -368,12 +555,19 @@ export default function MultiCheckboxPage() {
           flexGrow: 1,
           // maxWidth: 400,
           overflowY: 'auto',
+          userSelect: 'none',
         }}
       >
-        {renderLevel(checked, labels, handleCheckToggle, toggleExpanded)}
+        {renderLevel(
+          checked,
+          labels,
+          handleCheckToggle,
+          handleToggleExpanded,
+          expandTree
+        )}
       </TreeView>
 
-      <NestedCheckboxTable />
+      {/* <NestedCheckboxTable /> */}
     </>
   )
 }
