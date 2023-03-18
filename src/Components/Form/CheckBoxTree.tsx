@@ -9,7 +9,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import { SxProps } from '@mui/system'
+import { MUIStyledCommonProps, SxProps, Theme } from '@mui/system'
 import type { FieldValues, Control, FieldPath } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 // import { useEffect } from 'react'
@@ -36,7 +36,7 @@ type TInternalCheckBoxNode = TLeafCheckBoxNode & {
   handleToggleExpanded: (e: React.SyntheticEvent, id: string) => void
 }
 
-const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
+const StyledTreeItemRootNode = styled(TreeItem)(({ theme }) => ({
   // color: theme.palette.text.secondary,
   // [`& .${treeItemClasses.content}`]: {
   //   color: theme.palette.text.secondary,
@@ -73,9 +73,73 @@ const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
   },
   [`& .${treeItemClasses.group}`]: {
     marginLeft: 0,
+    backgroundColor: 'yellow',
     // [`& .${treeItemClasses.content}`]: {
     //   // paddingLeft: theme.spacing(4),
     // },
+  },
+}))
+
+const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
+  // color: theme.palette.text.secondary,
+  // [`& .${treeItemClasses.content}`]: {
+  //   color: theme.palette.text.secondary,
+  //   borderTopRightRadius: theme.spacing(2),
+  //   borderBottomRightRadius: theme.spacing(2),
+  //   paddingRight: theme.spacing(1),
+  //   fontWeight: theme.typography.fontWeightMedium,
+  //   '&.Mui-expanded': {
+  //     fontWeight: theme.typography.fontWeightBold,
+  //   },
+  //   '&:hover': {
+  //     backgroundColor: theme.palette.action.hover,
+  //   },
+  //   '&.custom-checked': {
+  //     backgroundColor: theme.palette.action.selected,
+  //   },
+
+  // [`&.${treeItemClasses.content}`]: {
+  //   // '> .MuiTreeItem-iconContainer': {
+  //   //   marginLeft: offsetLevel as number, // theme.spacing(-2),
+  //   // },
+  //   // '&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused': {
+  //   backgroundColor: `lightpink`,
+  //   '&.Mui-selected, &.Mui-focused': {
+  //     '&:hover': {
+  //       backgroundColor: theme.palette.action.hover,
+  //     },
+  //     //   //   color: 'var(--tree-view-color)',
+  //     //   // },
+  //     //   [`& .${treeItemClasses.label}`]: {
+  //     //     fontWeight: 'inherit',
+  //     //     color: 'inherit',
+  //     //   },
+  //   },
+  // },
+  [`& .${treeItemClasses.group}`]: {
+    marginLeft: 0,
+    // [`& .${treeItemClasses.content}`]: {
+    //   // paddingLeft: theme.spacing(4),
+    // },
+  },
+  '&.rootnode': {
+    [`&>.${treeItemClasses.content}`]: {
+      backgroundColor: theme.palette.grey[300],
+      '&:hover': {
+        backgroundColor: theme.palette.grey[300],
+      },
+    },
+  },
+  '&.childnode': {
+    [`&>.${treeItemClasses.content}`]: {
+      backgroundColor: theme.palette.background.default,
+      '&:hover': {
+        backgroundColor: theme.palette.action.hover,
+      },
+      '&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused': {
+        backgroundColor: theme.palette.background.default,
+      },
+    },
   },
 }))
 
@@ -89,13 +153,17 @@ type TCheckBoxTreeProps<T extends FieldValues> = {
 }
 
 export default function CheckBoxTree<TFormData extends FieldValues>({
-  labels,
+  labels: labelsInit,
   defaultValues,
   sx,
   maxHeight,
   control,
   name,
 }: TCheckBoxTreeProps<TFormData>) {
+  const labels = React.useMemo(() => {
+    console.log('calculating labels object')
+    return addRootLabel(labelsInit, 'Dental Practices')
+  }, [labelsInit])
   if (!labels.default) {
     labels.default = 'unknown option'
   }
@@ -105,8 +173,8 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
   } = useController({ control, name })
 
   // initialize checked state with defaultValues:
-  const [checked, setChecked] = React.useState(
-    (): TNestedCheckbox[] => value || defaultValues || []
+  const [checked, setChecked] = React.useState((): TNestedCheckbox[] =>
+    addRootNode(value || defaultValues || [])
   )
 
   React.useEffect(() => {
@@ -179,13 +247,81 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
         handleCheckToggle,
         handleToggleExpanded,
         handleExpandTree,
-        sx || {}
+        sx || {},
+        -1
       )}
     </TreeView>
   )
 }
 
 // ************** COMPONENTS *****************
+
+function RootNode(props: TInternalCheckBoxNode) {
+  const {
+    checkBoxInfo: { checked, id, children = [] },
+    labelText,
+    handleCheckToggle,
+    handleExpandTree,
+    handleToggleExpanded,
+    // offsetLevel = 0,
+    sx = {},
+    ...other
+  } = props
+
+  const [allExpanded, setAllExpanded] = React.useState(true)
+
+  const atLeastOneChildSelected = someChecked(children)
+  const indeterminate = !checked && atLeastOneChildSelected
+  return (
+    <StyledTreeItemRoot
+      className="rootnode"
+      onClick={(e) => handleToggleExpanded(e, id)}
+      key={id}
+      label={
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            p: 0,
+            pr: 0,
+            // ml: 4 * offsetLevel,
+            borderBottom: '1px solid #eee',
+            ...sx,
+          }}
+        >
+          <FormControlLabel
+            label={labelText}
+            control={
+              <Checkbox
+                checked={checked}
+                indeterminate={indeterminate}
+                onClick={(e) => {
+                  handleCheckToggle(e, id)
+                  if (handleExpandTree) {
+                    // when node is internal, i.e. is a parent and has children: selecting the checkbox on or off
+                    // will expand entire subtree to show that everything was toggled
+                    handleExpandTree(id)
+                  }
+                }}
+              />
+            }
+            sx={{ width: '100%' }}
+            disableTypography
+            onClick={(e) => {
+              if (allExpanded) {
+                handleToggleExpanded(e, id)
+              } else {
+                handleExpandTree(id)
+              }
+              setAllExpanded(!allExpanded)
+            }}
+          />
+        </Box>
+      }
+      {...other}
+    />
+  )
+}
 
 function LeafCheckBoxNode(props: TLeafCheckBoxNode) {
   const {
@@ -198,6 +334,7 @@ function LeafCheckBoxNode(props: TLeafCheckBoxNode) {
   } = props
   return (
     <StyledTreeItemRoot
+      className="childnode"
       label={
         <Box
           sx={{
@@ -242,6 +379,7 @@ function InternalCheckBoxNode(props: TInternalCheckBoxNode) {
   const indeterminate = !checked && atLeastOneChildSelected
   return (
     <StyledTreeItemRoot
+      className="childnode"
       onClick={(e) => handleToggleExpanded(e, id)}
       label={
         <Box
@@ -283,6 +421,27 @@ function InternalCheckBoxNode(props: TInternalCheckBoxNode) {
 }
 
 // ************** HELPER FUNCTIONS ****************
+
+function addRootNode(data: TNestedCheckbox[]): TNestedCheckbox[] {
+  return [
+    {
+      checked: data.every((child) => child.checked),
+      id: 'root',
+      children: data,
+    },
+  ]
+}
+
+function addRootLabel(
+  labels: TCheckboxLabel,
+  labelText: string
+): TCheckboxLabel {
+  return {
+    ...labels,
+    root: labelText,
+  }
+}
+
 function someChecked(subtree: TNestedCheckbox[]): boolean {
   // recursive function that goes over subtree and return whether at least one node is checked
   return subtree.some((child) => {
@@ -307,6 +466,31 @@ function renderTreeLevel(
   // LeafCheckBoxNode - leaf node that has no children
   return items.map((item) => {
     const { id, children } = item
+    if (level === -1) {
+      return (
+        <React.Fragment key={`rootkey-${id}`}>
+          <RootNode
+            nodeId={id}
+            checkBoxInfo={item}
+            labelText={labels[id] || labels.default}
+            key={id}
+            handleCheckToggle={handleCheckToggle}
+            handleExpandTree={handleExpandTree}
+            handleToggleExpanded={handleToggleExpanded}
+            sx={{ ...sx }}
+          />
+          {renderTreeLevel(
+            children || [],
+            labels,
+            handleCheckToggle,
+            handleToggleExpanded,
+            handleExpandTree,
+            sx,
+            level + 1
+          )}
+        </React.Fragment>
+      )
+    }
     return children ? (
       <InternalCheckBoxNode
         nodeId={id}
