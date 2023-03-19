@@ -34,10 +34,11 @@ export default function MultiCheckboxPage() {
       <CheckBoxTree
         labels={labels}
         defaultValues={initCheckedState}
-        sx={{ p: 0 }}
+        sx={{ p: 0, fontSize: 14 }}
         control={control}
         name="officeLocations"
-        // maxHeight={350}
+        caption="Please choose dental office locations:"
+        maxHeight={350}
       />
       <Button type="submit">submit</Button>
     </form>

@@ -9,7 +9,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import { MUIStyledCommonProps, SxProps, Theme } from '@mui/system'
+import { SxProps } from '@mui/system'
 import type { FieldValues, Control, FieldPath } from 'react-hook-form'
 import { useController } from 'react-hook-form'
 // import { useEffect } from 'react'
@@ -34,103 +34,30 @@ type TLeafCheckBoxNode = TreeItemProps & {
 type TInternalCheckBoxNode = TLeafCheckBoxNode & {
   handleExpandTree: (id: string) => void
   handleToggleExpanded: (e: React.SyntheticEvent, id: string) => void
+  handleTreeCollapse?: () => void
 }
 
-const StyledTreeItemRootNode = styled(TreeItem)(({ theme }) => ({
-  // color: theme.palette.text.secondary,
-  // [`& .${treeItemClasses.content}`]: {
-  //   color: theme.palette.text.secondary,
-  //   borderTopRightRadius: theme.spacing(2),
-  //   borderBottomRightRadius: theme.spacing(2),
-  //   paddingRight: theme.spacing(1),
-  //   fontWeight: theme.typography.fontWeightMedium,
-  //   '&.Mui-expanded': {
-  //     fontWeight: theme.typography.fontWeightBold,
-  //   },
-  //   '&:hover': {
-  //     backgroundColor: theme.palette.action.hover,
-  //   },
-  //   '&.custom-checked': {
-  //     backgroundColor: theme.palette.action.selected,
-  //   },
+const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
   [`& .${treeItemClasses.content}`]: {
-    // '> .MuiTreeItem-iconContainer': {
-    //   marginLeft: offsetLevel as number, // theme.spacing(-2),
-    // },
-    // '&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused': {
-    '&.Mui-selected, &.Mui-focused': {
-      backgroundColor: `${theme.palette.background.default}`,
-      '&:hover': {
-        backgroundColor: theme.palette.action.hover,
-      },
-      //   //   color: 'var(--tree-view-color)',
-      //   // },
-      //   [`& .${treeItemClasses.label}`]: {
-      //     fontWeight: 'inherit',
-      //     color: 'inherit',
-      //   },
+    '& .MuiTreeItem-label': {
+      fontWeight: 'inherit',
     },
   },
   [`& .${treeItemClasses.group}`]: {
     marginLeft: 0,
-    backgroundColor: 'yellow',
-    // [`& .${treeItemClasses.content}`]: {
-    //   // paddingLeft: theme.spacing(4),
-    // },
-  },
-}))
-
-const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
-  // color: theme.palette.text.secondary,
-  // [`& .${treeItemClasses.content}`]: {
-  //   color: theme.palette.text.secondary,
-  //   borderTopRightRadius: theme.spacing(2),
-  //   borderBottomRightRadius: theme.spacing(2),
-  //   paddingRight: theme.spacing(1),
-  //   fontWeight: theme.typography.fontWeightMedium,
-  //   '&.Mui-expanded': {
-  //     fontWeight: theme.typography.fontWeightBold,
-  //   },
-  //   '&:hover': {
-  //     backgroundColor: theme.palette.action.hover,
-  //   },
-  //   '&.custom-checked': {
-  //     backgroundColor: theme.palette.action.selected,
-  //   },
-
-  // [`&.${treeItemClasses.content}`]: {
-  //   // '> .MuiTreeItem-iconContainer': {
-  //   //   marginLeft: offsetLevel as number, // theme.spacing(-2),
-  //   // },
-  //   // '&.Mui-focused, &.Mui-selected, &.Mui-selected.Mui-focused': {
-  //   backgroundColor: `lightpink`,
-  //   '&.Mui-selected, &.Mui-focused': {
-  //     '&:hover': {
-  //       backgroundColor: theme.palette.action.hover,
-  //     },
-  //     //   //   color: 'var(--tree-view-color)',
-  //     //   // },
-  //     //   [`& .${treeItemClasses.label}`]: {
-  //     //     fontWeight: 'inherit',
-  //     //     color: 'inherit',
-  //     //   },
-  //   },
-  // },
-  [`& .${treeItemClasses.group}`]: {
-    marginLeft: 0,
-    // [`& .${treeItemClasses.content}`]: {
-    //   // paddingLeft: theme.spacing(4),
-    // },
   },
   '&.rootnode': {
     [`&>.${treeItemClasses.content}`]: {
-      backgroundColor: theme.palette.grey[300],
+      backgroundColor: theme.palette.grey[200],
+      fontWeight: theme.typography.fontWeightBold,
       '&:hover': {
-        backgroundColor: theme.palette.grey[300],
+        backgroundColor: theme.palette.grey[200],
       },
     },
   },
   '&.childnode': {
+    fontWeight: theme.typography.fontWeightRegular,
+    fontSize: theme.typography.fontSize,
     [`&>.${treeItemClasses.content}`]: {
       backgroundColor: theme.palette.background.default,
       '&:hover': {
@@ -149,6 +76,7 @@ type TCheckBoxTreeProps<T extends FieldValues> = {
   maxHeight?: number
   control: Control<T>
   name: FieldPath<T>
+  caption: string
   sx?: SxProps
 }
 
@@ -159,11 +87,12 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
   maxHeight,
   control,
   name,
+  caption,
 }: TCheckBoxTreeProps<TFormData>) {
   const labels = React.useMemo(() => {
     console.log('calculating labels object')
-    return addRootLabel(labelsInit, 'Dental Practices')
-  }, [labelsInit])
+    return addRootLabel(labelsInit, caption)
+  }, [labelsInit, caption])
   if (!labels.default) {
     labels.default = 'unknown option'
   }
@@ -172,13 +101,13 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
     field: { onChange, value },
   } = useController({ control, name })
 
-  // initialize checked state with defaultValues:
+  // initialize checked state with form values, defaultValues or empty array:
   const [checked, setChecked] = React.useState((): TNestedCheckbox[] =>
     addRootNode(value || defaultValues || [])
   )
 
   React.useEffect(() => {
-    onChange(checked)
+    onChange(checked[0].children)
   }, [checked, onChange])
 
   // const labels = reduceLabels(sampleData, { getall: 'Select All' })
@@ -202,6 +131,10 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
     e.preventDefault()
     e.stopPropagation()
     setExpanded((prevState) => toggleExpanded(prevState, id))
+  }
+
+  const handleTreeCollapse = (): void => {
+    setExpanded(['root'])
   }
 
   const handleExpandTree = (id: string) => {
@@ -247,6 +180,7 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
         handleCheckToggle,
         handleToggleExpanded,
         handleExpandTree,
+        handleTreeCollapse,
         sx || {},
         -1
       )}
@@ -263,6 +197,7 @@ function RootNode(props: TInternalCheckBoxNode) {
     handleCheckToggle,
     handleExpandTree,
     handleToggleExpanded,
+    handleTreeCollapse,
     // offsetLevel = 0,
     sx = {},
     ...other
@@ -275,10 +210,12 @@ function RootNode(props: TInternalCheckBoxNode) {
   return (
     <StyledTreeItemRoot
       className="rootnode"
-      onClick={(e) => handleToggleExpanded(e, id)}
+      // onClick={(e) => handleToggleExpanded(e, id)}
+
       key={id}
       label={
         <Box
+          style={{ fontWeight: 'inherit' }}
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -291,11 +228,13 @@ function RootNode(props: TInternalCheckBoxNode) {
         >
           <FormControlLabel
             label={labelText}
+            disableTypography
             control={
               <Checkbox
                 checked={checked}
                 indeterminate={indeterminate}
                 onClick={(e) => {
+                  e.stopPropagation()
                   handleCheckToggle(e, id)
                   if (handleExpandTree) {
                     // when node is internal, i.e. is a parent and has children: selecting the checkbox on or off
@@ -306,10 +245,16 @@ function RootNode(props: TInternalCheckBoxNode) {
               />
             }
             sx={{ width: '100%' }}
-            disableTypography
+            style={{ fontWeight: 'inherit' }}
             onClick={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+              console.log('current expansion:', allExpanded)
               if (allExpanded) {
-                handleToggleExpanded(e, id)
+                if (handleTreeCollapse) {
+                  handleTreeCollapse()
+                }
+                // handleToggleExpanded(e, id)
               } else {
                 handleExpandTree(id)
               }
@@ -319,6 +264,7 @@ function RootNode(props: TInternalCheckBoxNode) {
         </Box>
       }
       {...other}
+      style={{ fontWeight: 'inherit' }}
     />
   )
 }
@@ -395,6 +341,7 @@ function InternalCheckBoxNode(props: TInternalCheckBoxNode) {
         >
           <FormControlLabel
             label={labelText}
+            disableTypography
             control={
               <Checkbox
                 checked={checked}
@@ -410,7 +357,6 @@ function InternalCheckBoxNode(props: TInternalCheckBoxNode) {
               />
             }
             sx={{ width: '100%' }}
-            disableTypography
             onClick={(e) => handleToggleExpanded(e, id)}
           />
         </Box>
@@ -458,6 +404,7 @@ function renderTreeLevel(
   handleCheckToggle: (e: React.SyntheticEvent, id: string) => void,
   handleToggleExpanded: (e: React.SyntheticEvent, id: string) => void,
   handleExpandTree: (id: string) => void,
+  handleTreeCollapse: () => void,
   sx: SxProps,
   level = 0
 ): React.ReactNode {
@@ -477,7 +424,8 @@ function renderTreeLevel(
             handleCheckToggle={handleCheckToggle}
             handleExpandTree={handleExpandTree}
             handleToggleExpanded={handleToggleExpanded}
-            sx={{ ...sx }}
+            handleTreeCollapse={handleTreeCollapse}
+            // sx={{ ...sx }}
           />
           {renderTreeLevel(
             children || [],
@@ -485,6 +433,7 @@ function renderTreeLevel(
             handleCheckToggle,
             handleToggleExpanded,
             handleExpandTree,
+            handleTreeCollapse,
             sx,
             level + 1
           )}
@@ -509,6 +458,7 @@ function renderTreeLevel(
           handleCheckToggle,
           handleToggleExpanded,
           handleExpandTree,
+          handleTreeCollapse,
           sx,
           level + 1
         )}

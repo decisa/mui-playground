@@ -1,6 +1,5 @@
 import { useLoaderData } from 'react-router'
 import { Link, json } from 'react-router-dom'
-import FormCheckBoxDataTable from '../Components/Form/FormCheckBoxDataTable'
 
 interface Customer {
   id: number

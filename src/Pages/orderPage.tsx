@@ -1,5 +1,5 @@
 // /* eslint-disable @typescript-eslint/no-unsafe-return */
-import React, { FC, ReactNode } from 'react'
+import React, { ReactNode } from 'react'
 
 // import './index.css'
 
@@ -71,38 +71,38 @@ type TDragRowProps<Person> = {
   reorderRow: (draggedRowIndex: number, targetRowIndex: number) => void
 }
 
-const DraggableRow = ({ row, reorderRow }: TDragRowProps<Person>) => {
-  const [, dropRef] = useDrop({
-    accept: 'row',
-    drop: (draggedRow: Row<Person>) => reorderRow(draggedRow.index, row.index),
-  })
+// const DraggableRow = ({ row, reorderRow }: TDragRowProps<Person>) => {
+//   const [, dropRef] = useDrop({
+//     accept: 'row',
+//     drop: (draggedRow: Row<Person>) => reorderRow(draggedRow.index, row.index),
+//   })
 
-  const [{ isDragging }, dragRef, previewRef] = useDrag({
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    item: () => row,
-    type: 'row',
-  })
+//   const [{ isDragging }, dragRef, previewRef] = useDrag({
+//     collect: (monitor) => ({
+//       isDragging: monitor.isDragging(),
+//     }),
+//     item: () => row,
+//     type: 'row',
+//   })
 
-  return (
-    <tr
-      ref={previewRef} // previewRef could go here
-      style={{ opacity: isDragging ? 0.5 : 1 }}
-    >
-      <td ref={dropRef}>
-        <button ref={dragRef} type="button">
-          🟰
-        </button>
-      </td>
-      {row.getVisibleCells().map((cell) => (
-        <td key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </td>
-      ))}
-    </tr>
-  )
-}
+//   return (
+//     <tr
+//       ref={previewRef} // previewRef could go here
+//       style={{ opacity: isDragging ? 0.5 : 1 }}
+//     >
+//       <td ref={dropRef}>
+//         <button ref={dragRef} type="button">
+//           🟰
+//         </button>
+//       </td>
+//       {row.getVisibleCells().map((cell) => (
+//         <td key={cell.id}>
+//           {flexRender(cell.column.columnDef.cell, cell.getContext())}
+//         </td>
+//       ))}
+//     </tr>
+//   )
+// }
 
 const DraggableRowMui = ({ row, reorderRow }: TDragRowProps<Person>) => {
   const [, dropRef] = useDrop({

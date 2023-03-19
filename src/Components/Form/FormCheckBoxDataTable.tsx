@@ -11,9 +11,9 @@ import Paper from '@mui/material/Paper'
 import Checkbox from '@mui/material/Checkbox'
 // import SearchBar from '@components/form/SearchBar'
 import { useEffect, useState, ReactNode } from 'react'
-import { Controller, FieldPath, useController } from 'react-hook-form'
+import { FieldPath, useController } from 'react-hook-form'
 import type { Control, FieldValues } from 'react-hook-form'
-import { AutocompleteFreeSoloValueMapping } from '@mui/material'
+// import { AutocompleteFreeSoloValueMapping } from '@mui/material'
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -187,7 +187,10 @@ function CheckBoxDataTable<TableData extends SelectableData>({
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(isPaginated ? 5 : data.length)
 
-  const [filteredRows, setFilteredRows] = useState(data)
+  const [
+    filteredRows,
+    // setFilteredRows,
+  ] = useState(data)
 
   // let val = data.value
 
