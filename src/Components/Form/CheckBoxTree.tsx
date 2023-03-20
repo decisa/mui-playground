@@ -3,16 +3,14 @@ import { styled } from '@mui/material/styles'
 import Box from '@mui/material/Box'
 import TreeView from '@mui/lab/TreeView'
 import TreeItem, { treeItemClasses } from '@mui/lab/TreeItem'
-import type { TreeItemProps } from '@mui/lab/TreeItem'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import { SxProps } from '@mui/system'
-import type { FieldValues, Control, FieldPath } from 'react-hook-form'
 import { useController } from 'react-hook-form'
-// import { useEffect } from 'react'
+import type { TreeItemProps } from '@mui/lab/TreeItem'
+import type { SxProps } from '@mui/system'
+import type { FieldValues, Control, FieldPath } from 'react-hook-form'
 
 export type TNestedCheckbox = {
   id: string
@@ -49,7 +47,7 @@ const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
   '&.rootnode': {
     [`&>.${treeItemClasses.content}`]: {
       backgroundColor: theme.palette.grey[200],
-      fontWeight: theme.typography.fontWeightBold,
+      fontWeight: theme.typography.fontWeightMedium,
       '&:hover': {
         backgroundColor: theme.palette.grey[200],
       },
@@ -89,11 +87,15 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
   name,
   caption,
 }: TCheckBoxTreeProps<TFormData>) {
-  const labels = React.useMemo(() => {
-    console.log('calculating labels object')
-    return addRootLabel(labelsInit, caption)
-  }, [labelsInit, caption])
+  const labels = React.useMemo(
+    () =>
+      // console.log('calculating labels object')
+      addRootLabel(labelsInit, caption),
+    [labelsInit, caption]
+  )
+
   if (!labels.default) {
+    // label that will be used for nodes where label is unkown
     labels.default = 'unknown option'
   }
 
@@ -110,19 +112,6 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
     onChange(checked[0].children)
   }, [checked, onChange])
 
-  // const labels = reduceLabels(sampleData, { getall: 'Select All' })
-
-  // const [checked, setChecked] = React.useState((): TNestedCheckbox[] =>
-  //   getCheckedState([
-  //     {
-  //       checked: false,
-  //       id: 'getall',
-  //       children: sampleData,
-  //     },
-  //   ])
-  // )
-
-  //
   const [expanded, setExpanded] = React.useState<string[]>(
     getExpandableNodeIds(checked)
   )
@@ -198,7 +187,6 @@ function RootNode(props: TInternalCheckBoxNode) {
     handleExpandTree,
     handleToggleExpanded,
     handleTreeCollapse,
-    // offsetLevel = 0,
     sx = {},
     ...other
   } = props
@@ -210,8 +198,6 @@ function RootNode(props: TInternalCheckBoxNode) {
   return (
     <StyledTreeItemRoot
       className="rootnode"
-      // onClick={(e) => handleToggleExpanded(e, id)}
-
       key={id}
       label={
         <Box
@@ -221,7 +207,6 @@ function RootNode(props: TInternalCheckBoxNode) {
             alignItems: 'center',
             p: 0,
             pr: 0,
-            // ml: 4 * offsetLevel,
             borderBottom: '1px solid #eee',
             ...sx,
           }}
@@ -237,8 +222,7 @@ function RootNode(props: TInternalCheckBoxNode) {
                   e.stopPropagation()
                   handleCheckToggle(e, id)
                   if (handleExpandTree) {
-                    // when node is internal, i.e. is a parent and has children: selecting the checkbox on or off
-                    // will expand entire subtree to show that everything was toggled
+                    // if clicked to select / deselect all : expand whole sub-tree
                     handleExpandTree(id)
                   }
                 }}
@@ -247,14 +231,13 @@ function RootNode(props: TInternalCheckBoxNode) {
             sx={{ width: '100%' }}
             style={{ fontWeight: 'inherit' }}
             onClick={(e) => {
+              // clicking on caption label will expand or collapse the whole tree
               e.stopPropagation()
               e.preventDefault()
-              console.log('current expansion:', allExpanded)
               if (allExpanded) {
                 if (handleTreeCollapse) {
                   handleTreeCollapse()
                 }
-                // handleToggleExpanded(e, id)
               } else {
                 handleExpandTree(id)
               }
@@ -425,7 +408,6 @@ function renderTreeLevel(
             handleExpandTree={handleExpandTree}
             handleToggleExpanded={handleToggleExpanded}
             handleTreeCollapse={handleTreeCollapse}
-            // sx={{ ...sx }}
           />
           {renderTreeLevel(
             children || [],
