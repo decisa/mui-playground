@@ -15,6 +15,7 @@ import CustomersPage, { loader as getAllCustomers } from './Pages/customersPage'
 import Index from './Pages'
 import OrderPage from './Pages/orderPage'
 import MultiCheckboxPage from './Pages/multiCheckboxPage'
+import MagentoPage from './Pages/magentoPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -42,6 +43,7 @@ const router = createBrowserRouter(
           action={updateCustomer}
         />
       </Route>
+      <Route path="magento" element={<MagentoPage />} />
     </Route>
   )
 )

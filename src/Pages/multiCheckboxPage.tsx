@@ -1,7 +1,8 @@
 import { Button } from '@mui/material'
 // import * as React from 'react'
 import { useForm } from 'react-hook-form'
-
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as yup from 'yup'
 import CheckBoxTree, { TNestedCheckbox } from '../Components/Form/CheckBoxTree'
 import {
   getCheckedState,
@@ -9,9 +10,54 @@ import {
   sampleData,
 } from '../Components/Form/sampleData'
 
-type TFormData = {
-  officeLocations: TNestedCheckbox[]
-}
+// type TFormData = {
+//   officeLocations: TNestedCheckbox[]
+// }
+
+// interface TNestedCheckbox {
+//   id: string
+//   checked: boolean
+//   children?: TNestedCheckbox[]
+// }
+
+const treeNode: yup.ObjectSchema<TNestedCheckbox> = yup.object().shape({
+  id: yup.string().required(),
+  checked: yup.boolean().required(),
+  children: yup.array().of(yup.lazy(() => treeNode)),
+})
+
+const formSchema = yup.object().shape({
+  officeLocations: yup
+    .array()
+    .of(treeNode)
+    .test('not-empty', 'locations are missing', (value) => {
+      console.log('location validation going on:', value)
+      // return false
+      const result = !!value
+      console.log(`result is ${result.toString()}`)
+      return !!value && value.length > 0
+    })
+    .test(
+      'node-selected',
+      'at least one location should be selected',
+      (value) => {
+        console.log('validation going on:', value)
+        // return false
+        const atLeastOneSelected = (array: TNestedCheckbox[]): boolean =>
+          array.some(
+            (node) =>
+              node.checked ||
+              (node.children && atLeastOneSelected(node.children))
+          )
+        if (!value) return false
+        return atLeastOneSelected(value)
+      }
+    ),
+})
+
+// function atLeastOne
+
+type TFormData = yup.InferType<typeof formSchema>
 
 export default function MultiCheckboxPage() {
   const labels = reduceToLabels(sampleData, {})
@@ -21,9 +67,30 @@ export default function MultiCheckboxPage() {
     officeLocations: initCheckedState,
   }
 
-  const { control, handleSubmit } = useForm<TFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    resetField,
+    getValues,
+  } = useForm<TFormData>({
+    resolver: yupResolver(formSchema),
     defaultValues: defaultFormValues,
   })
+
+  const resetLocations = () =>
+    resetField('officeLocations', { defaultValue: [] })
+
+  const getLocations = () => {
+    console.log('locations:', getValues().officeLocations)
+  }
+
+  if (Object.keys(errors).length > 0) {
+    console.log('there are errors in form:')
+    for (const [key, value] of Object.entries(errors)) {
+      console.log(`${key}:`, value)
+    }
+  }
 
   const onSubmit = (formData: TFormData): void => {
     console.dir(JSON.stringify(formData.officeLocations, null, 2))
@@ -68,6 +135,12 @@ export default function MultiCheckboxPage() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      <Button onClick={resetLocations} type="button" variant="outlined">
+        Reset
+      </Button>
+      <Button onClick={getLocations} type="button" variant="outlined">
+        Get Locations
+      </Button>
       <CheckBoxTree
         labels={labels}
         // defaultValues={initCheckedState}

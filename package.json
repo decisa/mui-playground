@@ -6,6 +6,7 @@
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
     "@fontsource/roboto": "^4.5.8",
+    "@hookform/resolvers": "^3.0.0",
     "@mui/icons-material": "^5.11.9",
     "@mui/lab": "^5.0.0-alpha.123",
     "@mui/material": "^5.11.13",
@@ -29,7 +30,8 @@
     "react-router-dom": "^6.8.1",
     "react-scripts": "5.0.1",
     "ts-pattern": "^4.2.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "yup": "^1.0.2"
   },
   "scripts": {
     "start": "react-scripts start",

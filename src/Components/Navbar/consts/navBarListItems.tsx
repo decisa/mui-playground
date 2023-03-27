@@ -1,6 +1,7 @@
 import PeopleIcon from '@mui/icons-material/People'
 import ImageIcon from '@mui/icons-material/Image'
 import PublicIcon from '@mui/icons-material/Public'
+import WarehouseIcon from '@mui/icons-material/Warehouse'
 import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet'
 import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent'
 import DnsIcon from '@mui/icons-material/Dns'
@@ -59,5 +60,11 @@ export const mainNavbarItems = [
     label: 'Multi Checkbox',
     path: 'multicheckbox',
     icon: <DnsIcon />,
+  },
+  {
+    id: 9,
+    label: 'Magento',
+    path: 'magento',
+    icon: <WarehouseIcon />,
   },
 ]

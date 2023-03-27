@@ -35,6 +35,18 @@ type TInternalCheckBoxNode = TLeafCheckBoxNode & {
   handleTreeCollapse?: () => void
 }
 
+type TRootNodeProps = {
+  id: string
+  checked: boolean
+  indeterminate: boolean
+  labelText: string
+  sx?: SxProps
+  // checkBoxInfo: TNestedCheckbox
+  toggleExpandTree: () => void
+  // handleExpandTree: (id: string) => void
+  toggleCheckAll: (checked: boolean) => void
+}
+
 const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
   [`& .${treeItemClasses.content}`]: {
     '& .MuiTreeItem-label': {
@@ -70,7 +82,7 @@ const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
 
 type TCheckBoxTreeProps<T extends FieldValues> = {
   labels: TCheckboxLabel
-  defaultValues?: TNestedCheckbox[]
+  // defaultValues?: TNestedCheckbox[]
   maxHeight?: number
   control: Control<T>
   name: FieldPath<T>
@@ -80,17 +92,15 @@ type TCheckBoxTreeProps<T extends FieldValues> = {
 
 export default function CheckBoxTree<TFormData extends FieldValues>({
   labels: labelsInit,
-  defaultValues,
-  sx,
+  // defaultValues,
   maxHeight,
   control,
   name,
   caption,
+  sx,
 }: TCheckBoxTreeProps<TFormData>) {
   const labels = React.useMemo(
-    () =>
-      // console.log('calculating labels object')
-      addRootLabel(labelsInit, caption),
+    () => addRootLabel(labelsInit, caption),
     [labelsInit, caption]
   )
 
@@ -100,35 +110,67 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
   }
 
   const {
-    field: { onChange, value },
+    field: { onChange: setTreeExternalState, value: treeExternalState },
   } = useController({ control, name })
 
-  // initialize checked state with form values, defaultValues or empty array:
-  const [checked, setChecked] = React.useState((): TNestedCheckbox[] =>
-    addRootNode(value || defaultValues || [])
+  const [rootState, setRootState] = React.useState(() =>
+    getRootState(treeExternalState)
+  )
+
+  // update state of the root on every change of the tree state
+  React.useEffect(
+    () => setRootState(getRootState(treeExternalState)),
+    [treeExternalState]
+  )
+
+  const [expanded, setExpanded] = React.useState<string[]>(
+    // this line expands tree completely
+    // getExpandableNodeIds(checked)
+    []
   )
 
   React.useEffect(() => {
-    onChange(checked[0].children)
-  }, [checked, onChange])
-
-  const [expanded, setExpanded] = React.useState<string[]>(
-    getExpandableNodeIds(checked)
-  )
+    console.log('treeExternalState has changed', treeExternalState)
+  }, [treeExternalState])
 
   const handleToggleExpanded = (e: React.SyntheticEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
-    setExpanded((prevState) => toggleExpanded(prevState, id))
+    const newState = toggleExpanded(expanded, id)
+    setExpanded(newState)
   }
 
-  const handleTreeCollapse = (): void => {
-    setExpanded(['root'])
+  const collapseTree = (): void => {
+    setExpanded([])
+  }
+
+  const expandTree = (): void => {
+    const expandableIds = getExpandableNodeIds(treeExternalState, false)
+    setExpanded(expandableIds)
+  }
+
+  const toggleExpandTree = () => {
+    if (expanded.length > 0) {
+      collapseTree()
+    } else {
+      expandTree()
+    }
+  }
+
+  const toggleCheckAll = (checked: boolean): void => {
+    if (checked) {
+      setTreeExternalState(setCheckedAll(treeExternalState, false))
+    } else {
+      setTreeExternalState(setCheckedAll(treeExternalState, true))
+    }
+    // expand entire tree on mass select/deselect:
+    const expandableIds = getExpandableNodeIds(treeExternalState, true)
+    setExpanded(expandableIds)
   }
 
   const handleExpandTree = (id: string) => {
     // find the node to fully expand
-    const nodeToExpand = getNodeById(checked, id)
+    const nodeToExpand = getNodeById(treeExternalState, id)
     if (!nodeToExpand) return
 
     // get ids of the node to expand + all of its expandable children
@@ -139,6 +181,7 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
       // set will eliminate all duplicates
       const newExpanded = new Set(oldExpanded.concat(expandableIds))
       // convert set back to array
+      console.log('new expanded: ', newExpanded)
       return [...newExpanded]
     })
   }
@@ -146,7 +189,8 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
   const handleCheckToggle = (e: React.SyntheticEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
-    setChecked((prevState) => toggleCheckedById(prevState, id))
+    const newState = toggleCheckedById(treeExternalState, id)
+    setTreeExternalState(newState)
   }
 
   return (
@@ -163,15 +207,22 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
         userSelect: 'none',
       }}
     >
+      <RootNode
+        id="root"
+        checked={rootState.checked}
+        indeterminate={rootState.indeterminate}
+        labelText={labels.root || labels.default}
+        key="root"
+        toggleCheckAll={toggleCheckAll}
+        toggleExpandTree={toggleExpandTree}
+      />
       {renderTreeLevel(
-        checked,
+        treeExternalState,
         labels,
         handleCheckToggle,
         handleToggleExpanded,
         handleExpandTree,
-        handleTreeCollapse,
-        sx || {},
-        -1
+        sx || {}
       )}
     </TreeView>
   )
@@ -179,26 +230,29 @@ export default function CheckBoxTree<TFormData extends FieldValues>({
 
 // ************** COMPONENTS *****************
 
-function RootNode(props: TInternalCheckBoxNode) {
+function RootNode(props: TRootNodeProps) {
   const {
-    checkBoxInfo: { checked, id, children = [] },
+    id,
+    checked,
+    indeterminate,
     labelText,
-    handleCheckToggle,
-    handleExpandTree,
-    handleToggleExpanded,
-    handleTreeCollapse,
+    toggleCheckAll,
+    toggleExpandTree,
     sx = {},
     ...other
   } = props
 
-  const [allExpanded, setAllExpanded] = React.useState(true)
-
-  const atLeastOneChildSelected = someChecked(children)
-  const indeterminate = !checked && atLeastOneChildSelected
   return (
     <StyledTreeItemRoot
       className="rootnode"
       key={id}
+      nodeId={id}
+      onClick={(e) => {
+        // clicking on caption label will expand or collapse the whole tree
+        e.stopPropagation()
+        e.preventDefault()
+        toggleExpandTree()
+      }}
       label={
         <Box
           style={{ fontWeight: 'inherit' }}
@@ -220,29 +274,12 @@ function RootNode(props: TInternalCheckBoxNode) {
                 indeterminate={indeterminate}
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleCheckToggle(e, id)
-                  if (handleExpandTree) {
-                    // if clicked to select / deselect all : expand whole sub-tree
-                    handleExpandTree(id)
-                  }
+                  toggleCheckAll(checked)
                 }}
               />
             }
             sx={{ width: '100%' }}
             style={{ fontWeight: 'inherit' }}
-            onClick={(e) => {
-              // clicking on caption label will expand or collapse the whole tree
-              e.stopPropagation()
-              e.preventDefault()
-              if (allExpanded) {
-                if (handleTreeCollapse) {
-                  handleTreeCollapse()
-                }
-              } else {
-                handleExpandTree(id)
-              }
-              setAllExpanded(!allExpanded)
-            }}
           />
         </Box>
       }
@@ -351,16 +388,6 @@ function InternalCheckBoxNode(props: TInternalCheckBoxNode) {
 
 // ************** HELPER FUNCTIONS ****************
 
-function addRootNode(data: TNestedCheckbox[]): TNestedCheckbox[] {
-  return [
-    {
-      checked: data.every((child) => child.checked),
-      id: 'root',
-      children: data,
-    },
-  ]
-}
-
 function addRootLabel(
   labels: TCheckboxLabel,
   labelText: string
@@ -387,7 +414,7 @@ function renderTreeLevel(
   handleCheckToggle: (e: React.SyntheticEvent, id: string) => void,
   handleToggleExpanded: (e: React.SyntheticEvent, id: string) => void,
   handleExpandTree: (id: string) => void,
-  handleTreeCollapse: () => void,
+  // handleTreeCollapse: () => void,
   sx: SxProps,
   level = 0
 ): React.ReactNode {
@@ -396,32 +423,23 @@ function renderTreeLevel(
   // LeafCheckBoxNode - leaf node that has no children
   return items.map((item) => {
     const { id, children } = item
-    if (level === -1) {
-      return (
-        <React.Fragment key={`rootkey-${id}`}>
-          <RootNode
-            nodeId={id}
-            checkBoxInfo={item}
-            labelText={labels[id] || labels.default}
-            key={id}
-            handleCheckToggle={handleCheckToggle}
-            handleExpandTree={handleExpandTree}
-            handleToggleExpanded={handleToggleExpanded}
-            handleTreeCollapse={handleTreeCollapse}
-          />
-          {renderTreeLevel(
-            children || [],
-            labels,
-            handleCheckToggle,
-            handleToggleExpanded,
-            handleExpandTree,
-            handleTreeCollapse,
-            sx,
-            level + 1
-          )}
-        </React.Fragment>
-      )
-    }
+    // if (level === -1) {
+    //   return (
+    //     <React.Fragment key={`rootkey-${id}`}>
+
+    //       {renderTreeLevel(
+    //         children || [],
+    //         labels,
+    //         handleCheckToggle,
+    //         handleToggleExpanded,
+    //         handleExpandTree,
+    //         handleTreeCollapse,
+    //         sx,
+    //         level + 1
+    //       )}
+    //     </React.Fragment>
+    //   )
+    // }
     return children ? (
       <InternalCheckBoxNode
         nodeId={id}
@@ -440,7 +458,7 @@ function renderTreeLevel(
           handleCheckToggle,
           handleToggleExpanded,
           handleExpandTree,
-          handleTreeCollapse,
+          // handleTreeCollapse,
           sx,
           level + 1
         )}
@@ -552,6 +570,7 @@ function getNodeById(
 }
 
 function toggleExpanded(prevState: string[], id: string) {
+  console.log('toggle expanded', prevState, id)
   // creates a copy of prevState object and either removes or adds id to the array
   // expanded state of parent nodes is stored in flat array and contains ids of parents that have to be expanded
   const newState = [...prevState]
@@ -562,19 +581,52 @@ function toggleExpanded(prevState: string[], id: string) {
   } else {
     newState.splice(indexOfId, 1)
   }
+  console.log('newState', newState)
   return newState
 }
 
-function getExpandableNodeIds(tree: TNestedCheckbox[]) {
+function getExpandableNodeIds(tree: TNestedCheckbox[], recursive = true) {
   // find all expandable node ID in a given tree
   let ids: string[] = []
   for (let i = 0; i < tree.length; i += 1) {
     if (tree[i].children) {
       ids.push(tree[i].id)
-      ids = ids.concat(
-        getExpandableNodeIds(tree[i].children as TNestedCheckbox[])
-      )
+
+      if (recursive) {
+        ids = ids.concat(
+          getExpandableNodeIds(tree[i].children as TNestedCheckbox[])
+        )
+      }
     }
   }
   return ids
+}
+
+function getRootState(tree: TNestedCheckbox[]) {
+  let selected = true
+  let atLeastOneSelected = false
+
+  const traverseTree = (subtree: TNestedCheckbox[]) => {
+    subtree.forEach(({ checked, children }) => {
+      selected = selected && checked
+      atLeastOneSelected = atLeastOneSelected || checked
+      if (children?.length) {
+        traverseTree(children)
+      }
+    })
+  }
+
+  traverseTree(tree)
+
+  // const atLeastOneChildSelected = someChecked(tree)
+  const indeterminate = !selected && atLeastOneSelected
+  console.log('new root state:', {
+    atLeastOneSelected,
+    checked: selected,
+    indeterminate,
+  })
+  return {
+    checked: selected,
+    indeterminate,
+  }
 }
