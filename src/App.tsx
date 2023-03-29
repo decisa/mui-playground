@@ -2,6 +2,7 @@ import { Box } from '@mui/material'
 import { ReactNode } from 'react'
 import { Outlet } from 'react-router'
 import Navbar from './Components/Navbar/Navbar'
+import { MagentoProvider } from './Magento/magentoAPIContext'
 // import type
 
 // import React from 'react'
@@ -14,13 +15,15 @@ interface Props {
 function App({ children }: Props) {
   // const [state, setState] = React.useState('')
   return (
-    <div className="App">
-      <Navbar />
-      <Box sx={{ marginLeft: 30, p: 2 }}>
-        <Outlet />
-        {children || null}
-      </Box>
-    </div>
+    <MagentoProvider>
+      <div className="App">
+        <Navbar />
+        <Box sx={{ marginLeft: 30, p: 2 }}>
+          <Outlet />
+          {children || null}
+        </Box>
+      </div>
+    </MagentoProvider>
   )
 }
 
