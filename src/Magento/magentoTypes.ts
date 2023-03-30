@@ -42,3 +42,34 @@ export type TMagentoAtrribute = {
   // "is_unique": "0",
   // "validation_rules": []
 }
+
+// type TMagentoError = {
+
+// } & Error
+
+type TMagentoError = 'Unauthorized' | 'Bad Data' | 'Not Found'
+export class MagentoError extends Error {
+  code: number
+
+  constructor(
+    message: TMagentoError,
+    code: number,
+    cause: Error | null = null
+  ) {
+    super(message)
+    this.cause = cause
+    this.code = code
+  }
+
+  static unauthorized(cause: Error | null = null) {
+    return new MagentoError('Unauthorized', 401, cause)
+  }
+
+  static badData(cause: Error | null = null) {
+    return new MagentoError('Bad Data', 400, cause)
+  }
+
+  static notFound(cause: Error | null = null) {
+    return new MagentoError('Not Found', 404, cause)
+  }
+}

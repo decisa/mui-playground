@@ -1,15 +1,16 @@
-import { createContext, useRef, useMemo, useCallback } from 'react'
+import { createContext, useRef, useMemo, useCallback, useContext } from 'react'
 import magentoAuthorize from './magentoAuthorize'
 
-type TMagentoContext = {
-  token: React.MutableRefObject<string>
-  getNewToken: () => Promise<string>
+export type TMagentoContext = {
+  // token: React.MutableRefObject<string>
+  getToken: () => string
+  renewToken: () => Promise<string>
 }
 
 const MagentoContext = createContext<TMagentoContext>({
-  token: { current: 'default TOKEN' },
+  getToken: () => 'default token',
   // eslint-disable-next-line @typescript-eslint/require-await
-  getNewToken: async () => 'no context',
+  renewToken: async () => 'no context',
 })
 
 type MagentoProviderProps = {
@@ -21,7 +22,7 @@ const MagentoProvider = ({ children }: MagentoProviderProps) => {
 
   const tokenRef = useRef('')
 
-  const getNewToken = useCallback(async () => {
+  const renewToken = useCallback(async () => {
     const newToken = await fetchToken()
     tokenRef.current = newToken
     return newToken
@@ -40,10 +41,10 @@ const MagentoProvider = ({ children }: MagentoProviderProps) => {
 
   const context = useMemo(
     () => ({
-      getNewToken,
-      token: tokenRef,
+      renewToken,
+      getToken: () => tokenRef.current,
     }),
-    [getNewToken]
+    [renewToken]
   )
   return (
     <MagentoContext.Provider value={context}>
@@ -52,4 +53,6 @@ const MagentoProvider = ({ children }: MagentoProviderProps) => {
   )
 }
 
-export { MagentoContext, MagentoProvider }
+const useMagentoContext = (): TMagentoContext => useContext(MagentoContext)
+
+export { useMagentoContext, MagentoProvider }

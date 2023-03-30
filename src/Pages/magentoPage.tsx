@@ -1,7 +1,7 @@
-import { errAsync, ResultAsync } from 'neverthrow'
+import { ResultAsync } from 'neverthrow'
 import { Button, Paper } from '@mui/material'
 import MuiAlert, { AlertProps } from '@mui/material/Alert'
-import React, { useContext } from 'react'
+import React from 'react'
 import Snackbar from '@mui/material/Snackbar'
 import { Stack } from '@mui/system'
 import styled from '@emotion/styled'
@@ -10,7 +10,7 @@ import {
   TMagentoAtrribute,
   TMagentoInputType,
 } from '../Magento/magentoTypes'
-import { MagentoContext } from '../Magento/magentoAPIContext'
+import { useMagentoContext } from '../Magento/magentoAPIContext'
 
 const usr = process.env.REACT_APP_MAGENTO_USER
 const pass = process.env.REACT_APP_MAGENTO_PASS
@@ -27,7 +27,7 @@ const apiPath = `${domain}/rest/default`
 //   return traceMode ? `${name} ${traceSeparator} ` : ''
 // }
 
-const Item = styled(Paper)(({ theme }) => ({
+const Item = styled(Paper)(() => ({
   padding: '5px',
   textAlign: 'center',
 }))
@@ -194,7 +194,8 @@ export default function MagentoPage() {
     severity: 'info',
   })
 
-  const { token, getNewToken } = useContext(MagentoContext)
+  // const token: string = useContext<TMagentoContext>(MagentoContext).token.current
+  const { getToken, renewToken } = useMagentoContext()
 
   const handleClick = () => {
     setSnackbar({ open: true, message: 'test', severity: 'warning' })
@@ -214,19 +215,19 @@ export default function MagentoPage() {
 
   return (
     <Paper>
-      token = {token.current}
+      token = {getToken()}
       <Button variant="outlined" onClick={handleClick}>
         Open success snackbar
       </Button>
       <Button
         variant="outlined"
         onClick={() => {
-          if (token.current === '') {
+          if (getToken() === '') {
             console.log('token is not received yet, so fetching new one ...')
-            console.log('current token = ', token.current)
-            getNewToken()
+            console.log('current token = ', getToken())
+            renewToken()
           } else {
-            console.log(`token already exists = ${token.current}`)
+            console.log(`token already exists = ${getToken()}`)
           }
           // console.log('token = ', token.current)
           // getNewToken()
@@ -236,7 +237,7 @@ export default function MagentoPage() {
       </Button>
       <Button
         onClick={async () => {
-          const x = await safeGetMagentoToken()
+          await safeGetMagentoToken()
             .andThen((t) => {
               console.log('TOKEN:', t)
               return getAttribute('product_brand')(t)
