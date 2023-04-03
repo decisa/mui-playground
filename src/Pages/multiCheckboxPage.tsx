@@ -4,11 +4,7 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import CheckBoxTree, { TNestedCheckbox } from '../Components/Form/CheckBoxTree'
-import {
-  getCheckedState,
-  reduceToLabels,
-  sampleData,
-} from '../Components/Form/sampleData'
+import { reduceToLabels, sampleData } from '../Components/Form/sampleData'
 
 // type TFormData = {
 //   officeLocations: TNestedCheckbox[]
@@ -61,7 +57,73 @@ type TFormData = yup.InferType<typeof formSchema>
 
 export default function MultiCheckboxPage() {
   const labels = reduceToLabels(sampleData, {})
-  const initCheckedState = getCheckedState(sampleData)
+  // const initCheckedState = getCheckedState(sampleData)
+
+  const initCheckedState = [
+    {
+      children: [
+        {
+          id: 'L11',
+          checked: false,
+        },
+        {
+          id: 'L12',
+          checked: false,
+        },
+        {
+          id: 'L13',
+          checked: false,
+        },
+      ],
+      id: 'P1',
+      checked: false,
+    },
+    {
+      id: 'P7',
+      checked: false,
+    },
+    {
+      children: [
+        {
+          id: 'L21',
+          checked: true,
+        },
+        {
+          id: 'L22',
+          checked: false,
+        },
+        {
+          id: 'L23',
+          checked: false,
+        },
+      ],
+      id: 'P2',
+      checked: false,
+    },
+    {
+      children: [
+        {
+          id: 'L31',
+          checked: false,
+        },
+        {
+          id: 'L32',
+          checked: false,
+        },
+        {
+          id: 'L33',
+          checked: false,
+        },
+      ],
+      id: 'P3',
+      checked: false,
+    },
+    {
+      children: [],
+      id: 'P4',
+      checked: false,
+    },
+  ]
 
   const defaultFormValues: TFormData = {
     officeLocations: initCheckedState,
