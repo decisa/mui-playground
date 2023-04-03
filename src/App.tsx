@@ -2,7 +2,10 @@ import { Box } from '@mui/material'
 import { ReactNode } from 'react'
 import { Outlet } from 'react-router'
 import Navbar from './Components/Navbar/Navbar'
-import { MagentoProvider } from './Magento/magentoAPIContext'
+import {
+  // MagentoProvider,
+  MagentoProviderNeverthrow,
+} from './Magento/magentoAPIContext'
 // import type
 
 // import React from 'react'
@@ -15,7 +18,7 @@ interface Props {
 function App({ children }: Props) {
   // const [state, setState] = React.useState('')
   return (
-    <MagentoProvider>
+    <MagentoProviderNeverthrow>
       <div className="App">
         <Navbar />
         <Box sx={{ marginLeft: 30, p: 2 }}>
@@ -23,7 +26,7 @@ function App({ children }: Props) {
           {children || null}
         </Box>
       </div>
-    </MagentoProvider>
+    </MagentoProviderNeverthrow>
   )
 }
 

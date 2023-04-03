@@ -1,43 +1,34 @@
 import { createContext, useRef, useMemo, useCallback, useContext } from 'react'
-import magentoAuthorize from './magentoAuthorize'
+import { ResultAsync, okAsync } from 'neverthrow'
+import magentoAuthorizeNeverthrow from './magentoAuthorize'
 
-export type TMagentoContext = {
-  // token: React.MutableRefObject<string>
+export type TMagentoContextNeverthrow = {
   getToken: () => string
-  renewToken: () => Promise<string>
+  renewToken: () => ResultAsync<string, Error>
 }
 
-const MagentoContext = createContext<TMagentoContext>({
+const MagentoNeverThrowContext = createContext<TMagentoContextNeverthrow>({
   getToken: () => 'default token',
   // eslint-disable-next-line @typescript-eslint/require-await
-  renewToken: async () => 'no context',
+  renewToken: () => okAsync('test'),
 })
 
 type MagentoProviderProps = {
   children: React.ReactNode
 }
-const MagentoProvider = ({ children }: MagentoProviderProps) => {
-  console.log('PROVIDER RUNNING')
-  const fetchToken = magentoAuthorize()
+
+const MagentoProviderNeverthrow = ({ children }: MagentoProviderProps) => {
+  const fetchToken = magentoAuthorizeNeverthrow()
 
   const tokenRef = useRef('')
 
-  const renewToken = useCallback(async () => {
-    const newToken = await fetchToken()
-    tokenRef.current = newToken
+  const renewToken = useCallback(() => {
+    const newToken = fetchToken().andThen((token) => {
+      tokenRef.current = `${token}`
+      return okAsync(token)
+    })
     return newToken
   }, [fetchToken])
-
-  // useEffect(() => {
-  //   console.log('!!! initializing token now !!!')
-  //   if (tokenRef.current === 'empty') {
-  //     const initToken = async () => {
-  //       const t = await getNewToken()
-  //       tokenRef.current = t
-  //     }
-  //     initToken()
-  //   }
-  // }, [getNewToken])
 
   const context = useMemo(
     () => ({
@@ -47,12 +38,19 @@ const MagentoProvider = ({ children }: MagentoProviderProps) => {
     [renewToken]
   )
   return (
-    <MagentoContext.Provider value={context}>
+    <MagentoNeverThrowContext.Provider value={context}>
       {children}
-    </MagentoContext.Provider>
+    </MagentoNeverThrowContext.Provider>
   )
 }
 
-const useMagentoContext = (): TMagentoContext => useContext(MagentoContext)
+// const useMagentoContext = (): TMagentoContext => useContext(MagentoContext)
+const useMagentoNeverthrowContext = (): TMagentoContextNeverthrow =>
+  useContext(MagentoNeverThrowContext)
 
-export { useMagentoContext, MagentoProvider }
+export {
+  // useMagentoContext,
+  useMagentoNeverthrowContext,
+  // MagentoProvider,
+  MagentoProviderNeverthrow,
+}
