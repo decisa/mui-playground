@@ -11,6 +11,7 @@ import { useController } from 'react-hook-form'
 import type { TreeItemProps } from '@mui/lab/TreeItem'
 import type { SxProps } from '@mui/system'
 import type { FieldValues, Control, FieldPath } from 'react-hook-form'
+import { isEmptyObject } from '../../utils/utils'
 
 export type TNestedCheckbox = {
   id: string
@@ -506,7 +507,7 @@ function toggleCheckedById(
   const result = data.map((item) => {
     if (item.id === id) {
       // once node with id is found, toggle checked state
-      if (item.children) {
+      if (!isEmptyObject(item.children)) {
         // if updated node has children, set them all to the same value
         return {
           ...item,
@@ -517,7 +518,7 @@ function toggleCheckedById(
       // if node has no children, simply toggle the state
       return { ...item, checked: !item.checked }
     }
-    if (item.children) {
+    if (!isEmptyObject(item.children)) {
       // if a node has children, recursively continue search on next level
       return { ...item, children: toggleCheckedById(item.children, id) }
     }
@@ -527,7 +528,7 @@ function toggleCheckedById(
   // once all toggles are taken care of, update all parent nodes to correct checked value
   const updateInnerNodes = (subtree: TNestedCheckbox[]): TNestedCheckbox[] =>
     subtree.map((element) => {
-      if (element.children) {
+      if (!isEmptyObject(element.children)) {
         // parent's checked state depends on all values of its children
         // calculate all children and run update on children level
 

@@ -16,6 +16,7 @@ import Index from './Pages'
 import OrderPage from './Pages/orderPage'
 import MultiCheckboxPage from './Pages/multiCheckboxPage'
 import MagentoPage from './Pages/magentoPage'
+import ContainersPage from './Pages/containersPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -32,6 +33,7 @@ const router = createBrowserRouter(
     >
       <Route index element={<Index />} />
       <Route path="database" element={<DatabasePage />} />
+      <Route path="containers" element={<ContainersPage />} />
       <Route path="order" element={<OrderPage />} />
       <Route path="multicheckbox" element={<MultiCheckboxPage />} />
       <Route path="customer">

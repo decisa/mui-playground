@@ -3,7 +3,6 @@ import { ReactNode } from 'react'
 import { Outlet } from 'react-router'
 import Navbar from './Components/Navbar/Navbar'
 import { MagentoProvider } from './Magento/magentoAPIContext'
-// import type
 
 // import React from 'react'
 // import logo from './logo.svg';

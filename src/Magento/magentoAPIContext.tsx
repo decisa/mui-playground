@@ -2,7 +2,6 @@ import { createContext, useRef, useMemo, useCallback, useContext } from 'react'
 import magentoAuthorize from './magentoAuthorize'
 
 export type TMagentoContext = {
-  // token: React.MutableRefObject<string>
   getToken: () => string
   renewToken: () => Promise<string>
 }
@@ -16,6 +15,7 @@ const MagentoContext = createContext<TMagentoContext>({
 type MagentoProviderProps = {
   children: React.ReactNode
 }
+
 const MagentoProvider = ({ children }: MagentoProviderProps) => {
   console.log('PROVIDER RUNNING')
   const fetchToken = magentoAuthorize()
@@ -27,17 +27,6 @@ const MagentoProvider = ({ children }: MagentoProviderProps) => {
     tokenRef.current = newToken
     return newToken
   }, [fetchToken])
-
-  // useEffect(() => {
-  //   console.log('!!! initializing token now !!!')
-  //   if (tokenRef.current === 'empty') {
-  //     const initToken = async () => {
-  //       const t = await getNewToken()
-  //       tokenRef.current = t
-  //     }
-  //     initToken()
-  //   }
-  // }, [getNewToken])
 
   const context = useMemo(
     () => ({
