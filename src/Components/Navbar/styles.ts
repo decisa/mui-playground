@@ -29,6 +29,10 @@ export const mainNavBarStyles: MainNavBarStyles = {
       ml: -1,
       fontWeight: 500,
       fontSize: 16,
+      color: '#fff',
+      '&:hover': {
+        color: '#c5d8fd',
+      },
     },
   },
 }

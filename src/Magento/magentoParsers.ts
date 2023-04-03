@@ -65,9 +65,11 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
     items,
     billing_address: billingAddress,
     payment: paymentInfo,
+    subtotal,
+    subtotal_incl_tax: subtotalTaxed,
     status_histories: comments,
     extension_attributes: {
-      // applied_taxes: appliedTaxes,
+      applied_taxes: appliedTaxes,
       shipping_assignments: shippingAssignments,
     },
   } = rawOrder
@@ -80,6 +82,21 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
     } = shippingAssignments[0]
     shippingAddress = address
     shippingMethod = method
+  }
+
+  // Taxes parsing:
+  let taxRate = appliedTaxes
+    .filter((x) => x.code !== 'shipping')
+    .reduce((a, c) => a + c.percent, 0)
+
+  const collectedTaxes = appliedTaxes
+    .filter((x) => x.code !== 'shipping')
+    .map((x) => x.title)
+
+  if (taxRate === 0) {
+    // calculate tax percent rounded to 3 decimal places
+    taxRate =
+      Math.round(((subtotalTaxed - subtotal) * 100000) / subtotal) / 1000
   }
 
   const result = {
@@ -101,6 +118,8 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
     products: items,
     paymentInfo,
     comments,
+    taxRate,
+    collectedTaxes,
   }
 
   return result

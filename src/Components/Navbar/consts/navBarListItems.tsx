@@ -4,6 +4,7 @@ import PublicIcon from '@mui/icons-material/Public'
 import WarehouseIcon from '@mui/icons-material/Warehouse'
 import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet'
 import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent'
+import SailingIcon from '@mui/icons-material/Sailing'
 import DnsIcon from '@mui/icons-material/Dns'
 
 export const mainNavbarItems = [
@@ -66,5 +67,11 @@ export const mainNavbarItems = [
     label: 'Magento',
     path: 'magento',
     icon: <WarehouseIcon />,
+  },
+  {
+    id: 10,
+    label: 'Containers',
+    path: 'containers',
+    icon: <SailingIcon />,
   },
 ]

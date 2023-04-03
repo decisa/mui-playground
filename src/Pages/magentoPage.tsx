@@ -48,9 +48,12 @@ export default function MagentoPage() {
         variant="outlined"
         onClick={() => {
           console.log('hi')
-          getOrderById('100002726')
+          // getOrderById('100002726')
+          getOrderById('100006180')
+            // getOrderById('100005130')
+            // getOrderById('100003565')
             .map((order) => {
-              console.log(JSON.stringify(order, null, 2))
+              // console.log(JSON.stringify(order, null, 2))
               console.log('received orders:', order)
               return order
             })

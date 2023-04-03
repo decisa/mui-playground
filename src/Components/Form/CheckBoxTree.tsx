@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import type { TreeItemProps, TreeItemProps } from '@mui/lab/TreeItem'
+import type { TreeItemProps } from '@mui/lab/TreeItem'
 import TreeItem, { treeItemClasses } from '@mui/lab/TreeItem'
 import TreeView from '@mui/lab/TreeView'
 import Box from '@mui/material/Box'
@@ -9,17 +9,8 @@ import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import { styled } from '@mui/material/styles'
 import * as React from 'react'
-import type {
-  Control,
-  FieldPath,
-  FieldValues,
-  FieldValues,
-  Control,
-  FieldPath,
-} from 'react-hook-form'
+import type { Control, FieldValues, FieldPath } from 'react-hook-form'
 import { useController } from 'react-hook-form'
-
-import type { SxProps } from '@mui/system'
 
 import { isEmptyObject } from '../../utils/utils'
 
