@@ -3,14 +3,16 @@ import {
   Card,
   CardActions,
   CardContent,
-  Paper,
   Typography,
-  Grid,
   TextField,
 } from '@mui/material'
-import { ok } from 'assert'
 import { ResultAsync, err, errAsync, okAsync } from 'neverthrow'
-import { format, parseISO, toDate } from 'date-fns'
+import {
+  differenceInCalendarDays,
+  format,
+  formatDistanceToNowStrict,
+  parseISO,
+} from 'date-fns'
 import { Box, Stack } from '@mui/system'
 import SyncIcon from '@mui/icons-material/Sync'
 import SearchIcon from '@mui/icons-material/Search'
@@ -240,6 +242,27 @@ const ContainerCard = ({
   remove,
 }: ContainerCardProps) => {
   const { ETA, tracking, orders, dateChecked } = containerInfo
+
+  const daysLeft = differenceInCalendarDays(ETA, Date.now())
+
+  let daysLeftText = 'today'
+  if (daysLeft < 0) {
+    daysLeftText = daysLeft === -1 ? 'yesterday' : `${-daysLeft} days ago`
+  }
+  if (daysLeft > 0) {
+    daysLeftText = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`
+  }
+
+  let relativeTimeFrame = formatDistanceToNowStrict(ETA, {
+    addSuffix: true,
+    unit: 'day',
+  })
+
+  if (relativeTimeFrame === 'in 0 days') {
+    relativeTimeFrame = 'today'
+  }
+
+  const inPast = relativeTimeFrame.includes('ago')
   return (
     <Card
       sx={{
@@ -257,13 +280,22 @@ const ContainerCard = ({
           </Typography>
           <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
             last checked on: {format(dateChecked, 'dd MMM, yyyy hh:mmaaa')}
+            <br />
+            {formatDistanceToNowStrict(dateChecked, { addSuffix: true })}
           </Typography>
         </Stack>
         <Typography variant="h5" component="div">
           {tracking.toUpperCase()}
         </Typography>
         <Typography sx={{ mb: 1.5 }} color="text.secondary">
-          ETA: {format(ETA, 'dd MMM, yyyy')}
+          ETA: {format(ETA, 'dd MMM, yyyy')} (
+          <Typography
+            component="span"
+            {...{ color: !inPast ? 'green' : undefined }}
+          >
+            {daysLeftText}
+          </Typography>
+          )
         </Typography>
         <Typography sx={{ mb: 1.5, fontSize: 10 }} color="text.secondary">
           orders: <br />
