@@ -1,5 +1,13 @@
 export type TMagentoInputType = 'multiselect'
-
+export type CommentType = 'shipment' | 'order' | 'invoice' | 'creditmemo'
+export type OrderStatus =
+  | 'pending'
+  | 'processing'
+  | 'in_production'
+  | 'in_transit'
+  | 'preparing_shipment'
+  | 'complete'
+  | 'closed'
 export type TLabelValue = {
   label: string
   value: string
@@ -109,11 +117,11 @@ export type TMagentoOrderComment = {
   comment: string
   created_at: string // '2022-02-25 14:49:21'
   entity_id: number // 54830
-  entity_name: string // 'order'
+  entity_name: CommentType // 'order'
   is_customer_notified: 0 | 1
   is_visible_on_front: 0 | 1
   parent_id: number // 3950
-  status: string // 'in_transit'
+  status: OrderStatus // 'in_transit'
 }
 
 type TMagentoTaxType = {
@@ -254,7 +262,7 @@ export type TMagentoOrder = {
   shipping_invoiced: number // 0
   shipping_tax_amount: number // 0
   state: string // 'complete'
-  status: string // 'complete'
+  status: OrderStatus // 'complete'
   store_currency_code: string // 'USD'
   store_id: number // 1
   store_name: string // 'Main Website\nMain Website Store\n'

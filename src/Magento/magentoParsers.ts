@@ -12,6 +12,14 @@ import {
 import { MagentoError } from './MagentoError'
 import { toErrorWithMessage } from '../utils/errorHandling'
 import { isEmptyObject } from '../utils/utils'
+import {
+  Address,
+  Customer,
+  Order,
+  OrderComment,
+  Product,
+  ProductOption,
+} from '../DB/dbtypes'
 
 // const stripOffUndefined = (obj) => {
 //   if (typeof obj !== 'object') {
@@ -67,7 +75,7 @@ function magentoAttribute<T extends TMagentoAtrribute>(
   }
 }
 
-const parseComment = (orderComment: TMagentoOrderComment) => {
+const parseComment = (orderComment: TMagentoOrderComment): OrderComment => {
   const {
     comment,
     created_at: createdAt,
@@ -80,18 +88,21 @@ const parseComment = (orderComment: TMagentoOrderComment) => {
   } = orderComment
 
   return {
+    externalEntityId: entityId,
+    externalParentId: parentId,
+    // id,
+    // orderId,
+    // updatedAt,
     comment,
     createdAt: parseISO(`${createdAt}Z`),
     type,
-    entityId,
-    parentId,
     customerNotified: Boolean(customerNotified),
     visibleOnFront: Boolean(visibleOnFront),
     status,
   }
 }
 
-const parseProduct = (prod: TMagentoOrderProduct) => {
+const parseProduct = (prod: TMagentoOrderProduct): Product => {
   const {
     product_type: type,
     name,
@@ -111,6 +122,8 @@ const parseProduct = (prod: TMagentoOrderProduct) => {
     qty_shipped: qtyShipped,
     price,
     discount_amount: totalDiscount,
+    created_at: createdAt,
+    tax_amount: totalTax,
   } = prod
 
   //  id - pk
@@ -120,27 +133,31 @@ const parseProduct = (prod: TMagentoOrderProduct) => {
 
   let displayOrder = 0
 
-  const allAttributes =
+  const allAttributes: ProductOption[] =
     prod.product_option?.extension_attributes?.configurable_item_options?.map(
       ({ option_id: extId, option_value: extValue }) => {
         const result = {
-          externalId: extId,
+          label: `attribute label ${displayOrder}`,
+          value: `attribute value ${displayOrder}`,
+          externalId: Number(extId),
           externalValue: extValue,
-          type: 'attribute',
-          order: displayOrder,
+          type: 'attribute' as const,
+          sortOrder: displayOrder,
         }
         displayOrder += 1
         return result
       }
     ) || []
-  const allOptions =
+  const allOptions: ProductOption[] =
     prod.product_option?.extension_attributes?.custom_options?.map(
       ({ option_id: extId, option_value: extValue }) => {
         const result = {
-          externalId: extId,
-          externalValue: extValue,
-          type: 'option',
-          order: displayOrder,
+          label: `option label ${displayOrder}`,
+          value: `option value ${displayOrder}`,
+          externalId: Number(extId),
+          externalValue: Number(extValue),
+          type: 'option' as const,
+          sortOrder: displayOrder,
         }
         displayOrder += 1
         return result
@@ -149,11 +166,19 @@ const parseProduct = (prod: TMagentoOrderProduct) => {
 
   const options = [...allAttributes, ...allOptions]
 
-  const result = {
+  return {
     name,
     type,
     externalId,
+    // sku,
     configuration: {
+      totalTax,
+      createdAt: parseISO(`${createdAt}Z`),
+      // id,
+      // orderId,
+      // productId,
+      // updatedAt,
+      // volume,
       sku,
       externalId: externalConfigurationId,
       qtyOrdered,
@@ -166,15 +191,11 @@ const parseProduct = (prod: TMagentoOrderProduct) => {
       options,
     },
   }
-  return result
 }
 
 const parseMagentoOrderAddress = (
-  magentoOrderAddress: TMagentoAddress | null | undefined
-) => {
-  if (!magentoOrderAddress) {
-    return null
-  }
+  magentoOrderAddress: TMagentoAddress
+): Address => {
   const {
     address_type: addressType,
     city,
@@ -207,7 +228,16 @@ const parseMagentoOrderAddress = (
   }
 
   // const parsedAddress = _stripOffUndefined({
-  const parsedAddress = {
+  // const parsedAddress =
+
+  return {
+    // altPhone,
+    // coordinates,
+    // createdAt,
+    // customerId,
+    // id,
+    // notes,
+    // updatedAt,
     firstName,
     lastName,
     company,
@@ -220,11 +250,9 @@ const parseMagentoOrderAddress = (
     email,
     magento,
   }
-
-  return parsedAddress
 }
 
-function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
+function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
   const {
     created_at: dateCreated,
     customer_email: email,
@@ -235,11 +263,13 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
     customer_lastname: customerLastName,
     increment_id: orderNumber,
     quote_id: quoteId,
+    entity_id: externalId,
     shipping_description: shippingDescription,
+    shipping_amount: shippingCost,
     state: orderState,
     status: orderStatus,
     items,
-    billing_address: billingAddress,
+    billing_address: rawBillingAddress,
     payment: paymentInfo,
     subtotal,
     subtotal_incl_tax: subtotalTaxed,
@@ -250,14 +280,19 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
     },
   } = rawOrder
 
-  let shippingAddress = null
-  let shippingMethod = null
+  let rawShippingAddress = null
+  let shippingMethod = 'default shipping method'
   if (shippingAssignments.length > 0) {
     const {
       shipping: { address, method },
     } = shippingAssignments[0]
-    shippingAddress = address
+    rawShippingAddress = address
     shippingMethod = method
+  }
+
+  if (rawShippingAddress === null) {
+    // supposedly this line should never reach. just for typescript to stop complaining
+    rawShippingAddress = { ...rawBillingAddress }
   }
 
   // Taxes parsing:
@@ -275,32 +310,64 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
       Math.round(((subtotalTaxed - subtotal) * 100000) / subtotal) / 1000
   }
 
-  const result = {
-    dateCreated: parseISO(`${dateCreated}Z`),
+  const billingAddress = parseMagentoOrderAddress(rawBillingAddress)
+  const shippingAddress = parseMagentoOrderAddress(rawShippingAddress)
+  // const result =
+  const customer: Customer = {
+    // id,
+    firstName: customerFirstName || shippingAddress.firstName,
+    lastName: customerLastName || shippingAddress.lastName,
+    phone: shippingAddress.phone,
+    // altPhone,
     email,
-    customerFirstName,
-    customerLastName,
-    customerId,
-    isGuest,
-    customerGroupId,
-    orderNumber,
+    // createdAt,
+    // updatedAt,
+    // defaultShipping,
+    magento: {
+      groupId: customerGroupId,
+      isGuest: Boolean(isGuest),
+      email,
+      // customerId,
+    },
+  }
+
+  if (customerId && customer.magento) {
+    customer.magento.customerId = customerId
+  }
+
+  if (shippingAddress.phone !== billingAddress.phone) {
+    customer.altPhone = billingAddress.phone
+  }
+
+  const orderMagentoInfo: Order['magento'] = {
+    externalId,
     quoteId,
-    billingAddress: parseMagentoOrderAddress(billingAddress),
-    shippingAddress: parseMagentoOrderAddress(shippingAddress),
+    state: orderState,
+    status: orderStatus,
+    // updatedAt,
+    // orderId,
+  }
+
+  return {
+    // orderId,
+    orderNumber,
+    shippingCost,
+    paymentMethod: paymentInfo.method,
+    taxRate,
+    collectedTaxes,
+    orderDate: parseISO(`${dateCreated}Z`),
+    customer,
+    billingAddress,
+    shippingAddress,
     shippingMethod,
     shippingDescription,
-    orderState,
-    orderStatus,
+    comments: comments.map(parseComment),
     products: items
       .filter((prod) => isEmptyObject(prod.parent_item))
       .map(parseProduct),
-    paymentInfo,
-    comments: comments.map(parseComment),
-    taxRate,
-    collectedTaxes,
-  }
 
-  return result
+    magento: orderMagentoInfo,
+  }
 }
 
 function magentoOrder<T extends TResponseGetMagentoOrder>(rawResponse: T) {

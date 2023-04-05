@@ -15,6 +15,7 @@ const Item = styled(Paper)(() => ({
 export default function MagentoPage() {
   // console.log('rendering magento page')
   const [brands, setBrands] = React.useState<TAttribute | null>(null)
+  const [order, setOrder] = React.useState<unknown>(null)
 
   const snack = useSnackBar()
 
@@ -48,11 +49,13 @@ export default function MagentoPage() {
         variant="outlined"
         onClick={() => {
           console.log('hi')
-          getOrderById('100002726')
-            .map((order) => {
+          // getOrderById('100002726')
+          getOrderById('100003461')
+            .map((orderResult) => {
               // console.log(JSON.stringify(order, null, 2))
-              console.log('received orders:', order)
-              return order
+              console.log('received orders:', orderResult)
+              setOrder(orderResult)
+              return orderResult
             })
             .mapErr((error) => {
               console.log('error: ', error)
