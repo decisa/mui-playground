@@ -2,12 +2,31 @@ import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { parseISO } from 'date-fns'
 import {
   TAttribute,
+  TMagentoAddress,
   TMagentoAtrribute,
   TMagentoOrder,
+  TMagentoOrderComment,
+  TMagentoOrderProduct,
   TResponseGetMagentoOrder,
 } from './magentoTypes'
 import { MagentoError } from './MagentoError'
 import { toErrorWithMessage } from '../utils/errorHandling'
+import { isEmptyObject } from '../utils/utils'
+
+// const stripOffUndefined = (obj) => {
+//   if (typeof obj !== 'object') {
+//     return obj
+//   }
+
+//   const strippedOff = { ...obj }
+
+//   Object.keys(strippedOff).forEach((key) => {
+//     if (strippedOff[key] === undefined) {
+//       delete strippedOff[key]
+//     }
+//   })
+//   return strippedOff
+// }
 
 function safeParse<U, T>(
   parser: (value: U) => T
@@ -46,6 +65,163 @@ function magentoAttribute<T extends TMagentoAtrribute>(
     options,
     position,
   }
+}
+
+const parseComment = (orderComment: TMagentoOrderComment) => {
+  const {
+    comment,
+    created_at: createdAt,
+    entity_id: entityId,
+    entity_name: type,
+    is_customer_notified: customerNotified,
+    is_visible_on_front: visibleOnFront,
+    parent_id: parentId,
+    status,
+  } = orderComment
+
+  return {
+    comment,
+    createdAt: parseISO(`${createdAt}Z`),
+    type,
+    entityId,
+    parentId,
+    customerNotified: Boolean(customerNotified),
+    visibleOnFront: Boolean(visibleOnFront),
+    status,
+  }
+}
+
+const parseProduct = (prod: TMagentoOrderProduct) => {
+  const {
+    product_type: type,
+    name,
+    sku,
+    product_id: externalId,
+    // url,
+    // image,
+    // brandId,
+    // productSpecs,
+    // assemblyInstructions,
+    // volume,
+    item_id: externalConfigurationId, // TODO: double check if correct
+    qty_canceled: qtyCanceled,
+    qty_invoiced: qtyInvoiced,
+    qty_ordered: qtyOrdered,
+    qty_refunded: qtyRefunded,
+    qty_shipped: qtyShipped,
+    price,
+    discount_amount: totalDiscount,
+  } = prod
+
+  //  id - pk
+  //  parentId - fk
+  //  orderId - fk
+  //  volume - optional
+
+  let displayOrder = 0
+
+  const allAttributes =
+    prod.product_option?.extension_attributes?.configurable_item_options?.map(
+      ({ option_id: extId, option_value: extValue }) => {
+        const result = {
+          externalId: extId,
+          externalValue: extValue,
+          type: 'attribute',
+          order: displayOrder,
+        }
+        displayOrder += 1
+        return result
+      }
+    ) || []
+  const allOptions =
+    prod.product_option?.extension_attributes?.custom_options?.map(
+      ({ option_id: extId, option_value: extValue }) => {
+        const result = {
+          externalId: extId,
+          externalValue: extValue,
+          type: 'option',
+          order: displayOrder,
+        }
+        displayOrder += 1
+        return result
+      }
+    ) || []
+
+  const options = [...allAttributes, ...allOptions]
+
+  const result = {
+    name,
+    type,
+    externalId,
+    configuration: {
+      sku,
+      externalId: externalConfigurationId,
+      qtyOrdered,
+      qtyCanceled,
+      qtyRefunded,
+      qtyShipped,
+      qtyInvoiced,
+      price, // per item
+      totalDiscount, // discount_amount (for all items)
+      options,
+    },
+  }
+  return result
+}
+
+const parseMagentoOrderAddress = (
+  magentoOrderAddress: TMagentoAddress | null | undefined
+) => {
+  if (!magentoOrderAddress) {
+    return null
+  }
+  const {
+    address_type: addressType,
+    city,
+    company,
+    country_id: country,
+    customer_address_id: externalCustomerAddressId,
+    entity_id: externalId,
+    email,
+    parent_id: externalOrderId,
+    firstname: firstName,
+    lastname: lastName,
+    postcode: zipCode,
+    // region,
+    region_code: state,
+    // region_id,
+    street,
+    telephone: phone,
+  } = magentoOrderAddress
+
+  // externalOrderId - magento order ID to which address belongs
+  // externalCustomerAddressId - customer's address ID from which this address was copied
+  // externalId - magento ID of the order address
+
+  // const magento = stripOffUndefined({
+  const magento = {
+    externalId,
+    externalCustomerAddressId,
+    externalOrderId,
+    addressType,
+  }
+
+  // const parsedAddress = _stripOffUndefined({
+  const parsedAddress = {
+    firstName,
+    lastName,
+    company,
+    street,
+    city,
+    state,
+    zipCode,
+    country,
+    phone,
+    email,
+    magento,
+  }
+
+  return parsedAddress
 }
 
 function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
@@ -109,15 +285,17 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T) {
     customerGroupId,
     orderNumber,
     quoteId,
-    billingAddress,
-    shippingAddress,
+    billingAddress: parseMagentoOrderAddress(billingAddress),
+    shippingAddress: parseMagentoOrderAddress(shippingAddress),
     shippingMethod,
     shippingDescription,
     orderState,
     orderStatus,
-    products: items,
+    products: items
+      .filter((prod) => isEmptyObject(prod.parent_item))
+      .map(parseProduct),
     paymentInfo,
-    comments,
+    comments: comments.map(parseComment),
     taxRate,
     collectedTaxes,
   }

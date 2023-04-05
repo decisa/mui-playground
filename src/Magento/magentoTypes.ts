@@ -86,7 +86,7 @@ export type TResponseGetMagentoOrder = {
   total_count: number
 }
 
-type TMagentoAddress = {
+export type TMagentoAddress = {
   address_type: 'billing' | 'shipping'
   city: string
   country_id: 'US' | 'CA' | string
@@ -95,6 +95,7 @@ type TMagentoAddress = {
   entity_id: number // 7899
   firstname: string // 'Rajeev'
   lastname: string // 'Bhutani'
+  company?: string
   parent_id: number // 3950
   postcode: string // '19335'
   region: string // 'PA - Pennsylvania'
@@ -104,7 +105,7 @@ type TMagentoAddress = {
   telephone: string // '610.864.2558'
 }
 
-type TMagentoOrderComment = {
+export type TMagentoOrderComment = {
   comment: string
   created_at: string // '2022-02-25 14:49:21'
   entity_id: number // 54830
@@ -131,7 +132,7 @@ type TMagentoShippingAssignment = {
   }
 }
 
-type TMagentoOrderProduct = {
+export type TMagentoOrderProduct = {
   amount_refunded: number // 0
   base_amount_refunded: number // 0
   base_discount_amount: number // 0
