@@ -262,7 +262,6 @@ const ContainerCard = ({
     relativeTimeFrame = 'today'
   }
 
-  const inPast = relativeTimeFrame.includes('ago')
   return (
     <Card
       sx={{
@@ -291,7 +290,7 @@ const ContainerCard = ({
           ETA: {format(ETA, 'dd MMM, yyyy')} (
           <Typography
             component="span"
-            {...{ color: !inPast ? 'green' : undefined }}
+            {...{ color: daysLeft >= 0 ? 'green' : undefined }}
           >
             {daysLeftText}
           </Typography>
