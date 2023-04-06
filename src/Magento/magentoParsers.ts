@@ -1,17 +1,5 @@
-import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { parseISO } from 'date-fns'
-import {
-  TAttribute,
-  TMagentoAddress,
-  TMagentoAtrribute,
-  TMagentoOrder,
-  TMagentoOrderComment,
-  TMagentoOrderProduct,
-  TResponseGetMagentoOrder,
-} from './magentoTypes'
-import { MagentoError } from './MagentoError'
-import { toErrorWithMessage } from '../utils/errorHandling'
-import { isEmptyObject } from '../utils/utils'
+import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import {
   Address,
   Customer,
@@ -20,6 +8,19 @@ import {
   Product,
   ProductOption,
 } from '../DB/dbtypes'
+import { toErrorWithMessage } from '../utils/errorHandling'
+import { isEmptyObject } from '../utils/utils'
+import { MagentoError } from './MagentoError'
+import {
+  MainProduct,
+  TAttribute,
+  TMagentoAddress,
+  TMagentoAtrribute,
+  TMagentoOrder,
+  TMagentoOrderComment,
+  TMagentoOrderProduct,
+  TResponseGetMagentoOrder,
+} from './magentoTypes'
 
 // const stripOffUndefined = (obj) => {
 //   if (typeof obj !== 'object') {
@@ -101,6 +102,8 @@ const parseComment = (orderComment: TMagentoOrderComment): OrderComment => {
     status,
   }
 }
+
+const parseMainProduct = (prod: MainProduct): unknown => 'unknown'
 
 const parseProduct = (prod: TMagentoOrderProduct): Product => {
   const {

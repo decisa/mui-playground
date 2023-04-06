@@ -2,6 +2,7 @@ import { ResultAsync, err, okAsync } from 'neverthrow'
 import { useMagentoNeverthrowContext } from './magentoAPIContext'
 import { toErrorWithMessage } from '../utils/errorHandling'
 import {
+  MainProduct,
   TConditionType,
   TMagentoAtrribute,
   TResponseGetMagentoOrder,
@@ -45,15 +46,26 @@ function createSearchFilter(
   return result.join('&')
 }
 
-function getProductsByIdUrl(productId: string): string {
+function getProductsByIdUrl(productIds: string): string {
   const searchCriteria = createSearchFilter(
-    productId,
+    productIds,
     'entity_id',
     'in',
     false,
     false
   )
   return encodeURI(`${apiPath}/V1/products?${searchCriteria}`)
+}
+
+function getAttributesByIdUrl(productIds: string): string {
+  const searchCriteria = createSearchFilter(
+    productIds,
+    'attribute_id',
+    'in',
+    false,
+    false
+  )
+  return encodeURI(`${apiPath}/V1/products/attributes?${searchCriteria}`)
 }
 
 function getOrderByIdUrl(orderIds: string): string {
@@ -160,12 +172,21 @@ export const useMagentoAPI = () => {
     }).andThen(parseMagentoOrderResponse)
   }
 
-  const getProductsById = (productId: string) => {
-    const url = getProductsByIdUrl(productId)
-    return fetchWithToken<unknown>({
+  const getProductsById = (productIds: string) => {
+    const url = getProductsByIdUrl(productIds)
+    return fetchWithToken<MainProduct>({
       url,
       method: 'GET',
       name: 'getProductById',
+    }) // .andThen((parseMagentoOrderResponse))
+  }
+
+  const getAttributesById = (attributeIds: string) => {
+    const url = getAttributesByIdUrl(attributeIds)
+    return fetchWithToken<unknown>({
+      url,
+      method: 'GET',
+      name: 'getAttributesById',
     }) // .andThen((parseMagentoOrderResponse))
   }
 
@@ -173,5 +194,6 @@ export const useMagentoAPI = () => {
     getAttributeByCode,
     getOrderById,
     getProductsById,
+    getAttributesById,
   }
 }

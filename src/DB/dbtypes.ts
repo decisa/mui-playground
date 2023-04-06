@@ -1,4 +1,4 @@
-import { CommentType, OrderStatus } from '../Magento/magentoTypes'
+import { CommentType, OrderStatus, ProductType } from '../Magento/magentoTypes'
 
 export type Address = {
   id?: number
@@ -109,7 +109,7 @@ export type Product = {
   createdAt?: Date
   updatedAt?: Date
   externalId?: number // 167049
-  type?: 'configurable' | 'simple'
+  type?: ProductType
   configuration: ProductConfiguration
 }
 

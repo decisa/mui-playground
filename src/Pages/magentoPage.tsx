@@ -20,22 +20,37 @@ export default function MagentoPage() {
 
   const snack = useSnackBar()
 
-  const { getAttributeByCode, getOrderById, getProductsById } = useMagentoAPI()
+  const {
+    getAttributeByCode,
+    getOrderById,
+    getProductsById,
+    getAttributesById,
+  } = useMagentoAPI()
 
   React.useEffect(() => {
     if (order && order.length > 0) {
-      const allAttributes = order[0].products.flatMap(
-        (x) => x.configuration.options.filter((z) => z.type === 'attribute')
-        // .map((y) => y.externalId)
+      const allAttributes = order[0].products.flatMap((x) =>
+        x.configuration.options
+          .filter((z) => z.type === 'attribute')
+          .map((y) => y.externalId)
       )
-      console.log('all attriutes: ', allAttributes)
+
       const productIds = order[0].products
         .map((prod) => prod.externalId)
         .filter((x) => x !== undefined) as number[]
+
       console.log('productIds:', productIds)
-      // getProductById(productIds[0].toString()).map((x) => {
+      console.log('all attributes: ', allAttributes)
+
+      console.log('running products')
       getProductsById(productIds.join(',')).map((x) => {
         console.log('products by id:', x)
+        return x
+      })
+
+      console.log('running attributes')
+      getAttributesById(allAttributes.join(',')).map((x) => {
+        console.log('attributes by id:', x)
         return x
       })
     }
