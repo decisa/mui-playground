@@ -24,9 +24,15 @@ function createSearchFilter(
   field: string,
   // condition_type,
   conditionType: TConditionType = 'like',
+  split = true,
   wildcard = true
 ): string {
-  const values = searchTerms.split(',').map((term) => term.trim())
+  let values
+  if (split) {
+    values = searchTerms.split(',').map((term) => term.trim())
+  } else {
+    values = [searchTerms]
+  }
   const result = values.map((fieldValue, index) => {
     const fieldPart = `searchCriteria[filter_groups][0][filters][${index}][field]=${field}`
     const valuePart = `searchCriteria[filter_groups][0][filters][${index}][value]=${
@@ -37,6 +43,17 @@ function createSearchFilter(
   })
   console.log('result search query:', result)
   return result.join('&')
+}
+
+function getProductsByIdUrl(productId: string): string {
+  const searchCriteria = createSearchFilter(
+    productId,
+    'entity_id',
+    'in',
+    false,
+    false
+  )
+  return encodeURI(`${apiPath}/V1/products?${searchCriteria}`)
 }
 
 function getOrderByIdUrl(orderIds: string): string {
@@ -143,8 +160,18 @@ export const useMagentoAPI = () => {
     }).andThen(parseMagentoOrderResponse)
   }
 
+  const getProductsById = (productId: string) => {
+    const url = getProductsByIdUrl(productId)
+    return fetchWithToken<unknown>({
+      url,
+      method: 'GET',
+      name: 'getProductById',
+    }) // .andThen((parseMagentoOrderResponse))
+  }
+
   return {
     getAttributeByCode,
     getOrderById,
+    getProductsById,
   }
 }

@@ -6,6 +6,7 @@ import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { TAttribute } from '../Magento/magentoTypes'
 import { MagentoError } from '../Magento/MagentoError'
+import { Order } from '../DB/dbtypes'
 
 const Item = styled(Paper)(() => ({
   padding: '5px',
@@ -15,11 +16,30 @@ const Item = styled(Paper)(() => ({
 export default function MagentoPage() {
   // console.log('rendering magento page')
   const [brands, setBrands] = React.useState<TAttribute | null>(null)
-  const [order, setOrder] = React.useState<unknown>(null)
+  const [order, setOrder] = React.useState<Order[]>()
 
   const snack = useSnackBar()
 
-  const { getAttributeByCode, getOrderById } = useMagentoAPI()
+  const { getAttributeByCode, getOrderById, getProductsById } = useMagentoAPI()
+
+  React.useEffect(() => {
+    if (order && order.length > 0) {
+      const allAttributes = order[0].products.flatMap(
+        (x) => x.configuration.options.filter((z) => z.type === 'attribute')
+        // .map((y) => y.externalId)
+      )
+      console.log('all attriutes: ', allAttributes)
+      const productIds = order[0].products
+        .map((prod) => prod.externalId)
+        .filter((x) => x !== undefined) as number[]
+      console.log('productIds:', productIds)
+      // getProductById(productIds[0].toString()).map((x) => {
+      getProductsById(productIds.join(',')).map((x) => {
+        console.log('products by id:', x)
+        return x
+      })
+    }
+  }, [order])
 
   return (
     <Paper>
@@ -50,7 +70,7 @@ export default function MagentoPage() {
         onClick={() => {
           console.log('hi')
           // getOrderById('100002726')
-          getOrderById('100003461')
+          getOrderById('100004974')
             .map((orderResult) => {
               // console.log(JSON.stringify(order, null, 2))
               console.log('received orders:', orderResult)
