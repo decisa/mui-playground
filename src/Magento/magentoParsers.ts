@@ -12,6 +12,9 @@ import { toErrorWithMessage } from '../utils/errorHandling'
 import { isEmptyObject } from '../utils/utils'
 import { MagentoError } from './MagentoError'
 import {
+  MagentoAttributeRaw,
+  MagentoCommonAttributeCodes,
+  MagentoCustomOption,
   MainProduct,
   TAttribute,
   TMagentoAddress,
@@ -103,7 +106,117 @@ const parseComment = (orderComment: TMagentoOrderComment): OrderComment => {
   }
 }
 
-const parseMainProduct = (prod: MainProduct): unknown => 'unknown'
+type OptionArrayFormat = {
+  option_id: number
+  title: string
+  type: string
+  values: {
+    title: string
+    option_type_id: number
+  }[]
+}[]
+
+type OptionObjectFormat = {
+  [optionId: number]: {
+    label: string
+    optionType: string
+    values: {
+      [valueId: number]: string
+    }
+  }
+}
+
+// function attributesArrayToObject(attributes: MagentoAttributeRaw[]) {
+//   const result: OptionObjectFormat = {}
+//   attributes.f((option) => {
+//     const { title, values, type, option_id: optionId } = option
+//     result[optionId] = {
+//       label: title,
+//       optionType: type,
+//       values: {},
+//     }
+//     if (values && values.length) {
+//       values.forEach((value) => {
+//         const { title: optionValue, option_type_id: valueId } = value
+//         result[optionId].values[valueId] = optionValue
+//       })
+//     }
+//   })
+//   return result
+// }
+
+function commonAttributesArrayToObject(
+  attributes: {
+    attribute_code: MagentoCommonAttributeCodes
+    value: string
+  }[]
+): { [key in MagentoCommonAttributeCodes]?: string } {
+  const result: { [key in MagentoCommonAttributeCodes]?: string } = {}
+  attributes.forEach((attribute) => {
+    const { attribute_code: attributeCode, value } = attribute
+    result[attributeCode] = value
+  })
+  return result
+}
+
+function productsArrayToObject(products: MainProduct[]) {
+  console.log('products:', products)
+  const parsedProducts = products.map((product) => {
+    const {
+      sku,
+      id,
+      name,
+      options,
+      custom_attributes: commonAttributes,
+    } = product
+    return {
+      id,
+      name,
+      sku,
+      options,
+      commonAttributes,
+    }
+  })
+
+  const productsObject: {
+    [productId: number]: {
+      id: number
+      name: string
+      sku: string
+      options: MagentoCustomOption[]
+      commonAttributes: {
+        [key in MagentoCommonAttributeCodes]?: string
+      } & {
+        category_ids?: string[]
+      }
+    }
+  } = {}
+
+  // create object with keys=productId  for easier lookup
+  parsedProducts.forEach((product) => {
+    productsObject[product.id] = {
+      ...product,
+      commonAttributes: commonAttributesArrayToObject(product.commonAttributes),
+    }
+  })
+
+  return productsObject
+}
+
+function mainProductsResponseToObject(response: { items: MainProduct[] }) {
+  return productsArrayToObject(response.items)
+}
+
+// export const extractOptionsAndAttributes = (
+//   products: MainProduct[]
+// ): unknown => {
+//   const { sku, id, name, options, custom_attributes: commonAttributes } = prod
+
+//   const x = transformOptions(options)
+
+//   console.log('transformed options: ', x)
+//   return x
+// }
 
 const parseProduct = (prod: TMagentoOrderProduct): Product => {
   const {
@@ -386,3 +499,6 @@ function magentoOrder<T extends TResponseGetMagentoOrder>(rawResponse: T) {
 
 export const parseMagentoAttribute = safeParse(magentoAttribute)
 export const parseMagentoOrderResponse = safeParse(magentoOrder)
+// export const getOptionsAndAttributes = safeParse(extractOptionsAndAttributes)
+// export const parseMainProductsInfo = safeParse(productsArrayToObject)
+export const parseMainProductsInfo = safeParse(mainProductsResponseToObject)

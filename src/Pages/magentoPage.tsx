@@ -7,6 +7,7 @@ import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { TAttribute } from '../Magento/magentoTypes'
 import { MagentoError } from '../Magento/MagentoError'
 import { Order } from '../DB/dbtypes'
+import { parseMainProductsInfo } from '../Magento/magentoParsers'
 
 const Item = styled(Paper)(() => ({
   padding: '5px',
@@ -39,16 +40,17 @@ export default function MagentoPage() {
         .map((prod) => prod.externalId)
         .filter((x) => x !== undefined) as number[]
 
-      console.log('productIds:', productIds)
+      // console.log('productIds:', productIds)
       console.log('all attributes: ', allAttributes)
 
-      console.log('running products')
-      getProductsById(productIds.join(',')).map((x) => {
-        console.log('products by id:', x)
-        return x
-      })
+      getProductsById(productIds.join(','))
+        .andThen(parseMainProductsInfo)
+        .map((x) => {
+          console.log('parsed main products:', x)
+          return x
+        })
+        .mapErr((e) => console.log('error!', e))
 
-      console.log('running attributes')
       getAttributesById(allAttributes.join(',')).map((x) => {
         console.log('attributes by id:', x)
         return x

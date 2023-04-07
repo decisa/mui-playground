@@ -174,7 +174,10 @@ export const useMagentoAPI = () => {
 
   const getProductsById = (productIds: string) => {
     const url = getProductsByIdUrl(productIds)
-    return fetchWithToken<MainProduct>({
+    return fetchWithToken<{
+      items: MainProduct[]
+      total_count: number
+    }>({
       url,
       method: 'GET',
       name: 'getProductById',

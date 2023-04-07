@@ -323,15 +323,15 @@ type MagentoConfigurableAttributeOptions = {
   product_id: number // 405529
 }
 
-type MagentoOptionValue = {
+export type MagentoOptionValue = {
   title: string // 'Single Tone '
   sort_order: number // 1
   price: number // 0
   price_type: string // 'fixed'
-  option_type_id: string // 714888
+  option_type_id: number // 714888
 }
 
-type MagentoCustomOption = {
+export type MagentoCustomOption = {
   product_sku: string // 'PR-WING-DRESSER'
   option_id: number // 61072
   title: string // 'version'
@@ -354,7 +354,7 @@ type MagentoImageInfo = {
   file: string // '/w/i/wing-4-drawer-dresser-03.jpg'
 }
 
-type MagentoCommonAttributeCodes =
+export type MagentoCommonAttributeCodes =
   | 'url_key'
   | 'product_brand'
   | 'product_designer'
@@ -403,4 +403,45 @@ export type MainProduct = {
   }[]
   // product_links: [{sku: 'PR-WING-DRESSER', link_type: 'related', linked_product_sku: 'FI-WING', linked_product_type: 'simple', position: 9}, ...]
   // tier_prices: []
+}
+
+export type MagentoAttributeRaw = {
+  position: number // 0
+  attribute_id: number // 541
+  attribute_code: string // 'cattelan_top'
+  frontend_input: string // 'select'
+  options: {
+    label: string // 'No Top'
+    value: string // '8921'
+  }[]
+  frontend_labels: {
+    store_id: number // 1
+    label: string // 'top'
+  }[]
+  // is_wysiwyg_enabled: false
+  // is_html_allowed_on_front: true
+  // used_for_sort_by: false
+  // is_filterable: false
+  // is_filterable_in_search: false
+  // is_used_in_grid: false
+  // is_visible_in_grid: true
+  // is_filterable_in_grid: false
+  // apply_to: []
+  // is_searchable: '0'
+  // is_visible_in_advanced_search: '0'
+  // is_comparable: '0'
+  // is_used_for_promo_rules: '0'
+  // is_visible_on_front: '0'
+  // used_in_product_listing: '0'
+  // is_visible: true
+  // scope: 'global'
+  // entity_type_id: string // '4'
+  // is_required: false
+  // is_user_defined: true
+  // default_frontend_label: 'cattelan-top'
+  // backend_type: 'int'
+  // backend_model: 'Magento\\Eav\\Model\\Entity\\Attribute\\Backend\\DefaultBackend'
+  // source_model: 'Magento\\Eav\\Model\\Entity\\Attribute\\Source\\Table'
+  // is_unique: '0'
+  // validation_rules: []
 }
