@@ -106,25 +106,25 @@ const parseComment = (orderComment: TMagentoOrderComment): OrderComment => {
   }
 }
 
-type OptionArrayFormat = {
-  option_id: number
-  title: string
-  type: string
-  values: {
-    title: string
-    option_type_id: number
-  }[]
-}[]
+// type OptionArrayFormat = {
+//   option_id: number
+//   title: string
+//   type: string
+//   values: {
+//     title: string
+//     option_type_id: number
+//   }[]
+// }[]
 
-type OptionObjectFormat = {
-  [optionId: number]: {
-    label: string
-    optionType: string
-    values: {
-      [valueId: number]: string
-    }
-  }
-}
+// type OptionObjectFormat = {
+//   [optionId: number]: {
+//     label: string
+//     optionType: string
+//     values: {
+//       [valueId: number]: string
+//     }
+//   }
+// }
 
 // function attributesArrayToObject(attributes: MagentoAttributeRaw[]) {
 //   const result: OptionObjectFormat = {}
@@ -159,6 +159,87 @@ function commonAttributesArrayToObject(
   return result
 }
 
+function attributesArrayToObject(
+  attributes: MagentoAttributeRaw[]
+): ParsedAttributes {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const result: {
+    [attributeCode: string]: {
+      label: string
+      optionType: string
+      values: {
+        [valueId: string]: string
+      }
+    }
+  } = {}
+
+  attributes.forEach((attribute) => {
+    const {
+      attribute_code: attributeCode,
+      attribute_id: attributeId,
+      frontend_input: optionType,
+      frontend_labels: storeLabels,
+      options,
+      // position,
+    } = attribute
+
+    const optionsObject: {
+      [valueId: string]: string
+    } = {}
+
+    // loop over every option in the array and assign it to a field in the object
+    if (options && options.length > 0) {
+      options.forEach((option) => {
+        const { label, value: valueId } = option
+        optionsObject[valueId] = label
+      })
+    }
+
+    let label = 'unknown'
+    if (storeLabels && storeLabels.length > 0) {
+      label = storeLabels[0].label
+    }
+
+    const parsedAttribute = {
+      label,
+      optionType,
+      values: optionsObject,
+    }
+
+    result[attributeCode] = parsedAttribute
+    result[attributeId] = parsedAttribute
+  })
+
+  return result
+}
+
+function attributesResponseToObject(response: {
+  items: MagentoAttributeRaw[]
+}) {
+  return attributesArrayToObject(response.items)
+}
+
+type ParsedMainProduct = {
+  id: number
+  name: string
+  sku: string
+  getOptionInfo: (
+    optionId: number,
+    optionValueId: number | string
+  ) => {
+    label?: string
+    value?: string
+  }
+  options: MagentoCustomOption[]
+  commonAttributes: {
+    [key in MagentoCommonAttributeCodes]?: string
+  } & { category_ids?: string[] | undefined }
+}
+
+type ParsedMainProducts = {
+  [productId: number]: ParsedMainProduct
+}
+
 function productsArrayToObject(products: MainProduct[]) {
   console.log('products:', products)
   const parsedProducts = products.map((product) => {
@@ -178,24 +259,35 @@ function productsArrayToObject(products: MainProduct[]) {
     }
   })
 
-  const productsObject: {
-    [productId: number]: {
-      id: number
-      name: string
-      sku: string
-      options: MagentoCustomOption[]
-      commonAttributes: {
-        [key in MagentoCommonAttributeCodes]?: string
-      } & {
-        category_ids?: string[]
-      }
-    }
-  } = {}
+  const productsObject: ParsedMainProducts = {}
 
   // create object with keys=productId  for easier lookup
   parsedProducts.forEach((product) => {
+    const getOptionInfo = (
+      optionId: number,
+      optionValueId: number | string
+    ) => {
+      const option = product.options.find((opt) => opt.option_id === optionId)
+      let label
+      let value
+      if (option) {
+        label = option.title
+        if (option.type === 'area') {
+          // if this is a text field, then the value is just the valueId
+          value = optionValueId.toString()
+        } else {
+          // find the value with the given id in the values array
+          value = option.values.find(
+            (val) => val.option_type_id.toString() === optionValueId.toString()
+          )?.title
+        }
+      }
+      return { label, value }
+    }
+
     productsObject[product.id] = {
       ...product,
+      getOptionInfo,
       commonAttributes: commonAttributesArrayToObject(product.commonAttributes),
     }
   })
@@ -205,6 +297,65 @@ function productsArrayToObject(products: MainProduct[]) {
 
 function mainProductsResponseToObject(response: { items: MainProduct[] }) {
   return productsArrayToObject(response.items)
+}
+
+type ParsedAttributes = {
+  [attributeCode: string]: {
+    label: string
+    optionType: string
+    values: {
+      [valueId: string]: string
+    }
+  }
+}
+
+export function mapOptionValues(
+  options: ProductOption[],
+  parsedAttributes: ParsedAttributes,
+  mainProduct: ParsedMainProduct
+): ProductOption[] {
+  const result = options.map((option) => {
+    const { externalValue: valueId, externalId: optionId } = option
+    const mappedOption = { ...option }
+
+    switch (option.type) {
+      case 'attribute': {
+        if (optionId && valueId) {
+          const attribute = parsedAttributes[optionId?.toString()]
+          if (attribute) {
+            const { label } = attribute
+            const value =
+              attribute.optionType === 'area'
+                ? valueId
+                : attribute.values[valueId]
+            mappedOption.label = label
+            mappedOption.value = value.toString()
+          } else {
+            console.log(`attribute ${optionId} is undefined`)
+          }
+        }
+        break
+      }
+      case 'option': {
+        if (optionId && valueId) {
+          const { label, value } = mainProduct.getOptionInfo(optionId, valueId)
+          if (label) {
+            mappedOption.label = label
+          }
+          if (value) {
+            mappedOption.value = value
+          }
+        }
+        break
+      }
+      default: {
+        break
+      }
+    }
+    return mappedOption
+  })
+
+  return result
 }
 
 // export const extractOptionsAndAttributes = (
@@ -253,8 +404,8 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
     prod.product_option?.extension_attributes?.configurable_item_options?.map(
       ({ option_id: extId, option_value: extValue }) => {
         const result = {
-          label: `attribute label ${displayOrder}`,
-          value: `attribute value ${displayOrder}`,
+          label: `attribute ${displayOrder}`,
+          value: `value ${displayOrder}`,
           externalId: Number(extId),
           externalValue: extValue,
           type: 'attribute' as const,
@@ -265,20 +416,20 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
       }
     ) || []
   const allOptions: ProductOption[] =
-    prod.product_option?.extension_attributes?.custom_options?.map(
-      ({ option_id: extId, option_value: extValue }) => {
+    prod.product_option?.extension_attributes?.custom_options
+      ?.filter(({ option_value: extValue }) => extValue !== '')
+      ?.map(({ option_id: extId, option_value: extValue }) => {
         const result = {
-          label: `option label ${displayOrder}`,
-          value: `option value ${displayOrder}`,
+          label: `option ${displayOrder}`,
+          value: `value ${displayOrder}`,
           externalId: Number(extId),
-          externalValue: Number(extValue),
+          externalValue: extValue,
           type: 'option' as const,
           sortOrder: displayOrder,
         }
         displayOrder += 1
         return result
-      }
-    ) || []
+      }) || []
 
   const options = [...allAttributes, ...allOptions]
 
@@ -286,7 +437,7 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
     name,
     type,
     externalId,
-    // sku,
+    sku: undefined,
     configuration: {
       totalTax,
       createdAt: parseISO(`${createdAt}Z`),
@@ -497,8 +648,71 @@ function magentoOrder<T extends TResponseGetMagentoOrder>(rawResponse: T) {
   return result
 }
 
+function finalizeOrderDetails([products, attributes, notFullOrder]: [
+  ParsedMainProducts,
+  ParsedAttributes,
+  Order
+]): Order {
+  const finalOrderResult = { ...notFullOrder }
+  finalOrderResult.products = finalOrderResult.products.map((product) => {
+    const {
+      configuration,
+      name,
+      // assemblyInstructions,
+      // brand,
+      externalId,
+      // image,
+      // productSpecs,
+      // sku,
+      type,
+      // url,
+      // id,
+      // createdAt,
+      // updatedAt,
+      // volume,
+    } = product
+
+    const updatedProduct: Product = {
+      name,
+      type,
+      externalId,
+      configuration: {
+        ...configuration,
+      },
+    }
+
+    // copy over the common attributes
+    if (externalId) {
+      updatedProduct.sku = products[externalId].sku
+
+      const brandId = products[externalId].commonAttributes.product_brand
+      if (brandId) {
+        updatedProduct.brand = attributes.product_brand.values[brandId]
+      }
+
+      updatedProduct.url = products[externalId].commonAttributes.url_key
+      updatedProduct.assemblyInstructions =
+        products[externalId].commonAttributes.assembly_instructions
+      updatedProduct.productSpecs =
+        products[externalId].commonAttributes.product_specs
+      updatedProduct.image = products[externalId].commonAttributes.image
+
+      updatedProduct.configuration.options = mapOptionValues(
+        configuration.options,
+        attributes,
+        products[externalId]
+      )
+    }
+
+    return updatedProduct
+  })
+  return finalOrderResult
+}
+
 export const parseMagentoAttribute = safeParse(magentoAttribute)
 export const parseMagentoOrderResponse = safeParse(magentoOrder)
 // export const getOptionsAndAttributes = safeParse(extractOptionsAndAttributes)
 // export const parseMainProductsInfo = safeParse(productsArrayToObject)
 export const parseMainProductsInfo = safeParse(mainProductsResponseToObject)
+export const parseAttributesInfo = safeParse(attributesResponseToObject)
+export const combineOrderDetails = safeParse(finalizeOrderDetails)

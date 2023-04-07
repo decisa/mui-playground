@@ -7,7 +7,6 @@ import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { TAttribute } from '../Magento/magentoTypes'
 import { MagentoError } from '../Magento/MagentoError'
 import { Order } from '../DB/dbtypes'
-import { parseMainProductsInfo } from '../Magento/magentoParsers'
 
 const Item = styled(Paper)(() => ({
   padding: '5px',
@@ -17,46 +16,11 @@ const Item = styled(Paper)(() => ({
 export default function MagentoPage() {
   // console.log('rendering magento page')
   const [brands, setBrands] = React.useState<TAttribute | null>(null)
-  const [order, setOrder] = React.useState<Order[]>()
+  const [order, setOrder] = React.useState<Order>()
 
   const snack = useSnackBar()
 
-  const {
-    getAttributeByCode,
-    getOrderById,
-    getProductsById,
-    getAttributesById,
-  } = useMagentoAPI()
-
-  React.useEffect(() => {
-    if (order && order.length > 0) {
-      const allAttributes = order[0].products.flatMap((x) =>
-        x.configuration.options
-          .filter((z) => z.type === 'attribute')
-          .map((y) => y.externalId)
-      )
-
-      const productIds = order[0].products
-        .map((prod) => prod.externalId)
-        .filter((x) => x !== undefined) as number[]
-
-      // console.log('productIds:', productIds)
-      console.log('all attributes: ', allAttributes)
-
-      getProductsById(productIds.join(','))
-        .andThen(parseMainProductsInfo)
-        .map((x) => {
-          console.log('parsed main products:', x)
-          return x
-        })
-        .mapErr((e) => console.log('error!', e))
-
-      getAttributesById(allAttributes.join(',')).map((x) => {
-        console.log('attributes by id:', x)
-        return x
-      })
-    }
-  }, [order])
+  const { getAttributeByCode, getOrderById, getOrderDetails } = useMagentoAPI()
 
   return (
     <Paper>
@@ -87,12 +51,35 @@ export default function MagentoPage() {
         onClick={() => {
           console.log('hi')
           // getOrderById('100002726')
-          getOrderById('100004974')
+          getOrderById('100005081, 100002726') // Eric Smith
+            // getOrderById('100005622') // Amanda Bartlett missing options
+            // getOrderById('100004974')
             .map((orderResult) => {
-              // console.log(JSON.stringify(order, null, 2))
               console.log('received orders:', orderResult)
-              setOrder(orderResult)
+              if (orderResult && orderResult.length > 0) {
+                setOrder(orderResult[0])
+              }
               return orderResult
+            })
+            .map((orders) => {
+              if (orders && orders.length > 0) {
+                getOrderDetails(orders[0])
+                  .map((orderResult) => {
+                    setOrder(orderResult)
+                    // setFinalOrder(orderResult)
+                    return orderResult
+                  })
+                  .mapErr((error) => {
+                    if (error instanceof Error) {
+                      snack.error(error.message)
+                      return error
+                    }
+                    const errors = error.map((err) => err.message)
+                    snack.error(errors.join(', '))
+                    return error
+                  })
+              }
+              return orders
             })
             .mapErr((error) => {
               console.log('error: ', error)
@@ -108,6 +95,24 @@ export default function MagentoPage() {
             <Item key={option.value}>{option.label}</Item>
           ))}
         </Stack>
+      ) : null}
+
+      {order ? (
+        <pre>
+          {order.customer.firstName} {order.customer.lastName}{' '}
+          {`\n\n${order.orderNumber}\n\n`}
+          {order?.products
+            .map(({ name, brand, configuration }) => {
+              const title = `${configuration.qtyOrdered}× ${name}${
+                brand ? ` by ${String(brand)}` : ''
+              }`
+              const options = configuration.options
+                .map(({ label, value }) => ` > ${label}: ${value}`)
+                .join('\n')
+              return `${title}\n${options}`
+            })
+            .join('\n\n')}
+        </pre>
       ) : null}
 
       <SnackBar snack={snack} />

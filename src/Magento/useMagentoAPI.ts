@@ -2,6 +2,7 @@ import { ResultAsync, err, okAsync } from 'neverthrow'
 import { useMagentoNeverthrowContext } from './magentoAPIContext'
 import { toErrorWithMessage } from '../utils/errorHandling'
 import {
+  MagentoAttributeRaw,
   MainProduct,
   TConditionType,
   TMagentoAtrribute,
@@ -9,9 +10,13 @@ import {
 } from './magentoTypes'
 import { MagentoError } from './MagentoError'
 import {
+  combineOrderDetails,
+  parseAttributesInfo,
   parseMagentoAttribute,
   parseMagentoOrderResponse,
+  parseMainProductsInfo,
 } from './magentoParsers'
+import { Order } from '../DB/dbtypes'
 
 const domain = 'https://stage.roomservice360.com'
 const apiPath = `${domain}/rest/default`
@@ -160,7 +165,6 @@ export const useMagentoAPI = () => {
       method: 'GET',
       name: 'getAttributeByCode',
     }).andThen(parseMagentoAttribute)
-    // .map(parseMagentoAttribute)
   }
 
   const getOrderById = (orderId: string) => {
@@ -172,6 +176,7 @@ export const useMagentoAPI = () => {
     }).andThen(parseMagentoOrderResponse)
   }
 
+  // TODO: add parser at the end
   const getProductsById = (productIds: string) => {
     const url = getProductsByIdUrl(productIds)
     return fetchWithToken<{
@@ -184,13 +189,41 @@ export const useMagentoAPI = () => {
     }) // .andThen((parseMagentoOrderResponse))
   }
 
+  // TODO: add parser at the end
   const getAttributesById = (attributeIds: string) => {
     const url = getAttributesByIdUrl(attributeIds)
-    return fetchWithToken<unknown>({
+    return fetchWithToken<{
+      items: MagentoAttributeRaw[]
+      total_count: number
+    }>({
       url,
       method: 'GET',
       name: 'getAttributesById',
     }) // .andThen((parseMagentoOrderResponse))
+  }
+
+  const getOrderDetails = (order: Order) => {
+    // get all attribute IDs that we need to fetch
+    const allAttributes =
+      order.products.flatMap((x) =>
+        x.configuration.options
+          .filter((z) => z.type === 'attribute')
+          .map((y) => y.externalId)
+      ) || []
+
+    // add product_brand to the list of fetched attributes:
+    allAttributes.push(141)
+
+    // get all main product IDs that we need to fetch
+    const productIds = order.products
+      .map((prod) => prod.externalId)
+      .filter((x) => x !== undefined) as number[]
+
+    return ResultAsync.combineWithAllErrors([
+      getProductsById(productIds.join(',')).andThen(parseMainProductsInfo),
+      getAttributesById(allAttributes.join(',')).andThen(parseAttributesInfo),
+      okAsync(order),
+    ]).andThen(combineOrderDetails)
   }
 
   return {
@@ -198,5 +231,6 @@ export const useMagentoAPI = () => {
     getOrderById,
     getProductsById,
     getAttributesById,
+    getOrderDetails,
   }
 }
