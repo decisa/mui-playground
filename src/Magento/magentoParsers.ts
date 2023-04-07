@@ -328,8 +328,12 @@ export function mapOptionValues(
               attribute.optionType === 'area'
                 ? valueId
                 : attribute.values[valueId]
+
+            console.log('value, label = ', value, label)
             mappedOption.label = label
-            mappedOption.value = value.toString()
+            if (value) {
+              mappedOption.value = value.toString()
+            }
           } else {
             console.log(`attribute ${optionId} is undefined`)
           }

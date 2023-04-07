@@ -47,7 +47,7 @@ function createSearchFilter(
     const conditionPart = `searchCriteria[filter_groups][0][filters][${index}][condition_type]=${conditionType}`
     return [fieldPart, valuePart, conditionPart].join('&')
   })
-  console.log('result search query:', result)
+  // console.log('result search query:', result)
   return result.join('&')
 }
 
@@ -62,6 +62,17 @@ function getProductsByIdUrl(productIds: string): string {
   return encodeURI(`${apiPath}/V1/products?${searchCriteria}`)
 }
 
+// function getProductsByIdsWildcardUrl(productIds: string): string {
+//   const searchCriteria = createSearchFilter(
+//     productIds,
+//     'entity_id',
+//     'in',
+//     true,
+//     true
+//   )
+//   return encodeURI(`${apiPath}/V1/products?${searchCriteria}`)
+// }
+
 function getAttributesByIdUrl(productIds: string): string {
   const searchCriteria = createSearchFilter(
     productIds,
@@ -73,7 +84,7 @@ function getAttributesByIdUrl(productIds: string): string {
   return encodeURI(`${apiPath}/V1/products/attributes?${searchCriteria}`)
 }
 
-function getOrderByIdUrl(orderIds: string): string {
+function getOrdersByIdUrl(orderIds: string): string {
   // %25 is encoding for % - wildcard for search result
   const searchCriteria = createSearchFilter(orderIds, 'increment_id', 'like')
   // console.log('searchCriteria', searchCriteria)
@@ -89,6 +100,7 @@ export const reportNetworkError = (error: unknown) => {
   return MagentoError.unknown(toErrorWithMessage(error))
 }
 
+// TODO: add timestamp when token was fetched and add functionality to re-fetch if more than 4 hours passed.
 export const useMagentoAPI = () => {
   const { getToken, renewToken } = useMagentoNeverthrowContext()
 
@@ -113,6 +125,18 @@ export const useMagentoAPI = () => {
   }) =>
     withToken()
       .andThen((token) => {
+        if (url) {
+          const conditionTypeQty = url.match(/condition_type/g)
+          if (conditionTypeQty && conditionTypeQty.length > 10) {
+            return err(
+              MagentoError.badData(
+                new Error(
+                  'Too many search params. Number of search params should not exceed 10'
+                )
+              )
+            )
+          }
+        }
         const fetchOptions: RequestInit = {
           method,
           headers: {
@@ -168,7 +192,7 @@ export const useMagentoAPI = () => {
   }
 
   const getOrderById = (orderId: string) => {
-    const url = getOrderByIdUrl(orderId)
+    const url = getOrdersByIdUrl(orderId)
     return fetchWithToken<TResponseGetMagentoOrder>({
       url,
       method: 'GET',

@@ -2,6 +2,7 @@ import { Button, Paper } from '@mui/material'
 import React from 'react'
 import { Stack } from '@mui/system'
 import styled from '@emotion/styled'
+import { err } from 'neverthrow'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { TAttribute } from '../Magento/magentoTypes'
@@ -51,7 +52,10 @@ export default function MagentoPage() {
         onClick={() => {
           console.log('hi')
           // getOrderById('100002726')
-          getOrderById('100005081, 100002726') // Eric Smith
+
+          // getOrderById('5699,6427,6660,6760,6767,6782,6813,6816,6824,6835,2313') // too many
+          // getOrderById('5081, 2726') // Eric Smith
+          getOrderById('2077') // order with error 100002077
             // getOrderById('100005622') // Amanda Bartlett missing options
             // getOrderById('100004974')
             .map((orderResult) => {
@@ -66,15 +70,22 @@ export default function MagentoPage() {
                 getOrderDetails(orders[0])
                   .map((orderResult) => {
                     setOrder(orderResult)
-                    // setFinalOrder(orderResult)
                     return orderResult
                   })
                   .mapErr((error) => {
+                    console.log('ERRRRROR', error, error instanceof Error)
                     if (error instanceof Error) {
                       snack.error(error.message)
+                      console.log(
+                        'ERRRRROR',
+                        error.cause,
+                        error.code,
+                        error.name,
+                        error.stack
+                      )
                       return error
                     }
-                    const errors = error.map((err) => err.message)
+                    const errors = error.map((z) => z.message)
                     snack.error(errors.join(', '))
                     return error
                   })
@@ -82,7 +93,8 @@ export default function MagentoPage() {
               return orders
             })
             .mapErr((error) => {
-              console.log('error: ', error)
+              snack.error(error.message)
+              console.log('ERRRRROR', error)
               return error
             })
         }}
