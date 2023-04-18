@@ -17,9 +17,10 @@ import {
   parseMainProductsInfo,
 } from './magentoParsers'
 import { Order } from '../DB/dbtypes'
+import { apiPath } from './magentoAuthorize'
 
-const domain = 'https://stage.roomservice360.com'
-const apiPath = `${domain}/rest/default`
+// const domain = 'https://stage.roomservice360.com'
+// const apiPath = `${domain}/rest/default`
 
 function getProductAttributeByCodeUrl(attributeCode: string) {
   return `${apiPath}/V1/products/attributes/${attributeCode}`
