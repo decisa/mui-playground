@@ -241,7 +241,7 @@ type ParsedMainProducts = {
 }
 
 function productsArrayToObject(products: MainProduct[]) {
-  console.log('products:', products)
+  // console.log('products:', products)
   const parsedProducts = products.map((product) => {
     const {
       sku,
@@ -329,7 +329,7 @@ export function mapOptionValues(
                 ? valueId
                 : attribute.values[valueId]
 
-            console.log('value, label = ', value, label)
+            // console.log('value, label = ', value, label)
             mappedOption.label = label
             if (value) {
               mappedOption.value = value.toString()
