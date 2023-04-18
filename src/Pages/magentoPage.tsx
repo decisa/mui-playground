@@ -17,7 +17,7 @@ export default function MagentoPage() {
   const getOrders = () => {
     getOrderById(orderNumbers) // order with error 100002077 5081 eric
       .map((orderResult) => {
-        console.log('received orders:', orderResult)
+        // console.log('received orders:', orderResult)
         if (orderResult && orderResult.length > 0) {
           setOrder(orderResult[0])
         }
@@ -32,6 +32,7 @@ export default function MagentoPage() {
           getOrderDetails(orders[0])
             .map((orderResult) => {
               setOrder(orderResult)
+              console.log('final order:', orderResult)
               return orderResult
             })
             .mapErr((error) => {
