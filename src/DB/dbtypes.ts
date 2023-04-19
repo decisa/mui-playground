@@ -130,7 +130,7 @@ export type Order = {
   products: Product[]
   magento?: {
     externalId: number
-    quoteId: number
+    externalQuoteId: number
     state: string
     status: OrderStatus
     updatedAt?: Date

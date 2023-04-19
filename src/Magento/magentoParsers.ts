@@ -533,7 +533,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     customer_is_guest: isGuest,
     customer_lastname: customerLastName,
     increment_id: orderNumber,
-    quote_id: quoteId,
+    quote_id: externalQuoteId,
     entity_id: externalId,
     shipping_description: shippingDescription,
     shipping_amount: shippingCost,
@@ -542,9 +542,10 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     items,
     billing_address: rawBillingAddress,
     payment: paymentInfo,
-    subtotal,
-    subtotal_incl_tax: subtotalTaxed,
+    tax_amount: taxAmount,
+    total_paid: totalPaid,
     status_histories: comments,
+    updated_at: updatedAt,
     extension_attributes: {
       applied_taxes: appliedTaxes,
       shipping_assignments: shippingAssignments,
@@ -567,6 +568,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
   }
 
   // Taxes parsing:
+  console.log('applied taxes:', appliedTaxes)
   let taxRate = appliedTaxes
     .filter((x) => x.code !== 'shipping')
     .reduce((a, c) => a + c.percent, 0)
@@ -575,11 +577,14 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     .filter((x) => x.code !== 'shipping')
     .map((x) => x.title)
 
+  console.log('taxRate', taxRate)
+  console.log('collectedTaxes', collectedTaxes)
   if (taxRate === 0) {
     // calculate tax percent rounded to 3 decimal places
-    taxRate =
-      Math.round(((subtotalTaxed - subtotal) * 100000) / subtotal) / 1000
+
+    taxRate = Math.round((taxAmount * 100000) / (totalPaid - taxAmount)) / 1000
   }
+  console.log('final taxRate', taxRate)
 
   const billingAddress = parseMagentoOrderAddress(rawBillingAddress)
   const shippingAddress = parseMagentoOrderAddress(rawShippingAddress)
@@ -612,10 +617,10 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
 
   const orderMagentoInfo: Order['magento'] = {
     externalId,
-    quoteId,
+    externalQuoteId,
     state: orderState,
     status: orderStatus,
-    // updatedAt,
+    updatedAt: parseISO(`${updatedAt}Z`),
     // orderId,
   }
 
