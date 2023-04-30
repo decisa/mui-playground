@@ -6,6 +6,25 @@ import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { Order } from '../DB/dbtypes'
 
+type BrandShape =
+  | {
+      externalId?: number
+      name: string
+    }
+  | string
+  | undefined
+
+function getBrandInfo(brand: BrandShape) {
+  if (typeof brand === 'string') {
+    return ` by ${brand}`
+  }
+  if (brand?.name) {
+    return ` by ${brand.name}`
+  }
+  return ''
+}
+// brand ? ` by ${String(brand)}` : ''
+
 export default function MagentoPage() {
   const [order, setOrder] = React.useState<Order>()
   const [orderNumbers, setOrderNumbers] = React.useState('')
@@ -89,12 +108,13 @@ export default function MagentoPage() {
       {order ? (
         <pre>
           {order.customer.firstName} {order.customer.lastName}{' '}
-          {`\n\n${order.orderNumber}\n\n`}
+          {`\n\n${order.orderNumber} - ${String(order.magento?.status)}\n\n`}
           {order?.products
-            .map(({ name, brand, configuration }) => {
-              const title = `${configuration.qtyOrdered}× ${name}${
-                brand ? ` by ${String(brand)}` : ''
-              }`
+            .map((product) => {
+              const { name, brand, configuration } = product
+              const title = `${configuration.qtyOrdered}× ${name}${getBrandInfo(
+                brand
+              )}`
               const options = configuration.options
                 .map(({ label, value }) => ` > ${label}: ${value}`)
                 .join('\n')

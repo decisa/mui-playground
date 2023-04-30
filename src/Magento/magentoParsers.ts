@@ -92,7 +92,7 @@ const parseComment = (orderComment: TMagentoOrderComment): OrderComment => {
   } = orderComment
 
   return {
-    externalEntityId: entityId,
+    externalId: entityId,
     externalParentId: parentId,
     // id,
     // orderId,
@@ -316,7 +316,10 @@ export function mapOptionValues(
 ): ProductOption[] {
   const result = options.map((option) => {
     const { externalValue: valueId, externalId: optionId } = option
-    const mappedOption = { ...option }
+    const mappedOption = {
+      ...option,
+      externalValue: String(valueId),
+    }
 
     switch (option.type) {
       case 'attribute': {
@@ -595,7 +598,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     // updatedAt,
     // defaultShipping,
     magento: {
-      groupId: customerGroupId,
+      externalGroupId: customerGroupId,
       isGuest: Boolean(isGuest),
       email,
       // customerId,
@@ -603,7 +606,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
   }
 
   if (customerId && customer.magento) {
-    customer.magento.customerId = customerId
+    customer.magento.externalCustomerId = customerId
   }
 
   if (shippingAddress.phone !== billingAddress.phone) {
@@ -691,7 +694,10 @@ function finalizeOrderDetails([products, attributes, notFullOrder]: [
 
       const brandId = products[externalId].commonAttributes.product_brand
       if (brandId) {
-        updatedProduct.brand = attributes.product_brand.values[brandId]
+        updatedProduct.brand = {
+          name: attributes.product_brand.values[brandId],
+          externalId: parseInt(brandId),
+        }
       }
 
       updatedProduct.url = products[externalId].commonAttributes.url_key

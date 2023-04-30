@@ -37,10 +37,10 @@ export type Customer = {
   updatedAt?: Date
   defaultShipping?: Address
   magento?: {
-    groupId: number
+    externalGroupId: number
     isGuest: boolean
     email: string
-    customerId?: number
+    externalCustomerId?: number
   }
 }
 
@@ -54,7 +54,7 @@ export type OrderComment = {
   status: OrderStatus //
   createdAt?: Date
   updatedAt?: Date
-  externalEntityId?: number
+  externalId?: number
   externalParentId?: number
 }
 
@@ -97,7 +97,11 @@ export type Product = {
   sku?: string
   url?: string
   image?: string
-  brand?: unknown
+  brand?: {
+    id?: number
+    externalId?: number
+    name: string
+  }
   // brandId: {
   //   id,
   //   name,
