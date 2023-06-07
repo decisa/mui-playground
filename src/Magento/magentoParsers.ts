@@ -546,7 +546,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     billing_address: rawBillingAddress,
     payment: paymentInfo,
     tax_amount: taxAmount,
-    total_paid: totalPaid,
+    grand_total: grandTotal,
     status_histories: comments,
     updated_at: updatedAt,
     extension_attributes: {
@@ -571,18 +571,15 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
   }
 
   // Taxes parsing:
-  let taxRate = appliedTaxes
-    .filter((x) => x.code !== 'shipping')
-    .reduce((a, c) => a + c.percent, 0)
+  // calculate tax percent rounded to 3 decimal places
+  // 5234
+  const taxRate =
+    Math.round((taxAmount * 100000) / (grandTotal - taxAmount)) / 1000
 
+  console.log('taxRate', taxRate, taxAmount, grandTotal)
   const collectedTaxes = appliedTaxes
     .filter((x) => x.code !== 'shipping')
     .map((x) => x.title)
-
-  if (taxRate === 0) {
-    // calculate tax percent rounded to 3 decimal places
-    taxRate = Math.round((taxAmount * 100000) / (totalPaid - taxAmount)) / 1000
-  }
 
   const billingAddress = parseMagentoOrderAddress(rawBillingAddress)
   const shippingAddress = parseMagentoOrderAddress(rawShippingAddress)
@@ -693,10 +690,11 @@ function finalizeOrderDetails([products, attributes, notFullOrder]: [
       updatedProduct.sku = products[externalId].sku
 
       const brandId = products[externalId].commonAttributes.product_brand
-      if (brandId) {
+      const brandIdNum = brandId ? parseInt(brandId) : 0
+      if (brandIdNum) {
         updatedProduct.brand = {
-          name: attributes.product_brand.values[brandId],
-          externalId: parseInt(brandId),
+          name: attributes.product_brand.values[brandIdNum],
+          externalId: brandIdNum,
         }
       }
 

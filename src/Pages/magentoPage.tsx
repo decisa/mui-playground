@@ -1,4 +1,4 @@
-import React, { KeyboardEventHandler } from 'react'
+import React, { KeyboardEventHandler, useEffect } from 'react'
 import { Box, Button, Paper, TextField } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
@@ -28,8 +28,20 @@ function getBrandInfo(brand: BrandShape) {
 export default function MagentoPage() {
   const [order, setOrder] = React.useState<Order>()
   const [orderNumbers, setOrderNumbers] = React.useState('')
+  const [search, setSearch] = React.useState('')
 
   const snack = useSnackBar()
+
+  useEffect(() => {
+    if (search.length > 0) {
+      fetch(`http://localhost:8080/order?search=${search}`, { method: 'GET' })
+        .then((res) => res.json())
+        .then((res) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, prettier/prettier
+          console.log(res.results.map((x: { orderNumber: any }) => x.orderNumber).join(', '))
+        })
+    }
+  }, [search])
 
   const { getOrderById, getOrderDetails } = useMagentoAPI()
 
@@ -105,6 +117,14 @@ export default function MagentoPage() {
           search
         </Button>
       </Stack>
+      <TextField
+        id="search-order"
+        label="search order"
+        variant="standard"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        // onKeyDown={handleKeyboard}
+      />
       {order ? (
         <pre>
           {order.customer.firstName} {order.customer.lastName}{' '}
