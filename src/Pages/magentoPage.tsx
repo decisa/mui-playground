@@ -1,5 +1,7 @@
+import * as yup from 'yup'
+import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
 import React, { KeyboardEventHandler, useEffect } from 'react'
-import { Box, Button, Paper, TextField } from '@mui/material'
+import { Box, Button, Paper, TextField, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
@@ -28,20 +30,8 @@ function getBrandInfo(brand: BrandShape) {
 export default function MagentoPage() {
   const [order, setOrder] = React.useState<Order>()
   const [orderNumbers, setOrderNumbers] = React.useState('')
-  const [search, setSearch] = React.useState('')
 
   const snack = useSnackBar()
-
-  useEffect(() => {
-    if (search.length > 0) {
-      fetch(`http://localhost:8080/order?search=${search}`, { method: 'GET' })
-        .then((res) => res.json())
-        .then((res) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, prettier/prettier
-          console.log(res.results.map((x: { orderNumber: any }) => x.orderNumber).join(', '))
-        })
-    }
-  }, [search])
 
   const { getOrderById, getOrderDetails } = useMagentoAPI()
 
@@ -117,33 +107,110 @@ export default function MagentoPage() {
           search
         </Button>
       </Stack>
-      <TextField
-        id="search-order"
-        label="search order"
-        variant="standard"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        // onKeyDown={handleKeyboard}
-      />
+
       {order ? (
-        <pre>
-          {order.customer.firstName} {order.customer.lastName}{' '}
-          {`\n\n${order.orderNumber} - ${String(order.magento?.status)}\n\n`}
-          {order?.products
-            .map((product) => {
-              const { name, brand, configuration } = product
-              const title = `${configuration.qtyOrdered}× ${name}${getBrandInfo(
-                brand
-              )}`
-              const options = configuration.options
-                .map(({ label, value }) => ` > ${label}: ${value}`)
-                .join('\n')
-              return `${title}\n${options}`
-            })
-            .join('\n\n')}
-        </pre>
+        <>
+          <pre>
+            {order.customer.firstName} {order.customer.lastName}{' '}
+            {`\n\n${order.orderNumber} - ${String(order.magento?.status)}\n\n`}
+            {order?.products
+              .map((product) => {
+                const { name, brand, configuration } = product
+                const title = `${
+                  configuration.qtyOrdered
+                }× ${name}${getBrandInfo(brand)}`
+                const options = configuration.options
+                  .map(({ label, value }) => ` > ${label}: ${value}`)
+                  .join('\n')
+                return `${title}\n${options}`
+              })
+              .join('\n\n')}
+          </pre>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              console.log('importing order', order)
+              fetch('http://192.168.168.236:8080/order/magento', {
+                method: 'PUT',
+                body: JSON.stringify(order),
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              })
+                .then((res) => {
+                  if (!res.ok) {
+                    let errorText = `${res.statusText} - `
+                    return res.json().then((err) => {
+                      console.log('err', err)
+                      if (err && typeof err === 'object' && 'error' in err) {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                        errorText += String(err.error)
+                      }
+                      throw new Error(errorText)
+                    })
+                  }
+                  return res.json()
+                })
+                .then((res) => {
+                  console.log('res', res)
+                  snack.success('order imported')
+                })
+                .catch((err) => {
+                  console.log('err', err)
+                  snack.error(String(err))
+                })
+              // snack.success('order imported')
+            }}
+          >
+            Import
+          </Button>
+        </>
       ) : null}
 
+      <Grid container alignItems="center" justifyContent="space-between">
+        <Grid xs={6}>
+          <Typography variant="body1">Subtotal</Typography>
+        </Grid>
+        <Grid xs={6} textAlign="right">
+          <Typography variant="body1">$100.00</Typography>
+        </Grid>
+      </Grid>
+
+      <Grid container justifyContent="space-between" alignItems="center">
+        <Grid xs={6}>
+          <Typography variant="body1">Discount</Typography>
+        </Grid>
+        <Grid xs={6} textAlign="right">
+          <Typography variant="body1">$10.00</Typography>
+        </Grid>
+      </Grid>
+
+      <Grid container justifyContent="space-between" alignItems="center">
+        <Grid xs={6}>
+          <Typography variant="body1">Shipping Cost</Typography>
+        </Grid>
+        <Grid xs={6} textAlign="right">
+          <Typography variant="body1">$5.00</Typography>
+        </Grid>
+      </Grid>
+
+      <Grid container justifyContent="space-between" alignItems="center">
+        <Grid xs={6}>
+          <Typography variant="body1">Tax</Typography>
+        </Grid>
+        <Grid xs={6} textAlign="right">
+          <Typography variant="body1">$8.50</Typography>
+        </Grid>
+      </Grid>
+
+      <Grid container justifyContent="space-between" alignItems="center">
+        <Grid xs={6}>
+          <Typography variant="h6">Grand Total</Typography>
+        </Grid>
+        <Grid xs={6} textAlign="right">
+          <Typography variant="h6">$103.50</Typography>
+        </Grid>
+      </Grid>
       <SnackBar snack={snack} />
     </Box>
   )
