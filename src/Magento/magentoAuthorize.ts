@@ -6,9 +6,14 @@ import { reportNetworkError } from './useMagentoAPI'
 
 const usr = process.env.REACT_APP_MAGENTO_USER || ''
 const pass = process.env.REACT_APP_MAGENTO_PASS || ''
-export const domain = 'https://www.roomservice360.com'
+export const domain =
+  process.env.REACT_APP_MAGENTO_DOMAIN || 'https://www.roomservice360.com'
 export const apiPath = `${domain}/rest/default`
 
+console.log('domain', domain)
+console.log('apiPath', apiPath)
+console.log('usr', usr)
+console.log('pass', pass)
 // *************** URLS ***************
 function getTokenUrl(user = '', password = '') {
   return `${apiPath}/V1/integration/admin/token/?username=${`${user}`}&password=${password}`

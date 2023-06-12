@@ -162,7 +162,10 @@ export default function OrderPage() {
 
   useEffect(() => {
     if (search.length > 0) {
-      fetch(`http://192.168.168.236:8080/order?search=${search}`, {
+      // fetch(`http://192.168.168.236:8080/order?search=${search}`, {
+      //   method: 'GET',
+      // })
+      fetch(`http://localhost:8080/order?search=${search}`, {
         method: 'GET',
       })
         .then((res) => res.json())

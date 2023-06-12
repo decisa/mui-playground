@@ -7,6 +7,7 @@ import SearchIcon from '@mui/icons-material/Search'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { Order } from '../DB/dbtypes'
+import OrderConfirmation from '../Components/Order/OrderConfirmation'
 
 type BrandShape =
   | {
@@ -130,7 +131,8 @@ export default function MagentoPage() {
             variant="outlined"
             onClick={() => {
               console.log('importing order', order)
-              fetch('http://192.168.168.236:8080/order/magento', {
+              // fetch('http://192.168.168.236:8080/order/magento', {
+              fetch('http://localhost:8080/order/magento', {
                 method: 'PUT',
                 body: JSON.stringify(order),
                 headers: {
@@ -166,6 +168,8 @@ export default function MagentoPage() {
           </Button>
         </>
       ) : null}
+
+      {order ? <OrderConfirmation order={order} /> : null}
 
       <Grid container alignItems="center" justifyContent="space-between">
         <Grid xs={6}>
