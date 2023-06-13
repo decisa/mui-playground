@@ -7,15 +7,27 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
+  IconButton,
 } from '@mui/material'
+import { useContext } from 'react'
+import { useTheme } from '@mui/material/styles'
 import { Link } from 'react-router-dom'
-
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import { mainNavbarItems } from './consts/navBarListItems'
 import { mainNavBarStyles } from './styles'
+import { ColorModeContext, tokens } from '../../theme'
 
 // const drawerWidth = 240
 
-export default function Navbar() {
+type NavbarProps = {
+  className?: string
+}
+export default function Navbar({ className }: NavbarProps) {
+  const theme = useTheme()
+  const colors = tokens(theme.palette.mode)
+  const { toggleColorMode } = useContext(ColorModeContext)
+
   const mainMenuItems = mainNavbarItems.map((mainMenuItem) => {
     const { id, icon, label, path } = mainMenuItem
     return (
@@ -30,8 +42,21 @@ export default function Navbar() {
     )
   })
   return (
-    <Drawer sx={mainNavBarStyles.drawer} variant="permanent" anchor="left">
-      <Toolbar />
+    <Drawer
+      sx={mainNavBarStyles.drawer}
+      variant="permanent"
+      anchor="left"
+      className={className}
+    >
+      <Toolbar>
+        <IconButton type="button" onClick={toggleColorMode}>
+          {theme.palette.mode === 'dark' ? (
+            <LightModeOutlinedIcon />
+          ) : (
+            <DarkModeOutlinedIcon sx={{ color: colors.primary[900] }} />
+          )}
+        </IconButton>
+      </Toolbar>
       <Divider />
       <List>{mainMenuItems}</List>
       <Divider />

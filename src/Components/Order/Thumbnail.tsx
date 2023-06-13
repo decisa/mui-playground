@@ -17,9 +17,10 @@ const Thumbnail = ({ product }: ThumbnailProps) => {
       sx={{
         width: 1,
         maxWidth: 150,
-        minWidth: 50,
+        minWidth: 120,
         aspectRatio: '3/2',
         position: 'relative',
+        // mb: 'auto',
       }}
     >
       <img

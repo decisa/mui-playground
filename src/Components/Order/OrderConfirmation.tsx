@@ -23,7 +23,7 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
   console.log('OrderConfirmation:', billingAddress)
   return (
     <Paper>
-      <Card sx={{ p: 2 }}>
+      <Card sx={{ p: 2, border: 'none', boxShadow: 'none' }}>
         <Grid container alignItems="center">
           <Grid xs={6}>
             <h1>room service 360</h1>
@@ -37,23 +37,23 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
         </Grid>
       </Card>
       <hr />
-      <Card sx={{ px: 2 }}>
+      <Card sx={{ px: 2, border: 'none', boxShadow: 'none' }}>
         <Grid container>
           <Grid xs={6}>
-            <Typography variant="body2" fontWeight={700}>
+            <Typography variant="h6" fontWeight={700}>
               billing address
             </Typography>
             <OrderAddress address={billingAddress} />
           </Grid>
           <Grid xs={6}>
-            <Typography variant="body1" fontWeight={700}>
+            <Typography variant="h6" fontWeight={700}>
               shipping address
             </Typography>
             <OrderAddress address={shippingAddress} />
           </Grid>
         </Grid>
       </Card>
-      <Card sx={{ p: 2 }}>
+      <Card sx={{ p: 2, border: 'none', boxShadow: 'none' }}>
         <Grid container>
           <Grid xs={6}>
             <Typography variant="h6">payment method</Typography>
@@ -65,7 +65,7 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
           </Grid>
         </Grid>
       </Card>
-      <hr />
+
       <ProductsTable products={products} />
     </Paper>
   )

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import * as React from 'react'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import type { TreeItemProps } from '@mui/lab/TreeItem'
@@ -8,10 +9,9 @@ import Box from '@mui/material/Box'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import { styled } from '@mui/material/styles'
-import * as React from 'react'
-import type { Control, FieldValues, FieldPath } from 'react-hook-form'
-import { useController } from 'react-hook-form'
 
+import { useController } from 'react-hook-form'
+import type { Control, FieldValues, FieldPath } from 'react-hook-form'
 import { isEmptyObject } from '../../utils/utils'
 
 export type TNestedCheckbox = {

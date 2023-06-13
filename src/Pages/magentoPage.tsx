@@ -8,6 +8,7 @@ import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { Order } from '../DB/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
+import { order as initOrder } from '../mockData'
 
 type BrandShape =
   | {
@@ -29,7 +30,7 @@ function getBrandInfo(brand: BrandShape) {
 // brand ? ` by ${String(brand)}` : ''
 
 export default function MagentoPage() {
-  const [order, setOrder] = React.useState<Order>()
+  const [order, setOrder] = React.useState<Order>(initOrder)
   const [orderNumbers, setOrderNumbers] = React.useState('')
 
   const snack = useSnackBar()
@@ -109,7 +110,7 @@ export default function MagentoPage() {
         </Button>
       </Stack>
 
-      {order ? (
+      {/* {order ? (
         <>
           <pre>
             {order.customer.firstName} {order.customer.lastName}{' '}
@@ -167,7 +168,7 @@ export default function MagentoPage() {
             Import
           </Button>
         </>
-      ) : null}
+      ) : null} */}
 
       {order ? <OrderConfirmation order={order} /> : null}
 
