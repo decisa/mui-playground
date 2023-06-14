@@ -28,7 +28,10 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
       {options && options.length > 0 && (
         <List>
           {options.map((option) => (
-            <ListItem key={option.id} sx={{ py: 0, alignItems: 'start' }}>
+            <ListItem
+              key={option.id || option.externalId}
+              sx={{ py: 0, alignItems: 'start' }}
+            >
               <ListItemIcon sx={{ minWidth: 30, pt: 0.25 }}>
                 <ChevronRightIcon fontSize="small" />
               </ListItemIcon>

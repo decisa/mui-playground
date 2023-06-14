@@ -22,14 +22,14 @@ const OrderAddress = ({ address }: OrderAddressProps) => {
     notes,
   } = address
   return (
-    <Card variant="outlined" sx={{ border: 'none' }}>
+    <Card sx={{ border: 'none', boxShadow: 'none' }}>
       <Typography variant="body1">{`${firstName} ${lastName}`}</Typography>
       {company && <Typography variant="body2">{company}</Typography>}
       {email && <Typography variant="body2">{email}</Typography>}
       <Typography
         variant="body2"
         sx={{ whiteSpace: 'pre-wrap' }}
-        color="text.secondary"
+        color="textSecondary"
       >{`${street.join('\n')}\n${city}, ${state} ${zipCode}`}</Typography>
       <Typography variant="body2">{phone}</Typography>
       {altPhone && <Typography variant="body2">{altPhone}</Typography>}

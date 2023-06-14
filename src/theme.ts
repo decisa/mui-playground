@@ -2,6 +2,7 @@ import { createTheme, ThemeOptions } from '@mui/material/styles'
 import { PaletteMode } from '@mui/material'
 // import { ThemeOptions } from '@mui/system'
 import { createContext, useMemo, useState } from 'react'
+import { lineHeight } from '@mui/system'
 
 // color design tokens
 export const tokens = (mode: string) => ({
@@ -128,6 +129,20 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
   const colors = tokens(mode)
 
   const options: ThemeOptions = {
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          contained: {
+            color: '#fff',
+            backgroundColor: colors.blueAccent[500],
+            '&:hover': {
+              color: '#fff',
+              backgroundColor: colors.blueAccent[300],
+            },
+          },
+        },
+      },
+    },
     palette: {
       mode,
       ...(mode === 'dark'
@@ -213,7 +228,14 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
       body2: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
         fontSize: 14,
-        fontWeight: 300,
+        fontWeight: 400,
+      },
+      button: {
+        FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
+        fontWeight: 400,
+        fontSize: 16,
+        lineHeight: 1.75,
+        textTransform: 'lowercase',
       },
     },
   }

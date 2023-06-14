@@ -30,7 +30,7 @@ function getBrandInfo(brand: BrandShape) {
 // brand ? ` by ${String(brand)}` : ''
 
 export default function MagentoPage() {
-  const [order, setOrder] = React.useState<Order>(initOrder)
+  const [order, setOrder] = React.useState<Order | undefined>(initOrder)
   const [orderNumbers, setOrderNumbers] = React.useState('')
 
   const snack = useSnackBar()
@@ -102,7 +102,7 @@ export default function MagentoPage() {
           onKeyDown={handleKeyboard}
         />
         <Button
-          variant="text"
+          variant="contained"
           startIcon={<SearchIcon />}
           onClick={() => getOrders()}
         >
@@ -110,9 +110,9 @@ export default function MagentoPage() {
         </Button>
       </Stack>
 
-      {/* {order ? (
+      {order ? (
         <>
-          <pre>
+          {/* <pre>
             {order.customer.firstName} {order.customer.lastName}{' '}
             {`\n\n${order.orderNumber} - ${String(order.magento?.status)}\n\n`}
             {order?.products
@@ -127,9 +127,10 @@ export default function MagentoPage() {
                 return `${title}\n${options}`
               })
               .join('\n\n')}
-          </pre>
+          </pre> */}
           <Button
-            variant="outlined"
+            variant="contained"
+            sx={{ mb: 4 }}
             onClick={() => {
               console.log('importing order', order)
               // fetch('http://192.168.168.236:8080/order/magento', {
@@ -168,54 +169,10 @@ export default function MagentoPage() {
             Import
           </Button>
         </>
-      ) : null} */}
+      ) : null}
 
       {order ? <OrderConfirmation order={order} /> : null}
 
-      <Grid container alignItems="center" justifyContent="space-between">
-        <Grid xs={6}>
-          <Typography variant="body1">Subtotal</Typography>
-        </Grid>
-        <Grid xs={6} textAlign="right">
-          <Typography variant="body1">$100.00</Typography>
-        </Grid>
-      </Grid>
-
-      <Grid container justifyContent="space-between" alignItems="center">
-        <Grid xs={6}>
-          <Typography variant="body1">Discount</Typography>
-        </Grid>
-        <Grid xs={6} textAlign="right">
-          <Typography variant="body1">$10.00</Typography>
-        </Grid>
-      </Grid>
-
-      <Grid container justifyContent="space-between" alignItems="center">
-        <Grid xs={6}>
-          <Typography variant="body1">Shipping Cost</Typography>
-        </Grid>
-        <Grid xs={6} textAlign="right">
-          <Typography variant="body1">$5.00</Typography>
-        </Grid>
-      </Grid>
-
-      <Grid container justifyContent="space-between" alignItems="center">
-        <Grid xs={6}>
-          <Typography variant="body1">Tax</Typography>
-        </Grid>
-        <Grid xs={6} textAlign="right">
-          <Typography variant="body1">$8.50</Typography>
-        </Grid>
-      </Grid>
-
-      <Grid container justifyContent="space-between" alignItems="center">
-        <Grid xs={6}>
-          <Typography variant="h6">Grand Total</Typography>
-        </Grid>
-        <Grid xs={6} textAlign="right">
-          <Typography variant="h6">$103.50</Typography>
-        </Grid>
-      </Grid>
       <SnackBar snack={snack} />
     </Box>
   )

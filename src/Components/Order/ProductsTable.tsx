@@ -106,7 +106,12 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
           </Typography>
         ),
         cell: ({ row }) => (
-          <Price price={row.original.configuration.price || 0} />
+          <Price
+            price={
+              (row.original.configuration.price || 0) *
+              row.original.configuration.qtyOrdered
+            }
+          />
         ),
         size: 100,
       },
@@ -122,8 +127,6 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
     debugTable: true,
     getCoreRowModel: getCoreRowModel(),
   })
-
-  console.log('table size', table.getState(), table.getCenterTotalSize())
 
   return (
     <Table
@@ -143,30 +146,27 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
       <TableHead>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => {
-              console.log('header', header, header.getSize())
-              return (
-                <TableCell
-                  key={header.id}
-                  colSpan={header.colSpan}
-                  sx={{
-                    width: header.getSize() === 20 ? 'auto' : header.getSize(),
-                    // maxWidth: header.s,
-                  }}
-                  // sx={{
-                  //   maxWidth:
-                  //     header.column.columnDef.id === 'image' ? 150 : undefined,
-                  // }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </TableCell>
-              )
-            })}
+            {headerGroup.headers.map((header) => (
+              <TableCell
+                key={header.id}
+                colSpan={header.colSpan}
+                sx={{
+                  width: header.getSize() === 20 ? 'auto' : header.getSize(),
+                  // maxWidth: header.s,
+                }}
+                // sx={{
+                //   maxWidth:
+                //     header.column.columnDef.id === 'image' ? 150 : undefined,
+                // }}
+              >
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+              </TableCell>
+            ))}
           </TableRow>
         ))}
       </TableHead>
