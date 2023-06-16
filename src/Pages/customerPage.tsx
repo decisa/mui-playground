@@ -8,6 +8,8 @@ import {
 } from 'react-router'
 import { Form } from 'react-router-dom'
 
+const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
+
 type CustomerMagentoRecord = {
   groupId: number
   isGuest: boolean
@@ -113,24 +115,24 @@ export async function action({ request, params }: ActionFunctionArgs) {
   console.log(formData)
   const updates = Object.fromEntries(formData)
   const { firstName, lastName, phone, id } = updates as any as CustomerForm
-  const updatedCustomer = await fetch(
-    `http://localhost:8080/api/customer/${id}`,
-    {
-      method: 'PUT',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ firstName, lastName, phone }),
-    }
-  )
+  const updatedCustomer = await fetch(`${dbHost}/customer/${id}`, {
+    method: 'PATCH',
+    mode: 'cors',
+    headers: {
+      // add cors headers
+
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ firstName, lastName, phone }),
+  })
 
   console.log('udpated customer: ', updatedCustomer)
   return null
 }
 
 const getCustomerById = async (customerId: string): Promise<Customer> => {
-  const result = await fetch(`http://localhost:8080/api/customer/${customerId}`)
+  const result = await fetch(`${dbHost}/customer/${customerId}`)
   if (!result.ok) {
     throw new Error(
       `Failed throw to fetch customer with id=${customerId}: ${result.statusText}`
@@ -157,12 +159,12 @@ export async function loader({
   }
   const { customerId } = params
 
-  const x = Math.floor(Math.random() * 10) % 2
-  if (x) {
-    if (customerId === '3') {
-      return errAsync(new Error('customer id=3 is banned'))
-    }
-  }
+  // const x = Math.floor(Math.random() * 10) % 2
+  // if (x) {
+  //   if (customerId === '3') {
+  //     return errAsync(new Error('customer id=3 is banned'))
+  //   }
+  // }
 
   return safeGetCustomerById(customerId)
 }

@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { height } from '@mui/system'
-import { Product } from '../../DB/dbtypes'
+import { Product } from '../../Types/dbtypes'
 import Thumbnail from './Thumbnail'
 import ProductInfo from './ProductInfo'
 import Price from './Price'
@@ -152,6 +152,7 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
                 colSpan={header.colSpan}
                 sx={{
                   width: header.getSize() === 20 ? 'auto' : header.getSize(),
+                  p: 1.5,
                   // maxWidth: header.s,
                 }}
                 // sx={{

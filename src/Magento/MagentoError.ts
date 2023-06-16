@@ -1,4 +1,4 @@
-import { TMagentoErrorMessage } from './magentoTypes'
+import { TMagentoErrorMessage } from '../Types/magentoTypes'
 
 export class MagentoError extends Error {
   code: number

@@ -1,3 +1,4 @@
+import './index.css'
 import { CssBaseline, ThemeProvider, Box } from '@mui/material'
 import { ReactNode } from 'react'
 import { Outlet } from 'react-router'
@@ -42,7 +43,7 @@ function App({ children }: Props) {
           <CssBaseline />
           <AppContainer>
             <Navbar className="nav" />
-            <Box sx={{ marginLeft: 30, p: 2 }} className="main">
+            <Box sx={{ marginLeft: 35, p: 2 }} className="main">
               <Outlet />
               {children || null}
             </Box>

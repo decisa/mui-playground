@@ -142,6 +142,16 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
           },
         },
       },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            fontSize: 12,
+            lineHeight: '20px',
+            height: '20px',
+            borderRadius: '4px',
+          },
+        },
+      },
     },
     palette: {
       mode,

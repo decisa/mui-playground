@@ -1,4 +1,4 @@
-import { CommentType, OrderStatus, ProductType } from '../Magento/magentoTypes'
+import { CommentType, OrderStatus, ProductType } from './magentoTypes'
 
 export type Address = {
   id?: number
@@ -16,8 +16,8 @@ export type Address = {
   notes?: string
   coordinates?: number[]
   customerId?: number
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: Date | string
+  updatedAt?: Date | string
   magento?: {
     externalId: number // 4583
     externalCustomerAddressId?: number // 5972
@@ -33,8 +33,8 @@ export type Customer = {
   phone: string
   altPhone?: string
   email: string
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: Date | string
+  updatedAt?: Date | string
   defaultShipping?: Address
   magento?: {
     externalGroupId: number
@@ -52,8 +52,8 @@ export type OrderComment = {
   visibleOnFront: boolean
   type: CommentType
   status: OrderStatus //
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: Date | string
+  updatedAt?: Date | string
   externalId?: number
   externalParentId?: number
 }
@@ -67,8 +67,8 @@ export type ProductOption = {
   externalId?: number
   externalValue?: string | number
   type?: 'attribute' | 'option'
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type ProductConfiguration = {
@@ -87,8 +87,8 @@ export type ProductConfiguration = {
   orderId?: number
   productId?: number
   externalId?: number // 3994
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type Product = {
@@ -110,8 +110,8 @@ export type Product = {
   productSpecs?: string
   assemblyInstructions?: string
   volume?: number
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: Date | string
+  updatedAt?: Date | string
   externalId?: number // 167049
   type?: ProductType
   configuration: ProductConfiguration
@@ -124,7 +124,7 @@ export type Order = {
   paymentMethod: string // 'checkmo' | 'stripe_payments' | 'mageworx_ordereditor_payment_method' | 'paypal_express'
   taxRate: number
   collectedTaxes?: string[]
-  orderDate: Date
+  orderDate: Date | string
   customer: Customer
   billingAddress: Address
   shippingAddress: Address
@@ -137,7 +137,7 @@ export type Order = {
     externalQuoteId: number
     state: string
     status: OrderStatus
-    updatedAt?: Date
+    updatedAt?: Date | string
     orderId?: number
   }
   // paymentInfo: {

@@ -1,6 +1,7 @@
-import { List, ListItem, ListItemIcon, Typography } from '@mui/material'
+import { Link, List, ListItem, ListItemIcon, Typography } from '@mui/material'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import { Product } from '../../DB/dbtypes'
+import { Product } from '../../Types/dbtypes'
+import ProductName from './ProductName'
 
 type ProductInfoProps = {
   product: Product
@@ -11,19 +12,15 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
     name,
     brand,
     configuration,
+    url,
     // configuration: { qtyOrdered },
   } = product
   const { options } = configuration
+
   return (
     <>
       {/* PRODUCT NAME */}
-      <Typography component="span">{name}</Typography>
-      {brand && brand.name && (
-        <Typography component="span" color="textSecondary">
-          {' '}
-          by {brand.name}
-        </Typography>
-      )}
+      <ProductName product={product} />
       {/* OPTIONS */}
       {options && options.length > 0 && (
         <List>

@@ -9,10 +9,10 @@ type MainNavBarStyles = {
 
 export const mainNavBarStyles: MainNavBarStyles = {
   drawer: {
-    width: 240,
+    width: 280,
     flexShrink: 0,
     '& .MuiDrawer-paper': {
-      width: 240,
+      width: 280,
       bgcolor: '#101F33',
       color: 'rgba(255, 255, 255, 0.7)',
     },

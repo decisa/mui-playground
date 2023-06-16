@@ -6,72 +6,69 @@ import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet'
 import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent'
 import SailingIcon from '@mui/icons-material/Sailing'
 import DnsIcon from '@mui/icons-material/Dns'
+import SearchIcon from '@mui/icons-material/Search'
+import SavedSearchIcon from '@mui/icons-material/SavedSearch'
 
 export const mainNavbarItems = [
   {
-    id: 0,
-    label: 'Authentication',
-    path: 'signin',
-    icon: <PeopleIcon />,
-  },
-  {
     id: 1,
-    label: 'Database',
-    path: 'database',
-    icon: <ImageIcon />,
+    label: 'Search Magento Order',
+    path: 'magento',
+    icon: <SearchIcon />,
   },
   {
     id: 2,
-    label: 'Customer 1',
-    path: 'customer/1',
-    icon: <PublicIcon />,
+    label: 'Local DB Orders',
+    path: 'order',
+    icon: <SavedSearchIcon />,
   },
   {
     id: 3,
-    label: 'Customer 3',
+    label: 'Customer ID',
     path: 'customer/3',
     icon: <SettingsEthernetIcon />,
   },
   {
     id: 4,
+    label: 'All Customers',
+    path: 'customer',
+    icon: <PublicIcon />,
+  },
+  {
+    id: 5,
+    label: 'Containers',
+    path: 'containers',
+    icon: <SailingIcon />,
+  },
+  {
+    id: 10,
+    label: 'Authentication',
+    path: 'signin',
+    icon: <PeopleIcon />,
+  },
+  {
+    id: 11,
+    label: 'Database',
+    path: 'database',
+    icon: <ImageIcon />,
+  },
+
+  {
+    id: 14,
     label: 'Functions',
     path: 'order/15',
     icon: <SettingsInputComponentIcon />,
   },
   {
-    id: 5,
+    id: 15,
     label: 'Machine-Learning',
     path: 'signin',
     icon: <DnsIcon />,
   },
   {
-    id: 6,
-    label: 'All Customers',
-    path: 'customer',
-    icon: <DnsIcon />,
-  },
-  {
-    id: 7,
-    label: 'Orders',
-    path: 'order',
-    icon: <DnsIcon />,
-  },
-  {
-    id: 8,
+    id: 18,
     label: 'Multi Checkbox',
     path: 'multicheckbox',
     icon: <DnsIcon />,
-  },
-  {
-    id: 9,
-    label: 'Magento',
-    path: 'magento',
-    icon: <WarehouseIcon />,
-  },
-  {
-    id: 10,
-    label: 'Containers',
-    path: 'containers',
-    icon: <SailingIcon />,
   },
 ]

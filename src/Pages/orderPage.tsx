@@ -1,5 +1,12 @@
+/* eslint-disable react/display-name */
 // /* eslint-disable @typescript-eslint/no-unsafe-return */
-import React, { ReactNode, useEffect } from 'react'
+import React, {
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react'
 import {
   Box,
   TextField,
@@ -10,25 +17,26 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TableRowProps,
+  Button,
+  Typography,
 } from '@mui/material'
 
-// import './index.css'
-
 import {
+  CellContext,
   ColumnDef,
   Row,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { spawn } from 'child_process'
+import OrderConfirmation from '../Components/Order/OrderConfirmation'
+import { Order } from '../Types/dbtypes'
+import Comments from '../Components/Order/Comments'
 
-import { DndProvider, useDrag, useDrop } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
+const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
-import { makeData } from './makeData'
-
-type Order = {
+type ShortOrder = {
   orderId: number
   orderNumber: string
   firstName: string
@@ -36,103 +44,11 @@ type Order = {
   email: string
 }
 
-const defaultColumns: ColumnDef<Order>[] = [
-  {
-    accessorKey: 'orderId',
-    header: 'ID',
-    footer: (props) => props.column.id,
-  },
-  {
-    accessorKey: 'orderNumber',
-    header: () => <span>Order Number</span>,
-    footer: (props) => props.column.id,
-  },
-  {
-    accessorKey: 'firstName',
-    cell: (info) => info.getValue() as ReactNode,
-    footer: (props) => props.column.id,
-  },
-  {
-    accessorFn: (row) => row.lastName,
-    id: 'lastName',
-    cell: (info) => info.getValue() as ReactNode,
-    header: () => <span>Last Name</span>,
-    footer: (props) => props.column.id,
-  },
-  {
-    accessorKey: 'email',
-    header: 'email',
-    footer: (props) => props.column.id,
-  },
-]
-
-type RowProps<Person> = {
-  row: Row<Person>
+type RowProps<T> = {
+  row: Row<T>
 }
 
-// const DraggableRow = ({ row, reorderRow }: TDragRowProps<Person>) => {
-//   const [, dropRef] = useDrop({
-//     accept: 'row',
-//     drop: (draggedRow: Row<Person>) => reorderRow(draggedRow.index, row.index),
-//   })
-
-//   const [{ isDragging }, dragRef, previewRef] = useDrag({
-//     collect: (monitor) => ({
-//       isDragging: monitor.isDragging(),
-//     }),
-//     item: () => row,
-//     type: 'row',
-//   })
-
-//   return (
-//     <tr
-//       ref={previewRef} // previewRef could go here
-//       style={{ opacity: isDragging ? 0.5 : 1 }}
-//     >
-//       <td ref={dropRef}>
-//         <button ref={dragRef} type="button">
-//           🟰
-//         </button>
-//       </td>
-//       {row.getVisibleCells().map((cell) => (
-//         <td key={cell.id}>
-//           {flexRender(cell.column.columnDef.cell, cell.getContext())}
-//         </td>
-//       ))}
-//     </tr>
-//   )
-// }
-
-// const DraggableRowMui = ({ row, reorderRow }: TDragRowProps<Person>) => {
-//   const [, dropRef] = useDrop({
-//     accept: 'row',
-//     drop: (draggedRow: Row<Person>) => reorderRow(draggedRow.index, row.index),
-//   })
-
-//   const [{ isDragging }, dragRef, previewRef] = useDrag({
-//     collect: (monitor) => ({
-//       isDragging: monitor.isDragging(),
-//     }),
-//     item: () => row,
-//     type: 'row',
-//   })
-
-//   return (
-//     <TableRow ref={previewRef} style={{ opacity: isDragging ? 0.5 : 1 }}>
-//       <TableCell ref={dropRef}>
-//         <button ref={dragRef} type="button">
-//           🟰
-//         </button>
-//       </TableCell>
-//       {row.getVisibleCells().map((cell) => (
-//         <TableCell key={cell.id}>
-//           {flexRender(cell.column.columnDef.cell, cell.getContext())}
-//         </TableCell>
-//       ))}
-//     </TableRow>
-//   )
-// }
-const RowMui = ({ row }: RowProps<Order>) => (
+const RowMui = ({ row }: RowProps<ShortOrder>) => (
   <TableRow>
     {row.getVisibleCells().map((cell) => (
       <TableCell key={cell.id}>
@@ -155,24 +71,142 @@ type SearchResponse = {
   }[]
 }
 
+const getOrderByNumber = (
+  orderNumber: string,
+  callback: (orderData: Order | null) => void
+) => {
+  fetch(`${dbHost}/order/number/${orderNumber}`, {
+    method: 'GET',
+    mode: 'cors',
+    // headers: {
+    //   'Content-Type': 'application/json',
+    // },
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error('Network response was not ok')
+      return res.json()
+    })
+    .then((res: Order) => {
+      callback(res)
+    })
+    .catch((err) => {
+      console.log('error:', err)
+      callback(null)
+    })
+}
+
+const renderOrderNumberHeader = () => <span>Order Number</span>
+const renderLastNameHeader = () => <span>Last Name</span>
+const renderFirstName = (info: CellContext<ShortOrder, unknown>) =>
+  info.getValue()
+const renderLastName = (info: CellContext<ShortOrder, unknown>) =>
+  info.getValue()
+
+// type OrderNumberProps = {
+//   row: Row<Order>
+// }
+
+type OrderCallback = (order: Order | null) => void
+
+type RowRendererFactory = (
+  callback: OrderCallback
+) => (props: RowProps<ShortOrder>) => ReactNode
+
+const renderOrderNumber: RowRendererFactory =
+  (callback: OrderCallback) =>
+  ({ row }: RowProps<ShortOrder>) => {
+    const { orderNumber } = row.original
+    return (
+      <Button
+        type="button"
+        onClick={() => {
+          getOrderByNumber(orderNumber, callback)
+        }}
+      >
+        <Typography variant="body2" color="textPrimary">
+          {orderNumber}
+        </Typography>
+      </Button>
+    )
+  }
+
+// ;({ row }: OrderNumberProps) => {
+//   const { orderNumber } = row.original
+//   return (
+//     <Button
+//       type="button"
+//       onClick={() => {
+//         getOrderByNumber(orderNumber, console.log)
+//       }}
+//     >
+//       {orderNumber}
+//     </Button>
+//   )
+// }
+
 export default function OrderPage() {
-  const [columns] = React.useState(() => [...defaultColumns])
-  const [data, setData] = React.useState<Order[]>([])
+  const [showOrder, setShowOrder] = React.useState(false)
+  const [order, setOrder] = React.useState<Order | null>(null)
+  const [data, setData] = React.useState<ShortOrder[]>([])
   const [search, setSearch] = React.useState('')
 
+  // save the scroll position of the table
+  const scrollPosition = useRef(0)
+
+  const columns = useMemo<ColumnDef<ShortOrder>[]>(
+    () => [
+      {
+        accessorKey: 'orderId',
+        header: 'ID',
+      },
+      {
+        accessorKey: 'orderNumber',
+        header: renderOrderNumberHeader,
+        cell: renderOrderNumber((orderData: Order | null) => {
+          setOrder(orderData)
+          if (orderData) {
+            // save the scroll position of the table:
+            scrollPosition.current =
+              window.scrollY || document.documentElement.scrollTop
+            setShowOrder(true)
+          }
+        }),
+      },
+      {
+        accessorKey: 'firstName',
+        cell: renderFirstName,
+      },
+      {
+        accessorFn: (row) => row.lastName,
+        id: 'lastName',
+        cell: renderLastName,
+        header: renderLastNameHeader,
+      },
+      {
+        accessorKey: 'email',
+        header: 'email',
+      },
+    ],
+    []
+  )
+
   useEffect(() => {
+    // reset showOrder when search changes
+    setShowOrder(false)
+    scrollPosition.current = 1
     if (search.length > 0) {
       // fetch(`http://192.168.168.236:8080/order?search=${search}`, {
       //   method: 'GET',
       // })
-      fetch(`http://localhost:8080/order?search=${search}`, {
+      fetch(`${dbHost}/order?search=${search}`, {
         method: 'GET',
+        mode: 'cors',
       })
         .then((res) => res.json())
         .then((res: SearchResponse) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, prettier/prettier
           console.log(res.results.map((x) => x.orderNumber).join(', '))
-          const parsedOrder = res.results.map((orderInfo) => {
+          const parsedOrders = res.results.map((orderInfo) => {
             const {
               id,
               orderNumber,
@@ -186,24 +220,25 @@ export default function OrderPage() {
               email,
             }
           })
-          setData(parsedOrder)
+          setData(parsedOrders)
         })
+    } else {
+      setData([])
     }
   }, [search])
 
-  // const reorderRow = (draggedRowIndex: number, targetRowIndex: number) => {
-  //   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  //   data.splice(targetRowIndex, 0, data.splice(draggedRowIndex, 1)[0])
-  //   setData([...data])
-  // }
-
-  // const rerender = () => setData(() => makeData(20))
+  useLayoutEffect(() => {
+    if (!showOrder) {
+      if (scrollPosition.current > 0) {
+        window.scrollTo(0, scrollPosition.current)
+      }
+    }
+  }, [showOrder])
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // getRowId: (row) => row.orderId, // good to have guaranteed unique row ids/keys for rendering
     debugTable: true,
     debugHeaders: true,
     debugColumns: true,
@@ -218,85 +253,63 @@ export default function OrderPage() {
           variant="standard"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          // onKeyDown={handleKeyboard}
         />
       </Box>
 
-      <div className="p-2">
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }}>
-            <TableHead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableCell key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHead>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <RowMui key={row.id} row={row} />
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </div>
+      {showOrder && order ? (
+        <Box p={2}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setShowOrder(false)
+            }}
+          >
+            Go Back
+          </Button>
+          <Box display="flex" gap={2} flexWrap="wrap" alignItems="start">
+            <Paper
+              sx={{ maxWidth: 840, minWidth: 690, flex: '2 2 690px' }}
+              className="printable-paper"
+            >
+              {order ? <OrderConfirmation order={order} /> : null}
+            </Paper>
+            <Paper
+              sx={{ maxWidth: 840, minWidth: 400, flex: '3 3 400px' }}
+              className="no-print"
+            >
+              {order ? <Comments comments={order.comments} /> : null}
+            </Paper>
+          </Box>
+        </Box>
+      ) : (
+        <Box p={2} maxWidth={840}>
+          <TableContainer component={Paper}>
+            <Table sx={{ minWidth: 650 }}>
+              <TableHead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableCell key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHead>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <RowMui key={row.id} row={row} />
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
     </>
   )
 }
-
-// {
-//   <DndProvider backend={HTML5Backend}>
-//         <div className="p-2">
-//           <div className="h-4" />
-//           <div className="flex flex-wrap gap-2">
-//             <button
-//               onClick={() => rerender()}
-//               className="border p-1"
-//               type="button"
-//             >
-//               Regenerate
-//             </button>
-//           </div>
-//           <div className="h-4" />
-//           <TableContainer component={Paper}>
-//             <Table sx={{ minWidth: 650 }}>
-//               <TableHead>
-//                 {table.getHeaderGroups().map((headerGroup) => (
-//                   <TableRow key={headerGroup.id}>
-//                     <TableCell />
-//                     {headerGroup.headers.map((header) => (
-//                       <TableCell key={header.id} colSpan={header.colSpan}>
-//                         {header.isPlaceholder
-//                           ? null
-//                           : flexRender(
-//                               header.column.columnDef.header,
-//                               header.getContext()
-//                             )}
-//                       </TableCell>
-//                     ))}
-//                   </TableRow>
-//                 ))}
-//               </TableHead>
-//               <TableBody>
-//                 {table.getRowModel().rows.map((row) => (
-//                   <DraggableRowMui
-//                     key={row.id}
-//                     row={row}
-//                     reorderRow={reorderRow}
-//                   />
-//                 ))}
-//               </TableBody>
-//             </Table>
-//           </TableContainer>
-//         </div>
-//       </DndProvider>
-// }

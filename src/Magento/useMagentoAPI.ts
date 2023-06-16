@@ -7,7 +7,7 @@ import {
   TConditionType,
   TMagentoAtrribute,
   TResponseGetMagentoOrder,
-} from './magentoTypes'
+} from '../Types/magentoTypes'
 import { MagentoError } from './MagentoError'
 import {
   combineOrderDetails,
@@ -16,7 +16,7 @@ import {
   parseMagentoOrderResponse,
   parseMainProductsInfo,
 } from './magentoParsers'
-import { Order } from '../DB/dbtypes'
+import { Order } from '../Types/dbtypes'
 import { apiPath } from './magentoAuthorize'
 
 // const domain = 'https://stage.roomservice360.com'

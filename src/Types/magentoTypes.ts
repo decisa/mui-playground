@@ -1,14 +1,20 @@
 export type TMagentoInputType = 'multiselect'
 export type CommentType = 'shipment' | 'order' | 'invoice' | 'creditmemo'
 export type ProductType = 'configurable' | 'simple'
-export type OrderStatus =
-  | 'pending'
-  | 'processing'
-  | 'in_production'
-  | 'in_transit'
-  | 'preparing_shipment'
-  | 'complete'
-  | 'closed'
+
+export const orderStatuses = [
+  'pending',
+  'processing',
+  'in_production',
+  'in_transit',
+  'preparing_shipment',
+  'complete',
+  'closed',
+  'unknown',
+] as const
+
+export type OrderStatus = (typeof orderStatuses)[number]
+
 export type TLabelValue = {
   label: string
   value: string

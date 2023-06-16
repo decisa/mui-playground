@@ -6,16 +6,6 @@ import * as yup from 'yup'
 import CheckBoxTree, { TNestedCheckbox } from '../Components/Form/CheckBoxTree'
 import { reduceToLabels, sampleData } from '../Components/Form/sampleData'
 
-// type TFormData = {
-//   officeLocations: TNestedCheckbox[]
-// }
-
-// interface TNestedCheckbox {
-//   id: string
-//   checked: boolean
-//   children?: TNestedCheckbox[]
-// }
-
 const treeNode: yup.ObjectSchema<TNestedCheckbox> = yup.object().shape({
   id: yup.string().required(),
   checked: yup.boolean().required(),

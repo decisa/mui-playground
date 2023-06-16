@@ -1,6 +1,7 @@
 import { useLoaderData } from 'react-router'
 import { Link, json } from 'react-router-dom'
 
+const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 interface Customer {
   id: number
   firstName: string
@@ -15,7 +16,7 @@ interface Customer {
 
 export async function loader() {
   try {
-    const allCustomers = await fetch(`http://localhost:8080/api/customer/all`)
+    const allCustomers = await fetch(`${dbHost}/customer/all`)
     if (allCustomers.status !== 200) {
       console.log(
         `error caught, returning empty array. status code = ${allCustomers.status}`

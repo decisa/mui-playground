@@ -6,9 +6,12 @@ import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
-import { Order } from '../DB/dbtypes'
+import { Order } from '../Types/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import { order as initOrder } from '../mockData'
+import Comments from '../Components/Order/Comments'
+
+const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
 type BrandShape =
   | {
@@ -30,7 +33,8 @@ function getBrandInfo(brand: BrandShape) {
 // brand ? ` by ${String(brand)}` : ''
 
 export default function MagentoPage() {
-  const [order, setOrder] = React.useState<Order | undefined>(initOrder)
+  // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
+  const [order, setOrder] = React.useState<Order | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState('')
 
   const snack = useSnackBar()
@@ -91,8 +95,13 @@ export default function MagentoPage() {
     }
   }
   return (
-    <Box sx={{ m: 2 }}>
-      <Stack direction="row" alignItems="center" sx={{ mb: 4 }}>
+    <Box sx={{ m: 2 }} className="printable-paper">
+      <Stack
+        direction="row"
+        alignItems="center"
+        sx={{ mb: 4 }}
+        className="no-print"
+      >
         <TextField
           id="filled-basic"
           label="order #s"
@@ -108,11 +117,10 @@ export default function MagentoPage() {
         >
           search
         </Button>
-      </Stack>
 
-      {order ? (
-        <>
-          {/* <pre>
+        {order ? (
+          <>
+            {/* <pre>
             {order.customer.firstName} {order.customer.lastName}{' '}
             {`\n\n${order.orderNumber} - ${String(order.magento?.status)}\n\n`}
             {order?.products
@@ -128,51 +136,63 @@ export default function MagentoPage() {
               })
               .join('\n\n')}
           </pre> */}
-          <Button
-            variant="contained"
-            sx={{ mb: 4 }}
-            onClick={() => {
-              console.log('importing order', order)
-              // fetch('http://192.168.168.236:8080/order/magento', {
-              fetch('http://localhost:8080/order/magento', {
-                method: 'PUT',
-                body: JSON.stringify(order),
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-              })
-                .then((res) => {
-                  if (!res.ok) {
-                    let errorText = `${res.statusText} - `
-                    return res.json().then((err) => {
-                      console.log('err', err)
-                      if (err && typeof err === 'object' && 'error' in err) {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                        errorText += String(err.error)
-                      }
-                      throw new Error(errorText)
-                    })
-                  }
-                  return res.json()
+            <Button
+              variant="contained"
+              sx={{ ml: 2 }}
+              onClick={() => {
+                console.log('importing order', order)
+                // fetch('http://192.168.168.236:8080/order/magento', {
+                fetch(`${dbHost}/order/magento`, {
+                  method: 'PUT',
+                  body: JSON.stringify(order),
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
                 })
-                .then((res) => {
-                  console.log('res', res)
-                  snack.success('order imported')
-                })
-                .catch((err) => {
-                  console.log('err', err)
-                  snack.error(String(err))
-                })
-              // snack.success('order imported')
-            }}
-          >
-            Import
-          </Button>
-        </>
-      ) : null}
-
-      {order ? <OrderConfirmation order={order} /> : null}
-
+                  .then((res) => {
+                    if (!res.ok) {
+                      let errorText = `${res.statusText} - `
+                      return res.json().then((err) => {
+                        console.log('err', err)
+                        if (err && typeof err === 'object' && 'error' in err) {
+                          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                          errorText += String(err.error)
+                        }
+                        throw new Error(errorText)
+                      })
+                    }
+                    return res.json()
+                  })
+                  .then((res) => {
+                    console.log('res', res)
+                    snack.success('order imported')
+                  })
+                  .catch((err) => {
+                    console.log('err', err)
+                    snack.error(String(err))
+                  })
+                // snack.success('order imported')
+              }}
+            >
+              Import
+            </Button>
+          </>
+        ) : null}
+      </Stack>
+      <Box display="flex" gap={2} flexWrap="wrap" alignItems="start">
+        <Paper
+          sx={{ maxWidth: 840, minWidth: 690, flex: '2 2 690px' }}
+          className="printable-paper"
+        >
+          {order ? <OrderConfirmation order={order} /> : null}
+        </Paper>
+        <Paper
+          sx={{ maxWidth: 840, minWidth: 400, flex: '3 3 400px' }}
+          className="no-print"
+        >
+          {order ? <Comments comments={order.comments} /> : null}
+        </Paper>
+      </Box>
       <SnackBar snack={snack} />
     </Box>
   )

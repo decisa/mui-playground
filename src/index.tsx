@@ -1,7 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import './index.css'
-import { CssBaseline } from '@mui/material'
+// import './index.css'
 import { createBrowserRouter } from 'react-router-dom'
 import { createRoutesFromElements, Route, RouterProvider } from 'react-router'
 import App from './App'

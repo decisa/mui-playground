@@ -1,5 +1,5 @@
 import { Card, Typography } from '@mui/material'
-import { Order } from '../../DB/dbtypes'
+import { Order } from '../../Types/dbtypes'
 
 type Address = Order['billingAddress']
 
@@ -25,7 +25,7 @@ const OrderAddress = ({ address }: OrderAddressProps) => {
     <Card sx={{ border: 'none', boxShadow: 'none' }}>
       <Typography variant="body1">{`${firstName} ${lastName}`}</Typography>
       {company && <Typography variant="body2">{company}</Typography>}
-      {email && <Typography variant="body2">{email}</Typography>}
+      {/* {email && <Typography variant="body2">{email}</Typography>} */}
       <Typography
         variant="body2"
         sx={{ whiteSpace: 'pre-wrap' }}

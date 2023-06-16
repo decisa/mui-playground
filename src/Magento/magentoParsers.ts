@@ -7,7 +7,7 @@ import {
   OrderComment,
   Product,
   ProductOption,
-} from '../DB/dbtypes'
+} from '../Types/dbtypes'
 import { toErrorWithMessage } from '../utils/errorHandling'
 import { isEmptyObject } from '../utils/utils'
 import { MagentoError } from './MagentoError'
@@ -23,7 +23,7 @@ import {
   TMagentoOrderComment,
   TMagentoOrderProduct,
   TResponseGetMagentoOrder,
-} from './magentoTypes'
+} from '../Types/magentoTypes'
 
 // const stripOffUndefined = (obj) => {
 //   if (typeof obj !== 'object') {
