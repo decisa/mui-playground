@@ -30,6 +30,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { spawn } from 'child_process'
+import { render } from '@testing-library/react'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import { Order } from '../Types/dbtypes'
 import Comments from '../Components/Order/Comments'
@@ -37,11 +38,30 @@ import Comments from '../Components/Order/Comments'
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
 type ShortOrder = {
-  orderId: number
+  id: number
   orderNumber: string
-  firstName: string
-  lastName: string
-  email: string
+  customer: {
+    firstName: string
+    lastName: string
+    email: string
+  }
+  shippingAddress: {
+    firstName: string
+    lastName: string
+  }
+  billingAddress: {
+    firstName: string
+    lastName: string
+  }
+  products: {
+    name: string
+    brand: string
+    configuration: {
+      qtyOrdered: number
+      qtyShipped: number
+      qtyRefunded: number
+    }
+  }[]
 }
 
 type RowProps<T> = {
@@ -60,15 +80,7 @@ const RowMui = ({ row }: RowProps<ShortOrder>) => (
 
 type SearchResponse = {
   count: number
-  results: {
-    id: number
-    orderNumber: string
-    customer: {
-      firstName: string
-      lastName: string
-      email: string
-    }
-  }[]
+  results: ShortOrder[]
 }
 
 const getOrderByNumber = (
@@ -97,10 +109,23 @@ const getOrderByNumber = (
 
 const renderOrderNumberHeader = () => <span>Order Number</span>
 const renderLastNameHeader = () => <span>Last Name</span>
-const renderFirstName = (info: CellContext<ShortOrder, unknown>) =>
-  info.getValue()
+const renderFirstName = ({ row }: CellContext<ShortOrder, unknown>) =>
+  row.original.customer.firstName
 const renderLastName = (info: CellContext<ShortOrder, unknown>) =>
   info.getValue()
+const renderProducts = ({ row }: CellContext<ShortOrder, unknown>) => {
+  const { products } = row.original
+  return (
+    <ul>
+      {products.map((product, i) => (
+        <li key={i}>
+          {product.name} {product.configuration.qtyOrdered}{' '}
+          {product.configuration.qtyShipped} {product.configuration.qtyRefunded}
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 // type OrderNumberProps = {
 //   row: Row<Order>
@@ -173,14 +198,19 @@ export default function OrderPage() {
         }),
       },
       {
-        accessorKey: 'firstName',
+        id: 'firstName',
         cell: renderFirstName,
       },
       {
-        accessorFn: (row) => row.lastName,
+        accessorFn: (row) => row.customer.lastName,
         id: 'lastName',
         cell: renderLastName,
         header: renderLastNameHeader,
+      },
+      {
+        id: 'products',
+        header: 'Products',
+        cell: renderProducts,
       },
       {
         accessorKey: 'email',
@@ -206,21 +236,23 @@ export default function OrderPage() {
         .then((res: SearchResponse) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, prettier/prettier
           console.log(res.results.map((x) => x.orderNumber).join(', '))
-          const parsedOrders = res.results.map((orderInfo) => {
-            const {
-              id,
-              orderNumber,
-              customer: { firstName, lastName, email },
-            } = orderInfo
-            return {
-              orderId: id,
-              orderNumber,
-              firstName,
-              lastName,
-              email,
-            }
-          })
-          setData(parsedOrders)
+          // const parsedOrders = res.results.map((orderInfo) => {
+          //   const {
+          //     id,
+          //     orderNumber,
+          //     customer: { firstName, lastName, email },
+          //     products,
+          //   } = orderInfo
+          //   return {
+          //     orderId: id,
+          //     orderNumber,
+          //     firstName,
+          //     lastName,
+          //     email,
+          //     products,
+          //   }
+          // })
+          setData(res.results)
         })
     } else {
       setData([])
