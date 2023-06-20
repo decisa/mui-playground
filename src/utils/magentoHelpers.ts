@@ -1,7 +1,7 @@
 import { OrderStatus } from '../Types/magentoTypes'
 import { ChipColor } from '../Types/muiTypes'
 
-export function getStatusIconInfo(status?: OrderStatus): {
+export function getStatusIconInfo(status?: string): {
   color: ChipColor
   label: string
 } {
