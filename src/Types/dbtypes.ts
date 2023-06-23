@@ -47,7 +47,7 @@ export type Customer = {
 export type OrderComment = {
   id?: number
   orderId?: number
-  comment: string
+  comment: string | null
   customerNotified: boolean
   visibleOnFront: boolean
   type: CommentType
@@ -75,7 +75,7 @@ export type ProductConfiguration = {
   sku: string // 'CI-SPYDER-oblong-200x120-clear-11-s-titanium'
   options: ProductOption[]
   qtyOrdered: number
-  qtyShipped: number
+  qtyShippedExternal: number
   qtyRefunded?: number
   qtyCanceled?: number
   qtyInvoiced?: number
