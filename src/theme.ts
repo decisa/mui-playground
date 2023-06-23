@@ -9,15 +9,15 @@ export const tokens = (mode: string) => ({
   ...(mode === 'dark'
     ? {
         grey: {
-          100: '#fafafa',
-          200: '#c2c2c2',
-          300: '#a3a3a3',
-          400: '#858585',
+          100: '#141414',
+          200: '#292929',
+          300: '#3d3d3d',
+          400: '#525252',
           500: '#666666',
-          600: '#525252',
-          700: '#3d3d3d',
-          800: '#292929',
-          900: '#141414',
+          600: '#858585',
+          700: '#a3a3a3',
+          800: '#c2c2c2',
+          900: '#efefef',
         },
         primary: {
           100: '#d0d1d5',
@@ -29,6 +29,18 @@ export const tokens = (mode: string) => ({
           700: '#0c101b',
           800: '#080b12',
           900: '#040509',
+        },
+        background: {
+          50: '#384158',
+          100: '#0b0e14',
+          200: '#141b2d',
+          300: '#1b2336',
+          400: '#262f44',
+          500: '#384158',
+          600: '#58627b',
+          700: '#8891aa',
+          800: '#aeb5c8',
+          900: '#d2d6e1',
         },
         greenAccent: {
           100: '#dcf0eb',
@@ -53,28 +65,40 @@ export const tokens = (mode: string) => ({
           900: '#290608',
         },
         blueAccent: {
-          100: '#e2e8f2',
-          200: '#c4d0e5',
-          300: '#a7b9d7',
-          400: '#89a1ca',
-          500: '#6c8abd',
-          600: '#566e97',
-          700: '#415371',
-          800: '#2b374c',
-          900: '#161c26',
+          50: '#2a374c',
+          100: '#1e2735',
+          200: '#2a374c',
+          300: '#3d5072',
+          400: '#536e9b',
+          500: '#6d8bbe',
+          600: '#8aa5d3',
+          700: '#abc0e2',
+          800: '#ccd8ec',
+          900: '#e1e8f3',
         },
+        // blueAccent: {
+        //   100: '#e2e8f2',
+        //   200: '#c4d0e5',
+        //   300: '#a7b9d7',
+        //   400: '#89a1ca',
+        //   500: '#6c8abd',
+        //   600: '#566e97',
+        //   700: '#415371',
+        //   800: '#2b374c',
+        //   900: '#161c26',
+        // },
       }
     : {
         grey: {
-          100: '#141414',
-          200: '#292929',
-          300: '#3d3d3d',
-          400: '#525252',
+          100: '#fafafa',
+          200: '#c2c2c2',
+          300: '#a3a3a3',
+          400: '#858585',
           500: '#666666',
-          600: '#858585',
-          700: '#a3a3a3',
-          800: '#c2c2c2',
-          900: '#e0e0e0',
+          600: '#525252',
+          700: '#3d3d3d',
+          800: '#292929',
+          900: '#141414',
         },
         primary: {
           100: '#040509',
@@ -86,6 +110,18 @@ export const tokens = (mode: string) => ({
           700: '#727681',
           800: '#a1a4ab',
           900: '#d0d1d5',
+        },
+        background: {
+          50: '#f3f4f7',
+          100: '#d2d6e1',
+          200: '#aeb5c8',
+          300: '#8891aa',
+          400: '#58627b',
+          500: '#384158',
+          600: '#262f44',
+          700: '#1b2336',
+          800: '#141b2d',
+          900: '#0b0e14',
         },
         greenAccent: {
           100: '#10241f',
@@ -110,16 +146,28 @@ export const tokens = (mode: string) => ({
           900: '#f5d2d4',
         },
         blueAccent: {
-          100: '#161c26',
-          200: '#2b374c',
-          300: '#415371',
-          400: '#566e97',
-          500: '#6c8abd',
-          600: '#89a1ca',
-          700: '#a7b9d7',
-          800: '#c4d0e5',
-          900: '#e2e8f2',
+          50: '#f3f8ff',
+          100: '#e1e8f3',
+          200: '#ccd8ec',
+          300: '#abc0e2',
+          400: '#8aa5d3',
+          500: '#6d8bbe',
+          600: '#536e9b',
+          700: '#3d5072',
+          800: '#2a374c',
+          900: '#1e2735',
         },
+        // blueAccent: {
+        //   100: '#161c26',
+        //   200: '#ccd8ec',
+        //   300: '#415371',
+        //   400: '#566e97',
+        //   500: '#6c8abd',
+        //   600: '#89a1ca',
+        //   700: '#a7b9d7',
+        //   800: '#c4d0e5',
+        //   900: '#e2e8f2',
+        // },
       }),
 })
 
@@ -130,18 +178,27 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
 
   const options: ThemeOptions = {
     components: {
-      MuiButton: {
-        styleOverrides: {
-          contained: {
-            color: '#fff',
-            backgroundColor: colors.blueAccent[500],
-            '&:hover': {
-              color: '#fff',
-              backgroundColor: colors.blueAccent[300],
-            },
-          },
-        },
-      },
+      // MuiButton: {
+      //   styleOverrides: {
+      //     contained: {
+      //       color: '#fff',
+      //       backgroundColor: colors.blueAccent[500],
+      //       '&:hover': {
+      //         color: '#fff',
+      //         backgroundColor: colors.blueAccent[600],
+      //       },
+      //     },
+      //     outlined: {
+      //       color: colors.blueAccent[600],
+      //       borderColor: colors.blueAccent[600],
+      //       backgroundColor: `${colors.blueAccent[500]}11`,
+      //       '&:hover': {
+      //         color: '#fff',
+      //         backgroundColor: colors.blueAccent[500],
+      //       },
+      //     },
+      //   },
+      // },
       MuiChip: {
         styleOverrides: {
           root: {
@@ -157,8 +214,14 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
       mode,
       ...(mode === 'dark'
         ? {
+            // primary: {
+            //   main: colors.primary[500],
+            // },
             primary: {
-              main: colors.primary[500],
+              main: colors.blueAccent[500],
+              light: colors.blueAccent[600],
+              dark: colors.blueAccent[400],
+              contrastText: colors.grey[900],
             },
             secondary: {
               main: colors.greenAccent[500],
@@ -169,18 +232,24 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
               light: colors.grey[100],
             },
             background: {
-              default: colors.primary[500],
-              paper: colors.primary[500],
+              default: colors.background[200],
+              paper: colors.background[200],
             },
             text: {
-              primary: `${colors.grey[100]}ff`,
-              secondary: `${colors.grey[300]}dd`,
-              disabled: `${colors.grey[300]}77`,
+              primary: `${colors.grey[900]}ff`,
+              secondary: `${colors.grey[900]}bb`,
+              disabled: `${colors.grey[700]}77`,
             },
           }
         : {
+            // primary: {
+            //   main: colors.primary[100],
+            // },
             primary: {
-              main: colors.primary[100],
+              main: colors.blueAccent[500],
+              light: colors.blueAccent[300],
+              dark: colors.blueAccent[600],
+              contrastText: colors.grey[100],
             },
             secondary: {
               main: colors.greenAccent[500],
@@ -191,59 +260,69 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
               light: colors.grey[100],
             },
             background: {
-              default: '#fcfcfc',
+              // default: '#fcfcfc',
+              default: colors.background[50],
               paper: '#ffffff',
             },
             text: {
-              primary: `${colors.grey[300]}ff`,
-              secondary: `${colors.grey[300]}aa`,
-              disabled: `${colors.grey[300]}55`,
+              primary: `${colors.grey[800]}ff`,
+              secondary: `${colors.grey[800]}aa`,
+              disabled: `${colors.grey[700]}55`,
             },
           }),
     },
     typography: {
       fontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
+      htmlFontSize: 16,
       fontSize: 12,
       h1: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
-        fontSize: 40,
+        // fontSize: 40,
+        fontSize: '2.5rem',
       },
       h2: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
-        fontSize: 32,
+        // fontSize: 32,
+        fontSize: '2rem',
       },
       h3: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
-        fontSize: 24,
+        fontSize: '1.5rem',
       },
       h4: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
-        fontSize: 20,
+        // fontSize: 20,
+        fontSize: '1.25rem',
       },
       h5: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
-        fontSize: 16,
+        // fontSize: 16,
+        fontSize: '1rem',
         fontWeight: 500,
       },
       h6: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
-        fontSize: 14,
+        // fontSize: 14,
+        fontSize: '0.875rem',
         fontWeight: 700,
       },
       body1: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
-        fontSize: 16,
+        // fontSize: 16,
+        fontSize: '1rem',
         fontWeight: 400,
       },
       body2: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
-        fontSize: 14,
+        // fontSize: 14,
+        fontSize: '0.875rem',
         fontWeight: 400,
       },
       button: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
         fontWeight: 400,
-        fontSize: 16,
+        // fontSize: 16,
+        fontSize: '1rem',
         lineHeight: 1.75,
         textTransform: 'lowercase',
       },

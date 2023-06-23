@@ -28,7 +28,7 @@ type OrderConfirmationProps = {
 }
 
 const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
-  console.log('OrderConfirmation:', order)
+  // console.log('OrderConfirmation:', order)
   const theme = useTheme()
   const colors = tokens(theme.palette.mode)
 
@@ -96,7 +96,7 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
             <Typography
               variant="body2"
               component="span"
-              color={colors.blueAccent[300]}
+              color={colors.blueAccent[600]}
             >
               {order.customer.email}
             </Typography>

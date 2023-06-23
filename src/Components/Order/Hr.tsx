@@ -10,7 +10,7 @@ export default function Hr() {
       style={{
         marginTop: 0,
         height: '2px',
-        backgroundColor: colors.blueAccent[800],
+        backgroundColor: colors.blueAccent[200],
         border: 'none',
       }}
     />

@@ -138,7 +138,7 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
           verticalAlign: 'top',
         },
         '& .MuiTableRow-head': {
-          backgroundColor: colors.blueAccent[800],
+          backgroundColor: colors.blueAccent[200],
         },
         // width: table.getCenterTotalSize(),
       }}
