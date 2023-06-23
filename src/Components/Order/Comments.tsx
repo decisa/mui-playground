@@ -13,22 +13,116 @@ import TimelineOppositeContent, {
 
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined'
-import CancelPresentationOutlinedIcon from '@mui/icons-material/CancelPresentationOutlined'
 import MarkEmailReadOutlinedIcon from '@mui/icons-material/MarkEmailReadOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 
 import { format, parseISO } from 'date-fns'
-import { Box, Chip } from '@mui/material'
-import { get } from 'http'
+import { Box, Chip, Typography, useTheme } from '@mui/material'
 import { Order } from '../../Types/dbtypes'
 import { ChipColor } from '../../Types/muiTypes'
 import { getStatusIconInfo } from '../../utils/magentoHelpers'
+import { tokens } from '../../theme'
 
 type CommentsProps = {
   comments: Order['comments']
 }
 
-function getCommentVisibilityInfo(comment: Order['comments'][0]) {
+const wordsToHighlight = [
+  'balance',
+  'credit',
+  'deposit',
+  'payment',
+  'paid in full',
+  'refund',
+]
+// helper function that highlights given words in a string
+function highlightWords(text: string | null, words: string[]) {
+  // regular expression pattern to match the price variants
+  const pricePattern = /\$\d{1,3}(?:,?\d{3})*(?:\.\d{2})?(?![\d/])/g
+
+  // C regular expression pattern to match the splitters stored in words
+  const splitterPattern = new RegExp(
+    words.map((word) => `\\b${word}\\b`).join('|'),
+    'gi'
+  )
+
+  // Combine the price pattern and the splitter pattern
+  const regexPattern = new RegExp(
+    `(${pricePattern.source})|(${splitterPattern.source})`,
+    'gi'
+  )
+
+  // Split the text using the combined regular expression
+  console.log('processing comments:', text, typeof text)
+  const parts = text ? text.split(regexPattern).filter((part) => part) : ['']
+
+  const highlighted = parts.length > 1
+  const parsedComment = (
+    <>
+      {parts.map((part, i) => {
+        const key = `${part}-${i}`
+        if (part && part.match(/paid in full/i)) {
+          return (
+            <Typography
+              variant="body2"
+              component="span"
+              key={key}
+              sx={{
+                // backgroundColor: 'success.light',
+                fontWeight: 'bold',
+                // color: 'white',
+                // borderRadius: '3px',
+                // px: 1,
+                // paddingBottom: '2px',
+                color: 'success.light',
+                textDecoration: 'underline',
+              }}
+            >
+              {part}
+            </Typography>
+          )
+        }
+        if (part && part.match(regexPattern)) {
+          return (
+            <Typography
+              variant="body2"
+              component="span"
+              key={key}
+              sx={{ color: 'info.main', fontWeight: 'bold' }}
+            >
+              {part}
+            </Typography>
+          )
+        }
+        if (part === '') {
+          return (
+            <Typography
+              variant="body2"
+              component="span"
+              key={key}
+              sx={{ opacity: 0.4, userSelect: 'none' }}
+            >
+              empty comment
+            </Typography>
+          )
+        }
+        return (
+          <Typography variant="body2" component="span" key={key}>
+            {part}
+          </Typography>
+        )
+      })}
+    </>
+  )
+
+  return { comment: parsedComment, highlighted }
+}
+
+function getCommentVisibilityInfo(comment: {
+  visibleOnFront: boolean
+  customerNotified: boolean
+  status: string
+}) {
   let notifiedIcon
   let visibleIcon
   if (comment.customerNotified) {
@@ -87,7 +181,7 @@ function getCommentVisibilityInfo(comment: Order['comments'][0]) {
   )
 }
 
-function getCommentTypeIconInfo(comment: Order['comments'][0]): {
+function getCommentTypeIconInfo(comment: { type?: string }): {
   color: 'info' | 'secondary' | 'warning' | 'error'
   label: string
 } {
@@ -124,6 +218,59 @@ function getCommentTypeIconInfo(comment: Order['comments'][0]): {
 }
 
 export default function Comments({ comments }: CommentsProps) {
+  // use the MUI theme and colors
+  const theme = useTheme()
+  const colors = tokens(theme.palette.mode)
+
+  // highlight words in comments
+  type HighlightedComment = {
+    id: number
+    comment: React.ReactNode
+    createdAt: string
+    type: string
+    visibleOnFront: boolean
+    customerNotified: boolean
+    status: string
+    highlighted: boolean
+  }
+  const highlightedComments: HighlightedComment[] = comments.map(
+    (commentData) => {
+      const {
+        id,
+        externalId,
+        comment,
+        createdAt,
+        type,
+        status,
+        visibleOnFront,
+        customerNotified,
+      } = commentData
+      // let highlighted = false
+      // let parsedComment: React.ReactNode = comment
+      // if (commentData.comment) {
+      //   highlighted = true
+      //   parsedComment = highlightWords(commentData.comment, wordsToHighlight)
+      // }
+
+      const parsedCreatedAt = createdAt
+        ? format(
+            typeof createdAt === 'string' ? parseISO(createdAt) : createdAt,
+            'dd MMM yyyy'
+          )
+        : 'some day'
+
+      return {
+        id: id || externalId || 0,
+        createdAt: parsedCreatedAt,
+        type,
+        visibleOnFront,
+        customerNotified,
+        status,
+        ...highlightWords(comment, wordsToHighlight),
+      }
+    }
+  )
+  // console.log(highlightedComments)
   return (
     <Timeline
       sx={{
@@ -138,19 +285,21 @@ export default function Comments({ comments }: CommentsProps) {
           pr: 0,
         },
         maxWidth: 840,
+        px: 0,
       }}
     >
-      {comments.map((comment, index) => (
-        <TimelineItem key={comment.id || comment.externalId}>
+      {highlightedComments.map((comment, index) => (
+        <TimelineItem
+          key={comment.id}
+          sx={{
+            px: 2,
+            backgroundColor: comment.highlighted
+              ? colors.background[50]
+              : undefined,
+          }}
+        >
           <TimelineOppositeContent color="textSecondary" variant="h6">
-            {comment.createdAt
-              ? format(
-                  typeof comment.createdAt === 'string'
-                    ? parseISO(comment.createdAt)
-                    : comment.createdAt,
-                  'dd MMM yyyy'
-                )
-              : 'some day'}
+            {comment.createdAt}
             <Chip
               size="small"
               variant="outlined"
