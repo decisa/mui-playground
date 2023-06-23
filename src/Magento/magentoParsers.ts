@@ -267,12 +267,16 @@ function productsArrayToObject(products: MainProduct[]) {
       optionId: number,
       optionValueId: number | string
     ) => {
+      // console.log('looking up optionId:', optionId)
+      // console.log('all options:', product.options)
       const option = product.options.find((opt) => opt.option_id === optionId)
       let label
       let value
       if (option) {
         label = option.title
-        if (option.type === 'area') {
+        // if magento custom option type is field or area, then the value is just the valueId
+        // otherwise (when option type is drop_down), find the value with the given id in the values array
+        if (option.type === 'area' || option.type === 'field') {
           // if this is a text field, then the value is just the valueId
           value = optionValueId.toString()
         } else {
@@ -393,7 +397,7 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
     qty_invoiced: qtyInvoiced,
     qty_ordered: qtyOrdered,
     qty_refunded: qtyRefunded,
-    qty_shipped: qtyShipped,
+    qty_shipped: qtyShippedExternal,
     price,
     discount_amount: totalDiscount,
     created_at: createdAt,
@@ -439,6 +443,9 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
       }) || []
 
   const options = [...allAttributes, ...allOptions]
+  // console.log('object: ', prod.product_option?.extension_attributes)
+  // console.log('allAttributes: ', allAttributes)
+  // console.log('allOptions: ', allOptions)
 
   return {
     name,
@@ -458,7 +465,7 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
       qtyOrdered,
       qtyCanceled,
       qtyRefunded,
-      qtyShipped,
+      qtyShippedExternal,
       qtyInvoiced,
       price, // per item
       totalDiscount, // discount_amount (for all items)
@@ -523,6 +530,67 @@ const parseMagentoOrderAddress = (
     phone,
     email,
     magento,
+  }
+}
+type MagentoPaymentInfo = {
+  additional_information: string[] // ["Phone Order: 50% Deposit"],
+  // amount_ordered: number // 13558.75,
+  // amount_paid: number // 13558.75,
+  // base_amount_ordered: number // 13558.75,
+  // base_amount_paid: number // 13558.75,
+  // base_shipping_amount: number // 99,
+  // base_shipping_captured: number // 99,
+  // cc_exp_year: '0'
+  // cc_last4: string | null // null,
+  // cc_ss_start_month: "0",
+  // cc_ss_start_year: "0",
+  // entity_id: number // 6625,
+  method: string // "mageworx_ordereditor_payment_method",
+  // parent_id: number // 6625,
+  // shipping_amount: number // 99,
+  // shipping_captured: number // 99
+}
+
+function getPaymentMethod(paymentInfo: MagentoPaymentInfo): string {
+  switch (paymentInfo.method) {
+    case 'affirm_gateway': {
+      return 'Affirm'
+    }
+    case 'mageworx_ordereditor_payment_method': {
+      return paymentInfo.additional_information[0]
+    }
+    case 'paypal_express': {
+      const buyerEmail =
+        paymentInfo.additional_information.length > 4
+          ? paymentInfo.additional_information[3]
+          : ''
+      const emailPattern = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/
+      let resultPayPalMethod = 'PayPal'
+      if (emailPattern.test(buyerEmail)) {
+        resultPayPalMethod += ` (${buyerEmail})`
+      }
+      return resultPayPalMethod
+    }
+    case 'checkmo': {
+      return 'Check / Money order'
+    }
+    case 'stripe_payments_express': {
+      let stripePaymentInfo = ''
+      if (paymentInfo.additional_information.length >= 6) {
+        stripePaymentInfo += paymentInfo.additional_information[5] // wallet payment method
+        stripePaymentInfo += ` (${paymentInfo.additional_information[2]})` // apple pay or google pay
+      }
+      return stripePaymentInfo || 'Stripe'
+    }
+    case 'stripe_payments': {
+      if (paymentInfo.additional_information.length >= 3) {
+        return paymentInfo.additional_information[2]
+      }
+      return 'Stripe'
+    }
+    default: {
+      return paymentInfo.method
+    }
   }
 }
 
@@ -623,7 +691,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     // orderId,
     orderNumber,
     shippingCost,
-    paymentMethod: paymentInfo.method,
+    paymentMethod: getPaymentMethod(paymentInfo),
     taxRate,
     collectedTaxes,
     orderDate: parseISO(`${dateCreated}Z`),
@@ -705,6 +773,7 @@ function finalizeOrderDetails([products, attributes, notFullOrder]: [
         products[externalId].commonAttributes.product_specs
       updatedProduct.image = products[externalId].commonAttributes.image
 
+      // console.log('updatedProduct', updatedProduct)
       updatedProduct.configuration.options = mapOptionValues(
         configuration.options,
         attributes,
