@@ -1,5 +1,4 @@
 /* eslint-disable react/display-name */
-// /* eslint-disable @typescript-eslint/no-unsafe-return */
 import React, {
   ReactNode,
   useEffect,
@@ -19,6 +18,11 @@ import {
   TableRow,
   Button,
   Typography,
+  List,
+  ListItem,
+  ListItemIcon,
+  Chip,
+  useTheme,
 } from '@mui/material'
 
 import {
@@ -29,13 +33,30 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { spawn } from 'child_process'
-import { render } from '@testing-library/react'
+
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import { Order } from '../Types/dbtypes'
 import Comments from '../Components/Order/Comments'
+import { ChipColor } from '../Types/muiTypes'
+import { tokens } from '../theme'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
+
+type Product = {
+  name: string
+  brand: string
+  configuration: {
+    qtyOrdered: number
+    qtyShippedExternal: number
+    qtyRefunded: number
+  }
+}
+
+type ExtendedProduct = Product & {
+  configuration: {
+    status: ProductShipmentStatus
+  }
+}
 
 type ShortOrder = {
   id: number
@@ -53,22 +74,18 @@ type ShortOrder = {
     firstName: string
     lastName: string
   }
-  products: {
-    name: string
-    brand: string
-    configuration: {
-      qtyOrdered: number
-      qtyShipped: number
-      qtyRefunded: number
-    }
-  }[]
+  products: Product[]
+}
+
+type ExtendedShortOrder = Omit<ShortOrder, 'products'> & {
+  products: ExtendedProduct[]
 }
 
 type RowProps<T> = {
   row: Row<T>
 }
 
-const RowMui = ({ row }: RowProps<ShortOrder>) => (
+const RowMui = ({ row }: RowProps<ExtendedShortOrder>) => (
   <TableRow>
     {row.getVisibleCells().map((cell) => (
       <TableCell key={cell.id}>
@@ -77,6 +94,39 @@ const RowMui = ({ row }: RowProps<ShortOrder>) => (
     ))}
   </TableRow>
 )
+
+function getOrderStatusIconInfo(status?: ProductShipmentStatus): {
+  color: ChipColor
+  label: string
+} {
+  let chipColor: ChipColor
+  let label: string
+  // if (status === undefined) {
+  //   return { color: 'warning', label: 'undetermined' }
+  // }
+  switch (status) {
+    case 'refunded':
+      label = 'refunded'
+      chipColor = 'error'
+      break
+    case 'processing':
+      label = 'processing'
+      chipColor = 'warning'
+      break
+    case 'shipped':
+      label = 'shipped'
+      chipColor = 'success'
+      break
+    case 'partially shipped':
+      label = 'partially shipped'
+      chipColor = 'info'
+      break
+    default:
+      label = 'undetermined'
+      chipColor = 'error'
+  }
+  return { color: chipColor, label }
+}
 
 type SearchResponse = {
   count: number
@@ -108,22 +158,113 @@ const getOrderByNumber = (
 }
 
 const renderOrderNumberHeader = () => <span>Order Number</span>
+const renderFirstNameHeader = () => <span>First Name</span>
 const renderLastNameHeader = () => <span>Last Name</span>
-const renderFirstName = ({ row }: CellContext<ShortOrder, unknown>) =>
+const renderFirstName = ({ row }: CellContext<ExtendedShortOrder, unknown>) =>
   row.original.customer.firstName
-const renderLastName = (info: CellContext<ShortOrder, unknown>) =>
+const renderLastName = (info: CellContext<ExtendedShortOrder, unknown>) =>
   info.getValue()
-const renderProducts = ({ row }: CellContext<ShortOrder, unknown>) => {
+
+const productShipmentStatuses = [
+  'processing',
+  'shipped',
+  'partially shipped',
+  'refunded',
+  'undetermined',
+] as const
+type ProductShipmentStatus = (typeof productShipmentStatuses)[number]
+
+const getProductStatus = (
+  configuration: ShortOrder['products'][0]['configuration']
+): ProductShipmentStatus => {
+  const { qtyOrdered, qtyShippedExternal, qtyRefunded } = configuration
+
+  console.log('configuration:', configuration)
+  // Calculate remaining quantity on order after refunds
+  const qty = qtyOrdered - qtyRefunded
+  // If an item is fully refunded
+  if (qty <= 0) {
+    return 'refunded'
+  }
+  // If an item is ordered but not shipped or refunded
+  if (qtyShippedExternal === 0) {
+    return 'processing'
+  }
+  // If number of items shipped is more than number of items remaining on order
+  if (qtyShippedExternal >= qty) {
+    return 'shipped'
+  }
+  // If an item is partially shipped and not refunded
+  if (qtyShippedExternal < qty) {
+    return 'partially shipped'
+  }
+  // If the quantities do not fall into any of the above conditions (e.g. negative quantities)
+  return 'undetermined'
+}
+
+const getOrderShippingStatus = (
+  order: ExtendedShortOrder
+): ProductShipmentStatus => {
+  const productStatuses = order.products.map(
+    (product) => product.configuration.status
+  )
+
+  if (productStatuses.every((status) => status === 'refunded')) {
+    return 'refunded'
+  }
+  if (productStatuses.every((status) => status === 'shipped')) {
+    return 'shipped'
+  }
+  if (productStatuses.every((status) => status === 'processing')) {
+    return 'processing'
+  }
+  // detect undetermined status early
+  if (productStatuses.some((status) => status === 'undetermined')) {
+    return 'undetermined'
+  }
+  if (productStatuses.some((status) => status === 'shipped')) {
+    return 'partially shipped'
+  }
+  if (productStatuses.some((status) => status === 'partially shipped')) {
+    return 'partially shipped'
+  }
+
+  return 'undetermined'
+}
+
+const renderStatus = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
+  const status = getOrderShippingStatus(row.original)
+  return (
+    <Chip
+      size="small"
+      variant="outlined"
+      // sx={{ userSelect: 'none' }}
+      {...getOrderStatusIconInfo(status)}
+    />
+  )
+}
+
+const renderProducts = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
   const { products } = row.original
   return (
-    <ul>
-      {products.map((product, i) => (
-        <li key={i}>
-          {product.name} {product.configuration.qtyOrdered}{' '}
-          {product.configuration.qtyShipped} {product.configuration.qtyRefunded}
-        </li>
-      ))}
-    </ul>
+    products &&
+    products.length > 0 && (
+      <List>
+        {products.map((product, ind) => (
+          <ListItem key={ind} sx={{ p: 0, alignItems: 'baseline' }}>
+            <ListItemIcon sx={{ minWidth: 30, pt: 0.25 }}>
+              {product.configuration.qtyOrdered} ×
+            </ListItemIcon>
+            <Typography variant="body2" component="span" color="textPrimary">
+              {product.name} :
+            </Typography>
+            <Typography variant="body2" component="span" color="textPrimary">
+              {product.configuration.status}
+            </Typography>
+          </ListItem>
+        ))}
+      </List>
+    )
   )
 }
 
@@ -135,11 +276,11 @@ type OrderCallback = (order: Order | null) => void
 
 type RowRendererFactory = (
   callback: OrderCallback
-) => (props: RowProps<ShortOrder>) => ReactNode
+) => (props: RowProps<ExtendedShortOrder>) => ReactNode
 
 const renderOrderNumber: RowRendererFactory =
   (callback: OrderCallback) =>
-  ({ row }: RowProps<ShortOrder>) => {
+  ({ row }: RowProps<ExtendedShortOrder>) => {
     const { orderNumber } = row.original
     return (
       <Button
@@ -170,20 +311,20 @@ const renderOrderNumber: RowRendererFactory =
 // }
 
 export default function OrderPage() {
+  // use theme
+  const theme = useTheme()
+  const colors = tokens(theme.palette.mode)
+
   const [showOrder, setShowOrder] = React.useState(false)
   const [order, setOrder] = React.useState<Order | null>(null)
-  const [data, setData] = React.useState<ShortOrder[]>([])
+  const [data, setData] = React.useState<ExtendedShortOrder[]>([])
   const [search, setSearch] = React.useState('')
 
   // save the scroll position of the table
   const scrollPosition = useRef(0)
 
-  const columns = useMemo<ColumnDef<ShortOrder>[]>(
+  const columns = useMemo<ColumnDef<ExtendedShortOrder>[]>(
     () => [
-      {
-        accessorKey: 'orderId',
-        header: 'ID',
-      },
       {
         accessorKey: 'orderNumber',
         header: renderOrderNumberHeader,
@@ -199,6 +340,7 @@ export default function OrderPage() {
       },
       {
         id: 'firstName',
+        header: renderFirstNameHeader,
         cell: renderFirstName,
       },
       {
@@ -214,7 +356,13 @@ export default function OrderPage() {
       },
       {
         accessorKey: 'email',
+        accessorFn: (row) => row.customer.email,
         header: 'email',
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        cell: renderStatus,
       },
     ],
     []
@@ -236,23 +384,24 @@ export default function OrderPage() {
         .then((res: SearchResponse) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, prettier/prettier
           console.log(res.results.map((x) => x.orderNumber).join(', '))
-          // const parsedOrders = res.results.map((orderInfo) => {
-          //   const {
-          //     id,
-          //     orderNumber,
-          //     customer: { firstName, lastName, email },
-          //     products,
-          //   } = orderInfo
-          //   return {
-          //     orderId: id,
-          //     orderNumber,
-          //     firstName,
-          //     lastName,
-          //     email,
-          //     products,
-          //   }
-          // })
-          setData(res.results)
+          const parsedOrders = res.results.map((orderInfo) => {
+            const { products, ...otherFields } = orderInfo
+            const parsedProducts = products.map((product) => {
+              const { configuration, ...otherProductFields } = product
+              return {
+                ...otherProductFields,
+                configuration: {
+                  ...configuration,
+                  status: getProductStatus(configuration),
+                },
+              }
+            })
+            return {
+              ...otherFields,
+              products: parsedProducts,
+            }
+          })
+          setData(parsedOrders)
         })
     } else {
       setData([])
@@ -314,12 +463,15 @@ export default function OrderPage() {
           </Box>
         </Box>
       ) : (
-        <Box p={2} maxWidth={840}>
+        <Box p={2} maxWidth={1100}>
           <TableContainer component={Paper}>
             <Table sx={{ minWidth: 650 }}>
               <TableHead>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
+                  <TableRow
+                    key={headerGroup.id}
+                    sx={{ backgroundColor: colors.blueAccent[200] }}
+                  >
                     {headerGroup.headers.map((header) => (
                       <TableCell key={header.id} colSpan={header.colSpan}>
                         {header.isPlaceholder
