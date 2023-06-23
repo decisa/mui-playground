@@ -140,6 +140,7 @@ export const useMagentoAPI = () => {
         }
         const fetchOptions: RequestInit = {
           method,
+          mode: 'cors',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
