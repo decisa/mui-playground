@@ -8,7 +8,6 @@ import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { Order } from '../Types/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
-import { order as initOrder } from '../mockData'
 import Comments from '../Components/Order/Comments'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
