@@ -179,7 +179,7 @@ const getProductStatus = (
 ): ProductShipmentStatus => {
   const { qtyOrdered, qtyShippedExternal, qtyRefunded } = configuration
 
-  console.log('configuration:', configuration)
+  // console.log('configuration:', configuration)
   // Calculate remaining quantity on order after refunds
   const qty = qtyOrdered - qtyRefunded
   // If an item is fully refunded

@@ -42,6 +42,7 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
     products,
     shippingCost,
     taxRate,
+    deliveryMethod,
   } = order
   // console.log('OrderConfirmation:', billingAddress)
   const orderDate =
@@ -138,7 +139,11 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
           </Grid>
           <Grid xs={6}>
             <Typography variant="h6">shipping method</Typography>
-            <Typography variant="body2">{shippingMethod}</Typography>
+            <Typography variant="body2">
+              {deliveryMethod
+                ? `${deliveryMethod.name} - ${deliveryMethod.description}`
+                : shippingMethod}
+            </Typography>
           </Grid>
         </Grid>
       </Card>

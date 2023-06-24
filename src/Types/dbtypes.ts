@@ -140,6 +140,12 @@ export type Order = {
     updatedAt?: Date | string
     orderId?: number
   }
+  deliveryMethodId?: number | null
+  deliveryMethod?: {
+    id: number
+    name: string
+    description: string
+  } | null
   // paymentInfo: {
   //   account_status: null
   //   additional_information: [

@@ -594,6 +594,29 @@ function getPaymentMethod(paymentInfo: MagentoPaymentInfo): string {
   }
 }
 
+function getDeliveryMethodId(shippingMethod: string): number | null {
+  switch (shippingMethod) {
+    case 'flatrate_flatrate': {
+      return 2 // inside
+    }
+    case 'ibflatrate1_ibflatrate1': {
+      return 1 // standard shipping
+    }
+    case 'ibflatrate2_ibflatrate2': {
+      return 3 // white glove
+    }
+    case 'ibflatrate4_ibflatrate4': {
+      return 4 // premium
+    }
+    case 'ibflatrate5_ibflatrate5': {
+      return 5 // special
+    }
+    default: {
+      return null
+    }
+  }
+}
+
 function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
   const {
     created_at: dateCreated,
@@ -706,6 +729,8 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
       .map(parseProduct),
 
     magento: orderMagentoInfo,
+    deliveryMethod: null,
+    deliveryMethodId: getDeliveryMethodId(shippingMethod),
   }
 }
 
