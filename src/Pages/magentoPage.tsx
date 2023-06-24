@@ -1,38 +1,27 @@
-import * as yup from 'yup'
-import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
-import React, { KeyboardEventHandler, useEffect } from 'react'
-import { Box, Button, Paper, TextField, Typography } from '@mui/material'
+import React from 'react'
+import { Result, ResultAsync, errAsync } from 'neverthrow'
+import { LoaderFunctionArgs, useLoaderData } from 'react-router'
+import { Box, Button, Paper, TextField } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { Order } from '../Types/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
-import { order as initOrder } from '../mockData'
 import Comments from '../Components/Order/Comments'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
-type BrandShape =
-  | {
-      externalId?: number
-      name: string
-    }
-  | string
-  | undefined
-
-function getBrandInfo(brand: BrandShape) {
-  if (typeof brand === 'string') {
-    return ` by ${brand}`
-  }
-  if (brand?.name) {
-    return ` by ${brand.name}`
-  }
-  return ''
-}
-// brand ? ` by ${String(brand)}` : ''
-
 export default function MagentoPage() {
+  const deliveryMethods = (
+    useLoaderData() as Result<DeliveryMethodsAsObject, Error>
+  )
+    .mapErr((e) => {
+      console.log('there was error in chain')
+      console.dir(e)
+      return 'error'
+    })
+    .unwrapOr({} as DeliveryMethodsAsObject)
   // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
   const [order, setOrder] = React.useState<Order | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState('')
@@ -46,6 +35,12 @@ export default function MagentoPage() {
       .map((orderResult) => {
         // console.log('received orders:', orderResult)
         if (orderResult && orderResult.length > 0) {
+          if (orderResult[0].deliveryMethodId && deliveryMethods) {
+            if (orderResult[0].deliveryMethodId in deliveryMethods) {
+              orderResult[0].deliveryMethod =
+                deliveryMethods[orderResult[0].deliveryMethodId]
+            }
+          }
           setOrder(orderResult[0])
         }
         return orderResult
@@ -196,4 +191,44 @@ export default function MagentoPage() {
       <SnackBar snack={snack} />
     </Box>
   )
+}
+
+type DeliveryMethod = {
+  id: number
+  name: string
+  description: string
+}
+
+type DeliveryMethodsAsObject = {
+  [deliveryTypeId: number]: DeliveryMethod
+}
+
+const getDeliveryMethods = async (): Promise<DeliveryMethodsAsObject> => {
+  const result = await fetch(`${dbHost}/deliverymethod/all`)
+  if (!result.ok) {
+    throw new Error(`Failed throw to get delivery methods`)
+  }
+
+  const methods = (await result.json()) as DeliveryMethod[]
+
+  // convert array of methods to an object with deliveryType ids as keys
+  const methodsAsObject = methods.reduce((acc, method) => {
+    acc[method.id] = method
+    return acc
+  }, {} as DeliveryMethodsAsObject)
+  console.log('!!! result = ', methods)
+  console.log('!!! result as object = ', methodsAsObject)
+  return methodsAsObject
+}
+
+const safeGetCustomerById = async () =>
+  ResultAsync.fromPromise(
+    getDeliveryMethods(),
+    () => new Error('database error neverthrow')
+  )
+
+export async function loader(): Promise<
+  ResultAsync<DeliveryMethodsAsObject, Error>
+> {
+  return safeGetCustomerById()
 }
