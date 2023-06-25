@@ -22,12 +22,12 @@ export const mainNavbarItems = [
     path: 'order',
     icon: <SavedSearchIcon />,
   },
-  {
-    id: 3,
-    label: 'Customer ID',
-    path: 'customer/3',
-    icon: <SettingsEthernetIcon />,
-  },
+  // {
+  //   id: 3,
+  //   label: 'Customer ID',
+  //   path: 'customer/3',
+  //   icon: <SettingsEthernetIcon />,
+  // },
   {
     id: 4,
     label: 'All Customers',
@@ -40,35 +40,35 @@ export const mainNavbarItems = [
     path: 'containers',
     icon: <SailingIcon />,
   },
-  {
-    id: 10,
-    label: 'Authentication',
-    path: 'signin',
-    icon: <PeopleIcon />,
-  },
-  {
-    id: 11,
-    label: 'Database',
-    path: 'database',
-    icon: <ImageIcon />,
-  },
+  // {
+  //   id: 10,
+  //   label: 'Authentication',
+  //   path: 'signin',
+  //   icon: <PeopleIcon />,
+  // },
+  // {
+  //   id: 11,
+  //   label: 'Database',
+  //   path: 'database',
+  //   icon: <ImageIcon />,
+  // },
 
-  {
-    id: 14,
-    label: 'Functions',
-    path: 'order/15',
-    icon: <SettingsInputComponentIcon />,
-  },
-  {
-    id: 15,
-    label: 'Machine-Learning',
-    path: 'signin',
-    icon: <DnsIcon />,
-  },
-  {
-    id: 18,
-    label: 'Multi Checkbox',
-    path: 'multicheckbox',
-    icon: <DnsIcon />,
-  },
+  // {
+  //   id: 14,
+  //   label: 'Functions',
+  //   path: 'order/15',
+  //   icon: <SettingsInputComponentIcon />,
+  // },
+  // {
+  //   id: 15,
+  //   label: 'Machine-Learning',
+  //   path: 'signin',
+  //   icon: <DnsIcon />,
+  // },
+  // {
+  //   id: 18,
+  //   label: 'Multi Checkbox',
+  //   path: 'multicheckbox',
+  //   icon: <DnsIcon />,
+  // },
 ]

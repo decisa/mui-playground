@@ -583,10 +583,13 @@ function getPaymentMethod(paymentInfo: MagentoPaymentInfo): string {
       return stripePaymentInfo || 'Stripe'
     }
     case 'stripe_payments': {
-      if (paymentInfo.additional_information.length > 4) {
+      if (paymentInfo.additional_information.length > 5) {
         return paymentInfo.additional_information[3]
       }
-      if (paymentInfo.additional_information.length === 3) {
+      if (
+        paymentInfo.additional_information.length === 3 ||
+        paymentInfo.additional_information.length === 4
+      ) {
         return paymentInfo.additional_information[2]
       }
       return 'Stripe'

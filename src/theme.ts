@@ -4,6 +4,7 @@ import { PaletteMode } from '@mui/material'
 import { createContext, useMemo, useState } from 'react'
 import { lineHeight } from '@mui/system'
 
+export type ColorPalette = ReturnType<typeof tokens>
 // color design tokens
 export const tokens = (mode: string) => ({
   ...(mode === 'dark'

@@ -30,7 +30,8 @@ const router = createBrowserRouter(
         </App>
       }
     >
-      <Route index element={<Index />} />
+      {/* <Route index element={<Index />} /> */}
+      <Route index element={<MagentoPage />} loader={getDeliveryMethods} />
       <Route path="database" element={<DatabasePage />} />
       <Route path="containers" element={<ContainersPage />} />
       <Route path="order" element={<OrderPage />} />
