@@ -62,6 +62,8 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
     0
   )
 
+  // discount percentage
+  const discountPercentage = discount / subtotal
   const tax = ((subtotal - discount + shippingCost) * taxRate) / 100
 
   const total = subtotal - discount + shippingCost + tax
@@ -180,7 +182,9 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
           sx={{ width: 250 }}
         >
           <Grid xs={6}>
-            <Typography variant="body2">discount</Typography>
+            <Typography variant="body2">
+              discount {(discountPercentage * 100).toFixed(1)}%
+            </Typography>
           </Grid>
           <Grid xs={6} textAlign="right">
             <Price price={discount ? -discount : 0} />

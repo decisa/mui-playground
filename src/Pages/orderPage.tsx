@@ -34,11 +34,13 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 
+import { Stack } from '@mui/system'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import { Order } from '../Types/dbtypes'
 import Comments from '../Components/Order/Comments'
 import { ChipColor } from '../Types/muiTypes'
 import { tokens } from '../theme'
+import DotMenu from '../Components/DotMenu/DotMenu'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -234,13 +236,32 @@ const getOrderShippingStatus = (
 
 const renderStatus = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
   const status = getOrderShippingStatus(row.original)
+  const options = [
+    {
+      id: 'mark-as-shipped',
+      label: 'mark as shipped',
+      action: () => {
+        console.log(`mark as shipped ${row.original.orderNumber}`)
+      },
+    },
+    {
+      id: 'mark-as-refunded',
+      label: 'mark as refunded',
+      action: () => {
+        console.log(`mark as refunded ${row.original.orderNumber}`)
+      },
+    },
+  ]
   return (
-    <Chip
-      size="small"
-      variant="outlined"
-      // sx={{ userSelect: 'none' }}
-      {...getOrderStatusIconInfo(status)}
-    />
+    <Stack direction="row" alignItems="center">
+      <Chip
+        size="small"
+        variant="outlined"
+        // sx={{ userSelect: 'none' }}
+        {...getOrderStatusIconInfo(status)}
+      />
+      <DotMenu options={options} />
+    </Stack>
   )
 }
 

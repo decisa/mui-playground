@@ -1,14 +1,21 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Result, ResultAsync, errAsync } from 'neverthrow'
-import { LoaderFunctionArgs, useLoaderData } from 'react-router'
+import {
+  LoaderFunctionArgs,
+  useLoaderData,
+  useLocation,
+  useParams,
+} from 'react-router'
 import { Box, Button, Paper, TextField } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
+import { set } from 'date-fns'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
-import { Order } from '../Types/dbtypes'
+import { Order, OrderComment } from '../Types/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import Comments from '../Components/Order/Comments'
+import CommentsEditor from '../Components/Order/CommentsEditor'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -23,15 +30,56 @@ export default function MagentoPage() {
     })
     .unwrapOr({} as DeliveryMethodsAsObject)
   // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
+
+  const { orderId } = useParams()
+  console.log('location', orderId)
   const [order, setOrder] = React.useState<Order | undefined>()
-  const [orderNumbers, setOrderNumbers] = React.useState('')
+  const [orderNumbers, setOrderNumbers] = React.useState(orderId)
+
+  const { getOrderById, getOrderDetails, getOrderComments } = useMagentoAPI()
 
   const snack = useSnackBar()
 
-  const { getOrderById, getOrderDetails } = useMagentoAPI()
+  const addNewComment = (comment: OrderComment) => {
+    setOrder((prevOrder) => {
+      if (!prevOrder) {
+        return prevOrder
+      }
+      const newOrder = { ...prevOrder }
+      if (prevOrder.magento) {
+        newOrder.magento = { ...prevOrder.magento }
+        newOrder.magento.status = comment.status
+      }
+      newOrder.comments = [{ ...comment }, ...newOrder.comments]
+      return newOrder
+    })
+  }
 
-  const getOrders = () => {
-    getOrderById(orderNumbers) // order with error 100002077 5081 eric
+  const refetchComments = () => {
+    getOrderComments(order?.magento?.externalId || 0).map((comments) => {
+      // console.log('received comments:', comments)
+      // snack.success('comments updated')
+      setOrder((prevOrder) => {
+        if (!prevOrder) {
+          return prevOrder
+        }
+        const newOrder = { ...prevOrder }
+        if (prevOrder.magento && comments.length > 0) {
+          newOrder.magento = { ...prevOrder.magento }
+          newOrder.magento.status = comments[0].status
+        }
+        newOrder.comments = [...comments]
+        return newOrder
+      })
+      return comments
+    })
+  }
+
+  useEffect(() => {
+    if (!orderId) {
+      return
+    }
+    getOrderById(orderId) // order with error 100002077 5081 eric
       .map((orderResult) => {
         // console.log('received orders:', orderResult)
         if (orderResult && orderResult.length > 0) {
@@ -82,98 +130,10 @@ export default function MagentoPage() {
         console.log('ERRRRROR', error)
         return error
       })
-  }
+  }, [])
 
-  const handleKeyboard: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-      getOrders()
-    }
-  }
   return (
     <Box sx={{ m: 2 }} className="printable-paper">
-      <Stack
-        direction="row"
-        alignItems="center"
-        sx={{ mb: 4 }}
-        className="no-print"
-      >
-        <TextField
-          id="filled-basic"
-          label="order #s"
-          variant="standard"
-          value={orderNumbers}
-          onChange={(e) => setOrderNumbers(e.target.value)}
-          onKeyDown={handleKeyboard}
-        />
-        <Button
-          variant="contained"
-          startIcon={<SearchIcon />}
-          onClick={() => getOrders()}
-        >
-          search
-        </Button>
-
-        {order ? (
-          <>
-            {/* <pre>
-            {order.customer.firstName} {order.customer.lastName}{' '}
-            {`\n\n${order.orderNumber} - ${String(order.magento?.status)}\n\n`}
-            {order?.products
-              .map((product) => {
-                const { name, brand, configuration } = product
-                const title = `${
-                  configuration.qtyOrdered
-                }× ${name}${getBrandInfo(brand)}`
-                const options = configuration.options
-                  .map(({ label, value }) => ` > ${label}: ${value}`)
-                  .join('\n')
-                return `${title}\n${options}`
-              })
-              .join('\n\n')}
-          </pre> */}
-            <Button
-              variant="contained"
-              sx={{ ml: 2 }}
-              onClick={() => {
-                console.log('importing order', order)
-                // fetch('http://192.168.168.236:8080/order/magento', {
-                fetch(`${dbHost}/order/magento`, {
-                  method: 'PUT',
-                  body: JSON.stringify(order),
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                })
-                  .then((res) => {
-                    if (!res.ok) {
-                      let errorText = `${res.statusText} - `
-                      return res.json().then((err) => {
-                        console.log('err', err)
-                        if (err && typeof err === 'object' && 'error' in err) {
-                          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                          errorText += String(err.error)
-                        }
-                        throw new Error(errorText)
-                      })
-                    }
-                    return res.json()
-                  })
-                  .then((res) => {
-                    console.log('res', res)
-                    snack.success('order imported')
-                  })
-                  .catch((err) => {
-                    console.log('err', err)
-                    snack.error(String(err))
-                  })
-                // snack.success('order imported')
-              }}
-            >
-              Import
-            </Button>
-          </>
-        ) : null}
-      </Stack>
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="start">
         <Paper
           sx={{ maxWidth: 840, minWidth: 690, flex: '2 2 690px' }}
@@ -181,12 +141,24 @@ export default function MagentoPage() {
         >
           {order ? <OrderConfirmation order={order} /> : null}
         </Paper>
-        <Paper
-          sx={{ maxWidth: 840, minWidth: 400, flex: '3 3 400px' }}
-          className="no-print"
-        >
-          {order ? <Comments comments={order.comments} /> : null}
-        </Paper>
+        <Box>
+          <Paper>
+            {order ? (
+              <CommentsEditor
+                orderStatus={order?.magento?.status || 'unknown'}
+                orderId={order?.magento?.externalId || 0}
+                addNewComment={addNewComment}
+                refreshComments={refetchComments}
+              />
+            ) : null}
+          </Paper>
+          <Paper
+            sx={{ maxWidth: 840, minWidth: 400, flex: '3 3 400px' }}
+            className="no-print"
+          >
+            {order ? <Comments comments={order.comments} /> : null}
+          </Paper>
+        </Box>
       </Box>
       <SnackBar snack={snack} />
     </Box>

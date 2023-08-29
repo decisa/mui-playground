@@ -1,3 +1,5 @@
+import { ca, de } from 'date-fns/locale'
+import { Order } from '../Types/dbtypes'
 import { OrderStatus } from '../Types/magentoTypes'
 import { ChipColor } from '../Types/muiTypes'
 
@@ -44,4 +46,63 @@ export function getStatusIconInfo(status?: string): {
       chipColor = 'warning'
   }
   return { color: chipColor, label }
+}
+
+// processing
+// preparing_shipment
+// in_production
+// in_transit
+// production
+// fraud
+
+const orderStatuses: Record<OrderStatus, string> = {
+  pending: 'pending',
+  processing: 'processing',
+  in_production: 'in production',
+  in_transit: 'in transit from factory',
+  preparing_shipment: 'preparing to be shipped',
+  complete: 'complete',
+  pending_payment: 'pending payment',
+  closed: 'closed',
+  canceled: 'canceled',
+  paypal_reversed: 'PayPal reversed',
+  paypal_canceled_reversal: 'PayPal canceled reversal',
+  holded: 'on hold',
+  pending_paypal: 'pending PayPal',
+  payment_review: 'payment review',
+  production: 'production',
+  fraud: 'suspected fraud',
+  unknown: 'unknown',
+}
+
+export type ValueLabel = {
+  value: string
+  label: string
+}
+
+export function getPossibleOrderStatuses(
+  currentStatus: OrderStatus
+): ValueLabel[] {
+  let possibleStatuses: OrderStatus[]
+  switch (currentStatus) {
+    case 'pending':
+    case 'processing':
+    case 'in_production':
+    case 'in_transit':
+    case 'preparing_shipment':
+      possibleStatuses = [
+        'pending',
+        'processing',
+        'in_production',
+        'in_transit',
+        'preparing_shipment',
+      ]
+      break
+    default:
+      possibleStatuses = [currentStatus]
+  }
+  return possibleStatuses.map((status) => ({
+    value: status,
+    label: orderStatuses[status],
+  }))
 }

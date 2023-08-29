@@ -311,13 +311,13 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
         // fontSize: 16,
         fontSize: '1rem',
-        fontWeight: 400,
+        fontWeight: 300,
       },
       body2: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
         // fontSize: 14,
         fontSize: '0.875rem',
-        fontWeight: 400,
+        fontWeight: 300,
       },
       button: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),

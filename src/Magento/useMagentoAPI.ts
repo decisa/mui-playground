@@ -1,22 +1,27 @@
 import { ResultAsync, err, okAsync } from 'neverthrow'
+import { type } from 'os'
 import { useMagentoNeverthrowContext } from './magentoAPIContext'
 import { toErrorWithMessage } from '../utils/errorHandling'
 import {
   MagentoAttributeRaw,
   MainProduct,
+  OrderStatus,
   TConditionType,
   TMagentoAtrribute,
+  TMagentoOrderComment,
   TResponseGetMagentoOrder,
 } from '../Types/magentoTypes'
 import { MagentoError } from './MagentoError'
 import {
   combineOrderDetails,
   parseAttributesInfo,
+  parseCommentsResponse,
   parseMagentoAttribute,
   parseMagentoOrderResponse,
   parseMainProductsInfo,
+  safeParse,
 } from './magentoParsers'
-import { Order } from '../Types/dbtypes'
+import { Order, OrderComment } from '../Types/dbtypes'
 import { apiPath } from './magentoAuthorize'
 
 // const domain = 'https://stage.roomservice360.com'
@@ -61,6 +66,10 @@ function getProductsByIdUrl(productIds: string): string {
     false
   )
   return encodeURI(`${apiPath}/V1/products?${searchCriteria}`)
+}
+
+function getCommentsByIdUrl(magentoOrderId: number) {
+  return `${apiPath}/V1/orders/${magentoOrderId}/comments`
 }
 
 // function getProductsByIdsWildcardUrl(productIds: string): string {
@@ -148,6 +157,7 @@ export const useMagentoAPI = () => {
         }
         if (data) {
           fetchOptions.body = JSON.stringify(data)
+          // console.log('fetchOptions.body', fetchOptions.body)
         }
         return ResultAsync.fromPromise(
           fetch(url, fetchOptions),
@@ -164,7 +174,9 @@ export const useMagentoAPI = () => {
 
           switch (result.status) {
             case 400:
-              return err(MagentoError.badData(new Error(errorText)))
+              result.json().then((x) => console.log('x', x))
+              break
+            // return err(MagentoError.badData(new Error(errorText)))
             case 401:
               return err(MagentoError.unauthorized(new Error(errorText)))
             case 404:
@@ -200,6 +212,58 @@ export const useMagentoAPI = () => {
       method: 'GET',
       name: 'getOrderById',
     }).andThen(parseMagentoOrderResponse)
+  }
+
+  // type CommentObject = {
+  //   comment: string
+  //   notifyCustomer: boolean
+  //   visibleOnFrontend: boolean
+  //   orderStatus: OrderStatus
+  //   orderId: number
+  // }
+
+  const addOrderComment = (
+    newComment: Omit<OrderComment, 'externalParentId'> & {
+      externalParentId: number
+    }
+  ) => {
+    // const { orderId, comment, visibleOnFrontend, notifyCustomer, orderStatus } =
+    //   commentObject
+    const url = getCommentsByIdUrl(newComment.externalParentId)
+    console.log('url', url)
+
+    const data = {
+      statusHistory: {
+        parent_id: newComment.externalParentId,
+        entity_name: newComment.type,
+        comment: newComment.comment,
+        is_customer_notified: newComment.customerNotified ? 1 : 0,
+        is_visible_on_front: newComment.visibleOnFront ? 1 : 0,
+        status: newComment.status,
+      },
+    }
+    return fetchWithToken<boolean>({
+      url,
+      method: 'POST',
+      name: 'addOrderComment',
+      data,
+    })
+    // .andThen(safeParse((result) => result))
+  }
+
+  const getOrderComments = (orderId: number) => {
+    // const { orderId, comment, visibleOnFrontend, notifyCustomer, orderStatus } =
+    //   commentObject
+    const url = getCommentsByIdUrl(orderId)
+    // console.log('url', url)
+    return fetchWithToken<{
+      items: TMagentoOrderComment[]
+      total_count: number
+    }>({
+      url,
+      method: 'GET',
+      name: 'getOrderComments',
+    }).andThen(parseCommentsResponse)
   }
 
   // TODO: add parser at the end
@@ -258,5 +322,7 @@ export const useMagentoAPI = () => {
     getProductsById,
     getAttributesById,
     getOrderDetails,
+    addOrderComment,
+    getOrderComments,
   }
 }

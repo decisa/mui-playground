@@ -47,6 +47,7 @@ export const useSnackBar = (): TUseSnackProps => {
     })
   }
   const info = (message: string) => {
+    console.log('!!!!!!!!!!!! info:', message)
     setSnackState({
       open: true,
       message: `${message}`,
@@ -84,7 +85,7 @@ export const useSnackBar = (): TUseSnackProps => {
 export const SnackBar = ({ snack }: { snack: TUseSnackProps }) => (
   <Snackbar
     open={snack.snackState.open}
-    autoHideDuration={1500}
+    autoHideDuration={2500}
     onClose={snack.handleClose}
     anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
   >

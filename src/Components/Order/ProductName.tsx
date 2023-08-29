@@ -1,6 +1,6 @@
-import { Link, List, ListItem, ListItemIcon, Typography } from '@mui/material'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import { Link, Typography } from '@mui/material'
 import { Product } from '../../Types/dbtypes'
+import { domain } from '../../Magento/magentoAuthorize'
 
 type ProductNameProps = {
   product: Product
@@ -8,7 +8,7 @@ type ProductNameProps = {
 
 const ProductName = ({ product }: ProductNameProps) => {
   const { name, brand, url } = product
-  const domain = process.env.REACT_APP_MAGENTO_DOMAIN || ''
+
   const productUrl = url ? `${domain}/${url}.html` : null
 
   if (!productUrl) {

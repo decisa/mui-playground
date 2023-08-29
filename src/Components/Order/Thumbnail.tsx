@@ -1,8 +1,6 @@
 import { Box } from '@mui/material'
 import { Product } from '../../Types/dbtypes'
-
-const domain = process.env.REACT_APP_MAGENTO_DOMAIN || ''
-const cacheFolder = process.env.REACT_APP_MAGENTO_IMAGE_CACHE || ''
+import { cacheFolder, domain } from '../../Magento/magentoAuthorize'
 
 type ThumbnailProps = {
   product: Product

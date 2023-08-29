@@ -14,7 +14,12 @@ import CustomersPage, { loader as getAllCustomers } from './Pages/customersPage'
 import Index from './Pages'
 import OrderPage from './Pages/orderPage'
 import MultiCheckboxPage from './Pages/multiCheckboxPage'
-import MagentoPage, { loader as getDeliveryMethods } from './Pages/magentoPage'
+import MagentoSearchOrderPage, {
+  loader as getDeliveryMethods,
+} from './Pages/magentoSearchOrderPage'
+import MagentoOrder, {
+  loader as getDeliveryMethodsMagentoOrder,
+} from './Pages/magentoOrder'
 import ContainersPage from './Pages/containersPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
@@ -31,7 +36,11 @@ const router = createBrowserRouter(
       }
     >
       {/* <Route index element={<Index />} /> */}
-      <Route index element={<MagentoPage />} loader={getDeliveryMethods} />
+      <Route
+        index
+        element={<MagentoSearchOrderPage />}
+        loader={getDeliveryMethods}
+      />
       <Route path="database" element={<DatabasePage />} />
       <Route path="containers" element={<ContainersPage />} />
       <Route path="order" element={<OrderPage />} />
@@ -45,11 +54,18 @@ const router = createBrowserRouter(
           action={updateCustomer}
         />
       </Route>
-      <Route
-        path="magento"
-        element={<MagentoPage />}
-        loader={getDeliveryMethods}
-      />
+      <Route path="magento">
+        <Route
+          index
+          element={<MagentoSearchOrderPage />}
+          loader={getDeliveryMethods}
+        />
+        <Route
+          path=":orderId"
+          element={<MagentoOrder />}
+          loader={getDeliveryMethodsMagentoOrder}
+        />
+      </Route>
     </Route>
   )
 )

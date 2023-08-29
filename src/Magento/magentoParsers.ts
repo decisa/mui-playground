@@ -40,7 +40,7 @@ import {
 //   return strippedOff
 // }
 
-function safeParse<U, T>(
+export function safeParse<U, T>(
   parser: (value: U) => T
 ): (value: U) => ResultAsync<T, MagentoError> {
   return (value: U) => {
@@ -104,6 +104,26 @@ const parseComment = (orderComment: TMagentoOrderComment): OrderComment => {
     visibleOnFront: Boolean(visibleOnFront),
     status,
   }
+}
+
+const parseComments = (comments: TMagentoOrderComment[]): OrderComment[] => {
+  if (!comments || comments.length === 0) {
+    return []
+  }
+  return comments.map(parseComment)
+}
+
+const parseCommentsResponseUnsafe = (rawResponse: {
+  items: TMagentoOrderComment[]
+  total_count: number
+}): OrderComment[] => {
+  const { items } = rawResponse
+  if (!items || items.length === 0) {
+    return []
+  }
+  const result = items.map(parseComment)
+  // magento returns comments in reverse order, so we need to reverse them back
+  return result.reverse()
 }
 
 // type OptionArrayFormat = {
@@ -611,6 +631,9 @@ function getDeliveryMethodId(shippingMethod: string): number | null {
     case 'ibflatrate2_ibflatrate2': {
       return 3 // white glove
     }
+    case 'ibflatrate3_ibflatrate3': {
+      return 8 // standard shipping (international)
+    }
     case 'ibflatrate4_ibflatrate4': {
       return 4 // premium
     }
@@ -740,7 +763,9 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
   }
 }
 
-function magentoOrder<T extends TResponseGetMagentoOrder>(rawResponse: T) {
+function magentoOrder<T extends TResponseGetMagentoOrder>(
+  rawResponse: T
+): Order[] {
   const { items } = rawResponse
   if (!items || items.length === 0) {
     return []
@@ -824,3 +849,4 @@ export const parseMagentoOrderResponse = safeParse(magentoOrder)
 export const parseMainProductsInfo = safeParse(mainProductsResponseToObject)
 export const parseAttributesInfo = safeParse(attributesResponseToObject)
 export const combineOrderDetails = safeParse(finalizeOrderDetails)
+export const parseCommentsResponse = safeParse(parseCommentsResponseUnsafe)
