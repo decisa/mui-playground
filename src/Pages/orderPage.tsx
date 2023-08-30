@@ -41,6 +41,7 @@ import Comments from '../Components/Order/Comments'
 import { ChipColor } from '../Types/muiTypes'
 import { tokens } from '../theme'
 import DotMenu from '../Components/DotMenu/DotMenu'
+import { autoReceive } from '../utils/inventoryManagement'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -249,6 +250,13 @@ const renderStatus = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
       label: 'mark as refunded',
       action: () => {
         console.log(`mark as refunded ${row.original.orderNumber}`)
+      },
+    },
+    {
+      id: 'autoReceiveAll',
+      label: 'Auto-Receive All Products',
+      action: () => {
+        autoReceive(row.original.orderNumber)
       },
     },
   ]
