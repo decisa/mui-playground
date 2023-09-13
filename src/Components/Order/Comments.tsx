@@ -62,9 +62,7 @@ function highlightWords(
 
   // Split the text using the combined regular expression
   // console.log('processing comments:', text, typeof text)
-  const parts = text
-    ? text.split(regexPattern).filter((part) => part !== '')
-    : ['']
+  const parts = text ? text.split(regexPattern).filter((part) => part) : ['']
 
   const highlighted = parts.length > 1
   const parsedComment = (

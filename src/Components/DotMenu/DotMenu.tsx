@@ -4,45 +4,22 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 
-const newOptions = [
-  {
-    id: 'addDelivery',
-    label: 'Add Delivery',
-    action: () => console.log('add delivery'),
-  },
-  {
-    id: 'cosnole',
-    label: 'Send Message',
-    action: () => console.log('message!'),
-  },
-]
-
 type Option = {
   id: string
   label: string
   action: () => void
 }
 
-type OptionAsObject = {
-  [id: string]: Option
-}
-
-const optionObject = newOptions.reduce((acc, option) => {
-  acc[option.id] = option
-  return acc
-}, {} as OptionAsObject)
-
-const ITEM_HEIGHT = 48
-
 type DotMenuProps = {
   options: Option[]
 }
 
 export default function DotMenu({ options }: DotMenuProps) {
-  console.log('render options !')
+  // console.log('render options !')
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    console.log('handleClick', event.currentTarget)
     setAnchorEl(event.currentTarget)
   }
 
@@ -89,7 +66,7 @@ export default function DotMenu({ options }: DotMenuProps) {
             // selected={option.label === 'Pyxis'}
             onClick={option.action}
           >
-            {option.label}
+            {option.label} xxx
           </MenuItem>
         ))}
       </Menu>

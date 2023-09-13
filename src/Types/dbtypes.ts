@@ -1,3 +1,5 @@
+import { type } from 'os'
+import { number } from 'yup'
 import { CommentType, OrderStatus, ProductType } from './magentoTypes'
 
 export type Address = {
@@ -115,6 +117,7 @@ export type Product = {
   externalId?: number // 167049
   type?: ProductType
   configuration: ProductConfiguration
+  configurationId?: number
 }
 
 export type Order = {
@@ -169,4 +172,88 @@ export type Order = {
   //   shipping_amount: 99
   //   shipping_captured: 99
   // }
+}
+
+export type ProductSummary = {
+  configurationId: number
+  qtyInProduction: number
+  qtyInTransit: number
+  qtyPurchased: number
+  qtyReceived: number
+  qtyShipped: number
+}
+
+export type ShortProduct = {
+  name: string
+  brand?: {
+    name: string
+    id: number
+  }
+  configuration: {
+    qtyOrdered: number
+    qtyShippedExternal: number
+    qtyRefunded: number
+    summary?: ProductSummary
+  }
+}
+
+export type ShortOrder = {
+  id: number
+  orderNumber: string
+  customer: {
+    firstName: string
+    lastName: string
+    email: string
+  }
+  shippingAddress: {
+    firstName: string
+    lastName: string
+  }
+  billingAddress: {
+    firstName: string
+    lastName: string
+  }
+  products: ShortProduct[]
+}
+
+export const poStatuses = [
+  'pending',
+  'in production',
+  'shipped',
+  'received',
+] as const
+
+export type POStatus = (typeof poStatuses)[number]
+
+export type POItemCreate = {
+  configurationId: number
+  qtyOrdered: number
+}
+
+export type PurchaseOrderRequest = {
+  orderId: number
+  brandId: number
+  status?: POStatus
+  dateSubmitted?: Date
+  poNumber: string
+  items: POItemCreate[]
+}
+
+export type PurchaseOrderCreateResponse = {
+  createdAt: Date | string
+  updatedAt: Date | string
+  id: number
+  poNumber: string
+  dateSubmitted: Date | string
+  status: POStatus
+  brandId: number
+  orderId: number
+  items: {
+    createdAt: Date | string
+    updatedAt: Date | string
+    id: number
+    qtyOrdered: number
+    configurationId: number
+    purchaseOrderId: number
+  }[]
 }

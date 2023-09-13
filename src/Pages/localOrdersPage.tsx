@@ -36,51 +36,24 @@ import {
 
 import { Stack } from '@mui/system'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
-import { Order } from '../Types/dbtypes'
+import { Order, ShortOrder, ShortProduct } from '../Types/dbtypes'
 import Comments from '../Components/Order/Comments'
 import { ChipColor } from '../Types/muiTypes'
 import { tokens } from '../theme'
 import DotMenu from '../Components/DotMenu/DotMenu'
 import { autoReceive } from '../utils/inventoryManagement'
+import getLocalOrderActions from '../utils/getLocalOrderActions'
+import LocalOrderActions from '../Components/DotMenu/LocalOrderActions'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
-type Product = {
-  name: string
-  brand: string
-  configuration: {
-    qtyOrdered: number
-    qtyShippedExternal: number
-    qtyRefunded: number
-  }
-}
-
-type ExtendedProduct = Product & {
+type ExtendedProduct = ShortProduct & {
   configuration: {
     status: ProductShipmentStatus
   }
 }
 
-type ShortOrder = {
-  id: number
-  orderNumber: string
-  customer: {
-    firstName: string
-    lastName: string
-    email: string
-  }
-  shippingAddress: {
-    firstName: string
-    lastName: string
-  }
-  billingAddress: {
-    firstName: string
-    lastName: string
-  }
-  products: Product[]
-}
-
-type ExtendedShortOrder = Omit<ShortOrder, 'products'> & {
+export type ExtendedShortOrder = Omit<ShortOrder, 'products'> & {
   products: ExtendedProduct[]
 }
 
@@ -260,15 +233,18 @@ const renderStatus = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
       },
     },
   ]
+
+  // const options2 = getLocalOrderActions(row)
   return (
-    <Stack direction="row" alignItems="center">
+    <Stack direction="row" alignItems="center" justifyContent="end">
       <Chip
         size="small"
         variant="outlined"
         // sx={{ userSelect: 'none' }}
         {...getOrderStatusIconInfo(status)}
       />
-      <DotMenu options={options} />
+      {/* <DotMenu options={options} /> */}
+      <LocalOrderActions row={row} />
     </Stack>
   )
 }
@@ -279,7 +255,7 @@ const renderProducts = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
     products &&
     products.length > 0 && (
       <List>
-        {products.map((product, ind) => (
+        {products.slice(0, 3).map((product, ind) => (
           <ListItem key={ind} sx={{ p: 0, alignItems: 'baseline' }}>
             <ListItemIcon sx={{ minWidth: 30, pt: 0.25 }}>
               {product.configuration.qtyOrdered} ×
@@ -292,6 +268,28 @@ const renderProducts = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
             </Typography>
           </ListItem>
         ))}
+        {products.length === 4 && (
+          <ListItem key={3} sx={{ p: 0, alignItems: 'baseline' }}>
+            <ListItemIcon sx={{ minWidth: 30, pt: 0.25 }}>
+              {products[3].configuration.qtyOrdered} ×
+            </ListItemIcon>
+            <Typography variant="body2" component="span" color="textPrimary">
+              {products[3].name} :
+            </Typography>
+            <Typography variant="body2" component="span" color="textPrimary">
+              {products[3].configuration.status}
+            </Typography>
+          </ListItem>
+        )}
+        {/* {products.length > 4 && `... +${products.length - 3} more`} */}
+        {products.length > 4 && (
+          <ListItem key={4} sx={{ p: 0, alignItems: 'baseline' }}>
+            <ListItemIcon sx={{ minWidth: 30, pt: 0.25 }}>...</ListItemIcon>
+            <Typography variant="body2" component="span" color="textPrimary">
+              +{products.length - 3} more
+            </Typography>
+          </ListItem>
+        )}
       </List>
     )
   )

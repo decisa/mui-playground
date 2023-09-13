@@ -12,7 +12,7 @@ import CustomerPage, {
 } from './Pages/customerPage'
 import CustomersPage, { loader as getAllCustomers } from './Pages/customersPage'
 import Index from './Pages'
-import OrderPage from './Pages/orderPage'
+import OrderPage from './Pages/localOrdersPage'
 import MultiCheckboxPage from './Pages/multiCheckboxPage'
 import MagentoSearchOrderPage, {
   loader as getDeliveryMethods,
