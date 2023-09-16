@@ -8,6 +8,7 @@ import SailingIcon from '@mui/icons-material/Sailing'
 import DnsIcon from '@mui/icons-material/Dns'
 import SearchIcon from '@mui/icons-material/Search'
 import SavedSearchIcon from '@mui/icons-material/SavedSearch'
+import GradingIcon from '@mui/icons-material/Grading'
 
 export const mainNavbarItems = [
   {
@@ -22,12 +23,12 @@ export const mainNavbarItems = [
     path: 'order',
     icon: <SavedSearchIcon />,
   },
-  // {
-  //   id: 3,
-  //   label: 'Customer ID',
-  //   path: 'customer/3',
-  //   icon: <SettingsEthernetIcon />,
-  // },
+  {
+    id: 3,
+    label: 'PurchaseOrders',
+    path: 'po',
+    icon: <GradingIcon />,
+  },
   {
     id: 4,
     label: 'All Customers',

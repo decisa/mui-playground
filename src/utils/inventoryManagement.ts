@@ -1,12 +1,13 @@
 import { Result, ResultAsync, errAsync, okAsync } from 'neverthrow'
 import {
   Order,
-  Product,
+  // Product,
   ProductSummary,
   PurchaseOrderCreateResponse,
+  PurchaseOrderFullData,
   PurchaseOrderRequest,
   ShortOrder,
-  ShortProduct,
+  // ShortProduct,
 } from '../Types/dbtypes'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
@@ -30,6 +31,18 @@ export const searchShortOrders = (search: string) =>
     method: 'GET',
     mode: 'cors',
   }).andThen((res) => okAsync(res.results))
+
+export const getPurchaseOrder = (id: number) =>
+  safeJsonFetch<PurchaseOrderFullData>(`${dbHost}/purchaseorder/${id}`, {
+    method: 'GET',
+    mode: 'cors',
+  }) // .andThen((res) => okAsync(res.results))
+
+export const getPurchaseOrders = () =>
+  safeJsonFetch<PurchaseOrderFullData[]>(`${dbHost}/purchaseorder/all`, {
+    method: 'GET',
+    mode: 'cors',
+  }) // .andThen((res) => okAsync(res.results))
 
 const createPurchaseOrder = (po: PurchaseOrderRequest) =>
   safeJsonFetch<PurchaseOrderCreateResponse>(`${dbHost}/purchaseorder`, {

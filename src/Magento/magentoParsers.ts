@@ -483,10 +483,10 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
       sku,
       externalId: externalConfigurationId,
       qtyOrdered,
-      qtyCanceled,
+      // qtyCanceled,
       qtyRefunded,
       qtyShippedExternal,
-      qtyInvoiced,
+      // qtyInvoiced,
       price, // per item
       totalDiscount, // discount_amount (for all items)
       options,

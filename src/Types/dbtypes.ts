@@ -1,6 +1,7 @@
 import { type } from 'os'
 import { number } from 'yup'
 import { CommentType, OrderStatus, ProductType } from './magentoTypes'
+import OrderNumber from '../Components/Order/OrderNumber'
 
 export type Address = {
   id?: number
@@ -32,6 +33,7 @@ export type Customer = {
   id?: number
   firstName: string
   lastName: string
+  company?: string
   phone: string
   altPhone?: string
   email: string
@@ -79,8 +81,6 @@ export type ProductConfiguration = {
   qtyOrdered: number
   qtyShippedExternal: number
   qtyRefunded?: number
-  qtyCanceled?: number
-  qtyInvoiced?: number
   volume?: number
   price?: number
   totalTax?: number
@@ -91,7 +91,18 @@ export type ProductConfiguration = {
   externalId?: number // 3994
   createdAt?: Date | string
   updatedAt?: Date | string
+
+  qtyCanceled?: number // obsolete
+  qtyInvoiced?: number // obsolete
 }
+
+export type Brand = {
+  id?: number
+  name: string
+  externalId?: number
+}
+
+export type BrandRead = Omit<Brand, 'id'> & { id: number }
 
 export type Product = {
   id?: number
@@ -99,11 +110,7 @@ export type Product = {
   sku?: string
   url?: string
   image?: string
-  brand?: {
-    id?: number
-    externalId?: number
-    name: string
-  }
+  brand?: Brand
   // brandId: {
   //   id,
   //   name,
@@ -256,4 +263,47 @@ export type PurchaseOrderCreateResponse = {
     configurationId: number
     purchaseOrderId: number
   }[]
+}
+
+type POItem = {
+  id: number
+  qtyOrdered: number
+  configurationId: number
+  product?: POProduct
+}
+
+export type POProduct = Pick<Product, 'name' | 'sku'> & {
+  configuration: Pick<
+    ProductConfiguration,
+    'qtyOrdered' | 'qtyRefunded' | 'qtyShippedExternal' | 'sku'
+  > & {
+    options: Pick<ProductOption, 'label' | 'value'>[]
+  }
+}
+
+export type PurchaseOrderFullData = {
+  id: number
+  poNumber: string
+  dateSubmitted: Date | string
+  productionWeeks: number | null
+  status: POStatus
+  createdAt: Date | string
+  updatedAt: Date | string
+  brand: BrandRead
+  items: POItem[]
+  order: {
+    id: number
+    orderNumber: string
+    customer: Pick<
+      Customer,
+      | 'id'
+      | 'firstName'
+      | 'lastName'
+      | 'company'
+      | 'phone'
+      | 'altPhone'
+      | 'email'
+    >
+    shippingAddress: Pick<Address, 'firstName' | 'lastName' | 'state'>
+  }
 }
