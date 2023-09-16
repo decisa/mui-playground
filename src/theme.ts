@@ -211,8 +211,12 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
       },
       MuiDataGrid: {
         styleOverrides: {
+          cell: {
+            padding: '0 16px',
+          },
           root: {
             backgroundColor: mode === 'dark' ? colors.background[300] : '#fff',
+            gap: 0,
           },
           columnHeaders: {
             backgroundColor: colors.blueAccent[200],

@@ -10,6 +10,8 @@ import {
   GridColDef,
   GridToolbar,
   useGridApiContext,
+  GridRenderCellParams,
+  GridCell,
 } from '@mui/x-data-grid'
 import { useEffect, useState } from 'react'
 
@@ -23,16 +25,55 @@ import { PurchaseOrderFullData } from '../Types/dbtypes'
 //   { id: 3, col1: 'MUI', col2: 'is Amazing' },
 // ]
 
+const OneClickCell = ({ id, value, field }: GridRenderCellParams) => {
+  const apiRef = useGridApiContext()
+  // console.log('id:', id)
+  return (
+    <Box
+      onClick={() => {
+        if (!apiRef.current) {
+          return
+        }
+        apiRef.current.startCellEditMode({ id, field })
+      }}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        // p: 2,
+      }}
+    >
+      <Typography
+        variant="body2"
+        onClick={(e) => {
+          e.stopPropagation()
+          console.log('id:', id)
+          // apiRef.current.setCellMode(id, field, 'view')
+          // if (!apiRef.current) {
+          //   return
+          // }
+
+          // apiRef.current.startCellEditMode({ id, field })
+        }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  )
+}
+
 const columns: GridColDef<PurchaseOrderFullData>[] = [
   {
     field: 'brand',
     headerName: 'Brand',
     width: 150,
     valueGetter: (params) => params.row.brand.name,
+    editable: true,
   },
   {
     field: 'poNumber',
     headerName: 'PO number',
+    renderCell: (params) => <OneClickCell {...params} />,
     editable: true,
   },
   {
@@ -119,8 +160,6 @@ const columns: GridColDef<PurchaseOrderFullData>[] = [
 ]
 
 export default function PurchaseOrdersPage() {
-  // const apiRef = useGridApiContext()
-
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderFullData[]>(
     []
   )
@@ -184,15 +223,15 @@ export default function PurchaseOrdersPage() {
         // getEstimatedRowHeight={() => 100}
         slots={{ toolbar: GridToolbar }}
         getRowHeight={() => 'auto'}
-        onCellClick={(params, event) => {
-          const { field, cellMode } = params
-          if (field === 'poItems' || cellMode === 'view') {
-            // apiRef.current.startCellEditMode(params)
-            return
-          }
-          console.log('params:', params)
-          console.log('event:', event)
-        }}
+        // onCellClick={(params, event) => {
+        //   const { field, cellMode } = params
+        //   if (field === 'poItems' || cellMode === 'view') {
+        //     // apiRef.current.startCellEditMode(params)
+        //     return
+        //   }
+        //   console.log('params:', params)
+        //   console.log('event:', event)
+        // }}
       />
     </Box>
   )
