@@ -1,8 +1,7 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles'
 import { PaletteMode } from '@mui/material'
-// import { ThemeOptions } from '@mui/system'
 import { createContext, useMemo, useState } from 'react'
-import { lineHeight } from '@mui/system'
+import type {} from '@mui/x-data-grid/themeAugmentation'
 
 export type ColorPalette = ReturnType<typeof tokens>
 // color design tokens
@@ -207,6 +206,19 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             lineHeight: '20px',
             height: '20px',
             borderRadius: '4px',
+          },
+        },
+      },
+      MuiDataGrid: {
+        styleOverrides: {
+          root: {
+            backgroundColor: mode === 'dark' ? colors.background[300] : '#fff',
+          },
+          columnHeaders: {
+            backgroundColor: colors.blueAccent[200],
+          },
+          footerContainer: {
+            backgroundColor: colors.blueAccent[200],
           },
         },
       },
