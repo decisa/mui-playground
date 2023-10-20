@@ -1,4 +1,5 @@
 import { Result, ResultAsync, errAsync, okAsync } from 'neverthrow'
+import { parseISO } from 'date-fns'
 import {
   Order,
   // Product,
@@ -36,13 +37,20 @@ export const getPurchaseOrder = (id: number) =>
   safeJsonFetch<PurchaseOrderFullData>(`${dbHost}/purchaseorder/${id}`, {
     method: 'GET',
     mode: 'cors',
-  }) // .andThen((res) => okAsync(res.results))
+  })
 
 export const getPurchaseOrders = () =>
   safeJsonFetch<PurchaseOrderFullData[]>(`${dbHost}/purchaseorder/all`, {
     method: 'GET',
     mode: 'cors',
-  }) // .andThen((res) => okAsync(res.results))
+  }).map((res) =>
+    res.map((po) => ({
+      ...po,
+      dateSubmitted: parseISO(String(po.dateSubmitted)),
+    }))
+  )
+
+// .andThen((res) => okAsync(res.results))
 
 const createPurchaseOrder = (po: PurchaseOrderRequest) =>
   safeJsonFetch<PurchaseOrderCreateResponse>(`${dbHost}/purchaseorder`, {

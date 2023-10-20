@@ -209,23 +209,28 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
           },
         },
       },
-      MuiDataGrid: {
-        styleOverrides: {
-          cell: {
-            padding: '0 16px',
-          },
-          root: {
-            backgroundColor: mode === 'dark' ? colors.background[300] : '#fff',
-            gap: 0,
-          },
-          columnHeaders: {
-            backgroundColor: colors.blueAccent[200],
-          },
-          footerContainer: {
-            backgroundColor: colors.blueAccent[200],
-          },
-        },
-      },
+      // MuiDataGrid: {
+      //   styleOverrides: {
+      //     cell: {
+      //       padding: '0 16px',
+      //       backgroundColor: 'transparent',
+      //     },
+      //     root: {
+      //       // backgroundColor: mode === 'dark' ? colors.background[300] : '#fff',
+      //       height: '100%',
+      //       gap: 0,
+      //     },
+      //     columnHeaders: {
+      //       backgroundColor: colors.blueAccent[200],
+      //     },
+      //     footerContainer: {
+      //       backgroundColor: colors.blueAccent[200],
+      //     },
+      //     editInputCell: {
+      //       backgroundColor: 'transparent',
+      //     },
+      //   },
+      // },
     },
     palette: {
       mode,
@@ -241,7 +246,8 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
               contrastText: colors.grey[900],
             },
             secondary: {
-              main: colors.greenAccent[500],
+              light: colors.greenAccent[400],
+              main: colors.greenAccent[300],
             },
             neutral: {
               dark: colors.grey[700],

@@ -284,7 +284,7 @@ export type POProduct = Pick<Product, 'name' | 'sku'> & {
 export type PurchaseOrderFullData = {
   id: number
   poNumber: string
-  dateSubmitted: Date | string
+  dateSubmitted: Date
   productionWeeks: number | null
   status: POStatus
   createdAt: Date | string
