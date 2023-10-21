@@ -13,13 +13,37 @@ import {
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
+type ResponseError = {
+  error: string
+}
+
+function isServerError(obj: unknown): obj is ResponseError {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'error' in obj &&
+    typeof obj.error === 'string'
+  )
+}
+
 const safeJsonFetch = <T>(
   input: RequestInfo | URL,
   init?: RequestInit | undefined
 ) =>
   ResultAsync.fromPromise(
-    fetch(input, init).then((x) => x.json()) as Promise<T>,
-    () => new Error('database error neverthrow')
+    fetch(input, init).then((response) => {
+      if (!response.ok) {
+        return response.json().then((err) => {
+          // console.log('safeJsonFetch non OK !', err)
+          if (isServerError(err)) {
+            throw new Error(err.error)
+          }
+          throw new Error('Error occured, but no message provided')
+        })
+      }
+      return response.json()
+    }) as Promise<T>,
+    (error) => error
   )
 
 type SearchResponse = {
@@ -38,6 +62,23 @@ export const getPurchaseOrder = (id: number) =>
     method: 'GET',
     mode: 'cors',
   })
+
+export const updatePurchaseOrder = (
+  id: number,
+  poData: Partial<PurchaseOrderRequest>
+) =>
+  safeJsonFetch<PurchaseOrderCreateResponse>(`${dbHost}/purchaseorder/${id}`, {
+    method: 'PUT',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(poData),
+  })
+// .andThen((res) => {
+//   console.log('updated purchase order = ', res)
+//   return okAsync(res)
+// })
 
 export const getPurchaseOrders = () =>
   safeJsonFetch<PurchaseOrderFullData[]>(`${dbHost}/purchaseorder/all`, {
