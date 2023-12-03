@@ -41,7 +41,7 @@ import Comments from '../Components/Order/Comments'
 import { ChipColor } from '../Types/muiTypes'
 import { tokens } from '../theme'
 import DotMenu from '../Components/DotMenu/DotMenu'
-import { autoReceive } from '../utils/inventoryManagement'
+import { autoOrder } from '../utils/inventoryManagement'
 import getLocalOrderActions from '../utils/getLocalOrderActions'
 import LocalOrderActions from '../Components/DotMenu/LocalOrderActions'
 
@@ -229,7 +229,7 @@ const renderStatus = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
       id: 'autoReceiveAll',
       label: 'Auto-Receive All Products',
       action: () => {
-        autoReceive(row.original.orderNumber)
+        autoOrder(row.original.orderNumber)
       },
     },
   ]

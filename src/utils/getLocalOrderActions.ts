@@ -1,6 +1,6 @@
 import { Row } from '@tanstack/react-table'
 import { okAsync } from 'neverthrow'
-import { autoReceive } from './inventoryManagement'
+import { autoOrder } from './inventoryManagement'
 import { ExtendedShortOrder } from '../Pages/localOrdersPage'
 import { ShortOrder } from '../Types/dbtypes'
 
@@ -55,7 +55,7 @@ export default function getLocalOrderActions(row: Row<ExtendedShortOrder>) {
       id: 'autoReceiveAll',
       label: 'Auto-Receive All Products',
       action: () => {
-        autoReceive(row.original.orderNumber)
+        autoOrder(row.original.orderNumber)
       },
     })
   }
@@ -125,7 +125,7 @@ export function getOrderActions(order: ShortOrder) {
       id: 'autoReceiveAll',
       label: 'Auto-Receive All Products',
       action: () => {
-        autoReceive(order.orderNumber).andThen((updatedOrder) => {
+        autoOrder(order.orderNumber).andThen((updatedOrder) => {
           console.log('updated order is:', updatedOrder)
           return okAsync(updatedOrder)
         })

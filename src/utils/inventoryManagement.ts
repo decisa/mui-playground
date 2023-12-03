@@ -181,8 +181,9 @@ function maxAutoOrder(product: ParsedProduct): number {
   return difference > 0 ? difference : 0
 }
 
-export const autoReceive = (orderNumber: string) =>
+export const autoOrder = (orderNumber: string) =>
   searchShortOrders(orderNumber)
+    // find order by number
     .andThen((orders) => {
       if (orders.length > 1) {
         return errAsync(new Error('more than one order found'))
@@ -264,3 +265,24 @@ export const autoReceive = (orderNumber: string) =>
       console.log('error encountered: ', err)
       return err
     })
+
+// export const autoReceive = (poNumber: string) =>
+//   getPurchaseOrder(Number(poNumber))
+//     .andThen((po) => {
+//       const result = po.items.map((item) => {
+//         const receivedQty = item.qtyOrdered - item.
+//         return updatePurchaseOrder(po.id, {
+//           items: [
+//             {
+//               id: item.id,
+//               qtyReceived: receivedQty,
+//             },
+//           ],
+//         })
+//       })
+//       return ResultAsync.combine(result)
+//     })
+//     .mapErr((err) => {
+//       console.log('error encountered: ', err)
+//       return err
+//     })
