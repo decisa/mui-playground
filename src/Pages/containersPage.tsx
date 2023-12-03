@@ -21,10 +21,7 @@ import { useState } from 'react'
 import useLocalStorageState from '../utils/localStorage'
 
 const trackUrl = (trackingNumber: string): string =>
-  `https://wsapi.alpiusa.com/api/tracker/list?MasterBillNumber=&ContainerNumber=${trackingNumber}&HouseBillNumber=&CustomerRefNumber=&Skip=0&SortDirection=2&SortColumn=0&ConsigneeName=&ShipmentCode=&SearchFrom=Web`
-
-// const trackUrl = (trackingNumber: string): string =>
-// `https://wsapi.alpiusa.com/api/tracker/list?MasterBillNumber=&ContainerNumber=${trackingNumber}&HouseBillNumber=&CustomerRefNumber=&Skip=0&SortDirection=2&SortColumn=0&ConsigneeName` //= &ShipmentCode=&SearchFrom=Web`
+  `https://wsapi.alpiusa.com/api/tracker/list?MasterBillNumber=&ContainerNumber=${trackingNumber}&HouseBillNumber=&CustomerRefNumber=&Skip=0&SortDirection=2&SortColumn=0&ConsigneeName=&ShipmentCode=&OrganizationCode=&SearchFrom=Web`
 
 type ContainerTrackingInfo = {
   ConsoleCode: string
