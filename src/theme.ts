@@ -1,9 +1,25 @@
-import { createTheme, ThemeOptions } from '@mui/material/styles'
+import {
+  createTheme,
+  PaletteColorOptions,
+  ThemeOptions,
+} from '@mui/material/styles'
 import { PaletteMode } from '@mui/material'
 import { createContext, useMemo, useState } from 'react'
 import type {} from '@mui/x-data-grid/themeAugmentation'
+import { LinkProps } from '@mui/material/Link'
+import LinkBehavior from './Components/LinkBehavior'
 
 export type ColorPalette = ReturnType<typeof tokens>
+
+declare module '@mui/material/styles' {
+  interface PaletteColor {
+    lightest?: string
+  }
+  interface SimplePaletteColorOptions {
+    lightest?: string
+  }
+}
+
 // color design tokens
 export const tokens = (mode: string) => ({
   ...(mode === 'dark'
@@ -175,7 +191,6 @@ export const tokens = (mode: string) => ({
 
 export const themeSettings = (mode: PaletteMode): ThemeOptions => {
   const colors = tokens(mode)
-
   const options: ThemeOptions = {
     components: {
       // MuiButton: {
@@ -199,6 +214,25 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
       //     },
       //   },
       // },
+      MuiLink: {
+        defaultProps: {
+          component: LinkBehavior,
+        } as LinkProps,
+        styleOverrides: {
+          root: {
+            color: colors.blueAccent[500],
+            '&:hover': {
+              color: colors.blueAccent[600],
+            },
+          },
+        },
+      },
+      MuiButtonBase: {
+        defaultProps: {
+          LinkComponent: LinkBehavior,
+        },
+      },
+
       MuiChip: {
         styleOverrides: {
           root: {
@@ -241,8 +275,9 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             // },
             primary: {
               main: colors.blueAccent[500],
-              light: colors.blueAccent[600],
-              dark: colors.blueAccent[400],
+              light: colors.blueAccent[400],
+              lightest: colors.blueAccent[200],
+              dark: colors.blueAccent[700],
               contrastText: colors.grey[900],
             },
             secondary: {
@@ -256,7 +291,7 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             },
             background: {
               default: colors.background[200],
-              paper: colors.background[200],
+              paper: colors.background[300],
             },
             text: {
               primary: `${colors.grey[900]}ff`,
@@ -271,6 +306,7 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             primary: {
               main: colors.blueAccent[500],
               light: colors.blueAccent[300],
+              lightest: colors.blueAccent[200],
               dark: colors.blueAccent[600],
               contrastText: colors.grey[100],
             },

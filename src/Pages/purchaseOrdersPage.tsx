@@ -20,7 +20,7 @@ import {
 } from '@mui/x-data-grid'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { Link } from 'react-router-dom'
+import Link from '@mui/material/Link'
 import { styled } from '@mui/material/styles'
 import { alpha } from '@mui/system'
 
@@ -37,14 +37,23 @@ import { getGridActions } from '../Components/DataGrid/gridActions'
 import type { GridRowEditControls } from '../Components/DataGrid/gridActions'
 
 const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  '& .MuiDataGrid-columnHeaders': {
+    backgroundColor: theme.palette.primary.lightest,
+  },
   '& .MuiDataGrid-row--editing': {
-    backgroundColor: theme.palette.secondary.light,
+    // backgroundColor: theme.palette.secondary.light,
     '&:hover': {
-      backgroundColor: alpha(theme.palette.secondary.light, 0.8),
+      backgroundColor: alpha(theme.palette.primary.light, 0.4),
     },
+
     '& .MuiDataGrid-cell': {
-      // backgroundColor: 'transparent',
-      // borderBottomColor: 'transparent',
+      backgroundColor: 'transparent',
+      borderBottomColor: 'transparent',
+      '&.MuiDataGrid-cell--editable': {
+        backgroundColor: alpha(theme.palette.primary.light, 0.2),
+        // borderBottomColor: 'transparent',
+      },
     },
   },
 })) as typeof DataGrid
@@ -128,9 +137,9 @@ export default function PurchaseOrdersPage() {
       field: 'order',
       headerName: 'Order Number',
       // width: 150,
-      // valueGetter: (params) => params.row.order.orderNumber,
+      valueGetter: (params) => params.row.order.orderNumber,
       renderCell: (params) => (
-        <Link to={`/magento/${params.row.order.orderNumber}`}>
+        <Link href={`/magento/${params.row.order.orderNumber}`}>
           {params.row.order.orderNumber}
         </Link>
       ),
