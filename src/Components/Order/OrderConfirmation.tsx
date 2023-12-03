@@ -85,7 +85,7 @@ const OrderConfirmation = ({ order }: OrderConfirmationProps) => {
               }}
             >
               <img
-                src="/rs360.svg"
+                src="/2023-full-room_service_360_logo-bw.svg"
                 alt="room service 360 logo"
                 style={{
                   width: '100%',
