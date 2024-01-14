@@ -12,6 +12,7 @@
     "@mui/material": "^5.11.13",
     "@mui/system": "^5.11.9",
     "@mui/x-data-grid": "^6.13.0",
+    "@mui/x-date-pickers": "^6.19.0",
     "@tanstack/react-table": "^8.7.9",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",

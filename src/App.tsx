@@ -3,6 +3,8 @@ import { CssBaseline, ThemeProvider, Box } from '@mui/material'
 import { ReactNode } from 'react'
 import { Outlet } from 'react-router'
 import styled from '@emotion/styled'
+import { LocalizationProvider } from '@mui/x-date-pickers'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import Navbar from './Components/Navbar/Navbar'
 import {
   // MagentoProvider,
@@ -40,14 +42,16 @@ function App({ children }: Props) {
     <MagentoProviderNeverthrow>
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <AppContainer>
-            <Navbar className="nav" />
-            <Box sx={{ marginLeft: 35, p: 2 }} className="main">
-              <Outlet />
-              {children || null}
-            </Box>
-          </AppContainer>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <CssBaseline />
+            <AppContainer>
+              <Navbar className="nav" />
+              <Box sx={{ marginLeft: 35, p: 2 }} className="main">
+                <Outlet />
+                {children || null}
+              </Box>
+            </AppContainer>
+          </LocalizationProvider>
         </ThemeProvider>
       </ColorModeContext.Provider>
     </MagentoProviderNeverthrow>
