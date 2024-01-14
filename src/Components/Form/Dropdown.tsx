@@ -1,10 +1,9 @@
-import * as React from 'react'
 import { Control, FieldValues, FieldPath, useController } from 'react-hook-form'
 import Box from '@mui/material/Box'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
-import Select, { SelectChangeEvent, SelectProps } from '@mui/material/Select'
+import Select, { SelectProps } from '@mui/material/Select'
 import type { Variant } from '@mui/material/styles/createTypography'
 import { useTheme } from '@mui/material/styles'
 import { ValueLabel } from '../../utils/magentoHelpers'
@@ -32,8 +31,8 @@ export default function Dropdown<TForm extends FieldValues>({
   const {
     field: { onChange, value: selectedValue },
   } = useController({ control, name })
-  console.log('selectedValue', selectedValue)
-  console.log('options', options)
+  // console.log('selectedValue', selectedValue)
+  // console.log('options', options)
 
   return (
     <Box sx={{ minWidth: 200 }}>
@@ -62,15 +61,6 @@ export default function Dropdown<TForm extends FieldValues>({
               {optionLabel}
             </MenuItem>
           ))}
-          {/* <MenuItem value={10} sx={{ fontSize, fontWeight }}>
-            In Production
-          </MenuItem>
-          <MenuItem value={20} sx={{ fontSize, fontWeight }}>
-            Complete
-          </MenuItem>
-          <MenuItem value={30} sx={{ fontSize, fontWeight }}>
-            Pending
-          </MenuItem> */}
         </Select>
       </FormControl>
     </Box>
