@@ -40,9 +40,7 @@ import { Order, ShortOrder, ShortProduct } from '../Types/dbtypes'
 import Comments from '../Components/Order/Comments'
 import { ChipColor } from '../Types/muiTypes'
 import { tokens } from '../theme'
-import DotMenu from '../Components/DotMenu/DotMenu'
-import { autoOrder } from '../utils/inventoryManagement'
-import getLocalOrderActions from '../utils/getLocalOrderActions'
+
 import LocalOrderActions from '../Components/DotMenu/LocalOrderActions'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
@@ -210,29 +208,6 @@ const getOrderShippingStatus = (
 
 const renderStatus = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
   const status = getOrderShippingStatus(row.original)
-  const options = [
-    {
-      id: 'mark-as-shipped',
-      label: 'mark as shipped',
-      action: () => {
-        console.log(`mark as shipped ${row.original.orderNumber}`)
-      },
-    },
-    {
-      id: 'mark-as-refunded',
-      label: 'mark as refunded',
-      action: () => {
-        console.log(`mark as refunded ${row.original.orderNumber}`)
-      },
-    },
-    {
-      id: 'autoReceiveAll',
-      label: 'Auto-Receive All Products',
-      action: () => {
-        autoOrder(row.original.orderNumber)
-      },
-    },
-  ]
 
   // const options2 = getLocalOrderActions(row)
   return (
@@ -295,10 +270,6 @@ const renderProducts = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
   )
 }
 
-// type OrderNumberProps = {
-//   row: Row<Order>
-// }
-
 type OrderCallback = (order: Order | null) => void
 
 type RowRendererFactory = (
@@ -322,20 +293,6 @@ const renderOrderNumber: RowRendererFactory =
       </Button>
     )
   }
-
-// ;({ row }: OrderNumberProps) => {
-//   const { orderNumber } = row.original
-//   return (
-//     <Button
-//       type="button"
-//       onClick={() => {
-//         getOrderByNumber(orderNumber, console.log)
-//       }}
-//     >
-//       {orderNumber}
-//     </Button>
-//   )
-// }
 
 export default function OrderPage() {
   // use theme
