@@ -17,6 +17,7 @@ import {
   useGridApiContext,
   GridActionsCellItem,
   GridRowId,
+  GridRenderCellParams,
 } from '@mui/x-data-grid'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -27,14 +28,23 @@ import { alpha } from '@mui/system'
 import { format, getDate, parseISO, set } from 'date-fns'
 
 import { okAsync } from 'neverthrow'
+import { CellContext } from '@tanstack/react-table'
+import { get } from 'http'
+import { Chip } from '@mui/material'
 import {
   getPurchaseOrders,
   updatePurchaseOrder,
 } from '../utils/inventoryManagement'
-import { PurchaseOrderFullData } from '../Types/dbtypes'
+import { POStatus, PurchaseOrderFullData } from '../Types/dbtypes'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
-import { getGridActions } from '../Components/DataGrid/gridActions'
+import {
+  getGridActions,
+  getPurchaseOrderStatus,
+  poStatusColor,
+} from '../Components/DataGrid/gridActions'
 import type { GridRowEditControls } from '../Components/DataGrid/gridActions'
+import PurchaseOrderActions from '../Components/DotMenu/PurchaseOrderActions'
+import CreateShipment from '../Components/CreateShipment/CreateShipment'
 
 const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -57,6 +67,41 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
     },
   },
 })) as typeof DataGrid
+
+const renderDotMenu = ({
+  row,
+}: GridRenderCellParams<PurchaseOrderFullData, unknown>) => (
+  <PurchaseOrderActions row={row} />
+)
+const renderPOStatus = ({
+  row,
+  value,
+}: GridRenderCellParams<PurchaseOrderFullData, unknown>) => {
+  // console.log('row:', value)
+  const { items } = row
+  const title = items
+    .map((item, index) => {
+      const { summary } = item
+      if (!summary) {
+        return `${index} : no summary`
+      }
+
+      return `${item.product?.name || index} : ${
+        summary.qtyPurchased || ''
+      } | ${summary?.qtyShipped} | ${summary?.qtyReceived}`
+    })
+    .join('\n')
+
+  return (
+    <Chip
+      size="small"
+      variant="outlined"
+      color={poStatusColor(String(value))}
+      label={String(value)}
+      title={title}
+    />
+  )
+}
 
 export default function PurchaseOrdersPage() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderFullData[]>(
@@ -130,7 +175,7 @@ export default function PurchaseOrdersPage() {
       headerName: 'Date',
       editable: true,
       type: 'date',
-      width: 130,
+      width: 120,
       valueFormatter: (params) => format(params.value as Date, 'dd MMM yyyy'),
     },
     {
@@ -160,6 +205,7 @@ export default function PurchaseOrdersPage() {
       disableColumnMenu: true,
       sortable: false,
       flex: 1,
+      minWidth: 300,
       renderCell: (params) => {
         // console.log('params:', params)
         const products = params.row.items // .map((item) => item.product)
@@ -171,7 +217,7 @@ export default function PurchaseOrdersPage() {
               {products.slice(0, 2).map((product, ind) => (
                 <ListItem key={ind} sx={{ p: 0, alignItems: 'baseline' }}>
                   <ListItemIcon sx={{ minWidth: 30, pt: 0.25 }}>
-                    {product.qtyOrdered} ×
+                    {product.qtyPurchased} ×
                   </ListItemIcon>
                   <Typography
                     variant="body2"
@@ -185,7 +231,7 @@ export default function PurchaseOrdersPage() {
               {products.length === 3 && (
                 <ListItem key={2} sx={{ p: 0, alignItems: 'baseline' }}>
                   <ListItemIcon sx={{ minWidth: 30, pt: 0.25 }}>
-                    {products[2].qtyOrdered} ×
+                    {products[2].qtyPurchased} ×
                   </ListItemIcon>
                   <Typography
                     variant="body2"
@@ -216,7 +262,13 @@ export default function PurchaseOrdersPage() {
         )
       },
     },
-    { field: 'status', headerName: 'Status', width: 120 },
+    {
+      field: 'status',
+      headerName: 'Status',
+      width: 120,
+      valueGetter: (params) => getPurchaseOrderStatus(params.row),
+      renderCell: (params) => renderPOStatus(params),
+    },
     {
       field: 'actions',
       headerName: 'Actions',
@@ -226,17 +278,11 @@ export default function PurchaseOrdersPage() {
     },
   ]
 
-  useEffect(() => {
-    console.log('rowModesModel changed:', rowModesModel)
-  }, [rowModesModel])
-
   // prevent standard rowEdit stop:
   const handleRowEditStop = useCallback<GridEventListener<'rowEditStop'>>(
     (params, event) => {
-      console.log('ending row edit mode!')
       if (params.reason === GridRowEditStopReasons.rowFocusOut) {
         event.defaultMuiPrevented = true
-        console.log('prevented!')
       }
     },
     []
@@ -261,7 +307,7 @@ export default function PurchaseOrdersPage() {
   useEffect(() => {
     getPurchaseOrders()
       .map((purchaseOrder) => {
-        console.log('all orders:', purchaseOrder)
+        // console.log('all orders:', purchaseOrder)
         setPurchaseOrders(purchaseOrder)
         return purchaseOrder
       })
@@ -317,7 +363,7 @@ export default function PurchaseOrdersPage() {
           // console.log('originalRow:', originalRow)
           updatePurchaseOrder(originalRow.id, updatedRow).match(
             (result) => {
-              console.log('result:', result)
+              // console.log('result:', result)
               // notify of success:
               snack.success('Purchase order updated!')
               return Promise.resolve(updatedRow)
@@ -336,6 +382,7 @@ export default function PurchaseOrdersPage() {
           }
         }}
       />
+      <CreateShipment />
       <SnackBar snack={snack} />
     </Box>
   )
