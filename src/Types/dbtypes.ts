@@ -3,6 +3,21 @@ import { number } from 'yup'
 import { CommentType, OrderStatus, ProductType } from './magentoTypes'
 import OrderNumber from '../Components/Order/OrderNumber'
 
+export const carrierTypes = ['container', 'freight', 'parcel', 'auto'] as const
+
+export type CarrierType = (typeof carrierTypes)[number]
+
+export type Carrier = {
+  id: number
+  name: string
+  type: CarrierType
+  contactName: string | null
+  phone: string | null
+  altPhone: string | null
+  email: string | null
+  accountNumber: string | null
+}
+
 export type Address = {
   id?: number
   email: string
@@ -33,9 +48,9 @@ export type Customer = {
   id?: number
   firstName: string
   lastName: string
-  company?: string
+  company?: string | null
   phone: string
-  altPhone?: string
+  altPhone?: string | null
   email: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -234,7 +249,7 @@ export type POStatus = (typeof poStatuses)[number]
 
 export type POItemCreate = {
   configurationId: number
-  qtyOrdered: number
+  qtyPurchased: number
 }
 
 export type PurchaseOrderRequest = {
@@ -265,11 +280,19 @@ export type PurchaseOrderCreateResponse = {
   }[]
 }
 
+export type POItemSummary = {
+  purchaseOrderItemId: number
+  qtyPurchased: number
+  qtyShipped: number
+  qtyReceived: number
+}
+
 type POItem = {
   id: number
-  qtyOrdered: number
+  qtyPurchased: number
   configurationId: number
   product?: POProduct
+  summary?: POItemSummary
 }
 
 export type POProduct = Pick<Product, 'name' | 'sku'> & {
