@@ -10,12 +10,7 @@ import { errAsync, okAsync } from 'neverthrow'
 import { getOrderActions } from '../../utils/getLocalOrderActions'
 import { searchShortOrders } from '../../utils/inventoryManagement'
 import { ExtendedShortOrder } from '../../Pages/localOrdersPage'
-
-type Option = {
-  id: string
-  label: string
-  action: (() => void) | null
-}
+import { Option } from './DotMenu'
 
 type LocalOrderActionsProps = {
   row: Row<ExtendedShortOrder>
@@ -37,7 +32,7 @@ export default function LocalOrderActions({ row }: LocalOrderActionsProps) {
         {
           id: 'loading',
           label: 'loading...',
-          action: null,
+          // action: null,
         },
       ])
     } else {
