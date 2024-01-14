@@ -4,6 +4,7 @@ import {
   LoaderFunctionArgs,
   useLoaderData,
   useLocation,
+  useNavigate,
   useParams,
 } from 'react-router'
 import { Box, Button, Paper, TextField } from '@mui/material'
@@ -39,6 +40,14 @@ export default function MagentoPage() {
   const { getOrderById, getOrderDetails, getOrderComments } = useMagentoAPI()
 
   const snack = useSnackBar()
+  const navigate = useNavigate()
+  const handleKeyboard: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+      // console.log(`/magento/${orderNumbers}`)
+      navigate(`/magento/${orderNumbers || ''}`)
+      // getOrders()
+    }
+  }
 
   const addNewComment = (comment: OrderComment) => {
     setOrder((prevOrder) => {
@@ -130,10 +139,78 @@ export default function MagentoPage() {
         console.log('ERRRRROR', error)
         return error
       })
-  }, [])
+  }, [orderId])
 
   return (
     <Box sx={{ m: 2 }} className="printable-paper">
+      <Stack
+        direction="row"
+        alignItems="center"
+        sx={{ mb: 4 }}
+        className="no-print"
+      >
+        <TextField
+          id="filled-basic"
+          label="order #s"
+          variant="standard"
+          value={orderNumbers}
+          onChange={(e) => setOrderNumbers(e.target.value)}
+          onKeyDown={handleKeyboard}
+        />
+        <Button
+          variant="contained"
+          startIcon={<SearchIcon />}
+          // onClick={() => getOrders()}
+          onClick={() => {
+            navigate(`/magento/${orderNumbers || ''}`)
+          }}
+        >
+          search
+        </Button>
+
+        {order ? (
+          <Button
+            variant="contained"
+            sx={{ ml: 2 }}
+            onClick={() => {
+              console.log('importing order', order)
+              // fetch('http://192.168.168.236:8080/order/magento', {
+              fetch(`${dbHost}/order/magento`, {
+                method: 'PUT',
+                body: JSON.stringify(order),
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              })
+                .then((res) => {
+                  if (!res.ok) {
+                    let errorText = `${res.statusText} - `
+                    return res.json().then((err) => {
+                      console.log('err', err)
+                      if (err && typeof err === 'object' && 'error' in err) {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                        errorText += String(err.error)
+                      }
+                      throw new Error(errorText)
+                    })
+                  }
+                  return res.json()
+                })
+                .then((res) => {
+                  console.log('res', res)
+                  snack.success('order imported')
+                })
+                .catch((err) => {
+                  console.log('err', err)
+                  snack.error(String(err))
+                })
+              // snack.success('order imported')
+            }}
+          >
+            Import
+          </Button>
+        ) : null}
+      </Stack>
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="start">
         <Paper
           sx={{ maxWidth: 840, minWidth: 690, flex: '2 2 690px' }}
