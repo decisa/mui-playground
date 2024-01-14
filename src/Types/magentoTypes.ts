@@ -26,7 +26,7 @@ export type OrderStatus = (typeof orderStatuses)[number]
 
 export type TLabelValue = {
   label: string
-  value: string
+  value: string | number
 }
 
 export type TLabelName = {
