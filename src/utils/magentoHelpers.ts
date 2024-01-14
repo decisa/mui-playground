@@ -1,5 +1,3 @@
-import { ca, de } from 'date-fns/locale'
-import { Order } from '../Types/dbtypes'
 import { OrderStatus } from '../Types/magentoTypes'
 import { ChipColor } from '../Types/muiTypes'
 
@@ -76,7 +74,7 @@ const orderStatuses: Record<OrderStatus, string> = {
 }
 
 export type ValueLabel = {
-  value: string
+  value: string | number
   label: string
 }
 
