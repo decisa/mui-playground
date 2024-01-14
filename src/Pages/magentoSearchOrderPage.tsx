@@ -1,6 +1,7 @@
 import React from 'react'
 import { Result, ResultAsync, errAsync } from 'neverthrow'
-import { LoaderFunctionArgs, useLoaderData } from 'react-router'
+import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router'
+import { redirect } from 'react-router-dom'
 import { Box, Button, Paper, TextField } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
@@ -14,6 +15,8 @@ import CommentsEditor from '../Components/Order/CommentsEditor'
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
 export default function MagentoPage() {
+  const navigate = useNavigate()
+
   const deliveryMethods = (
     useLoaderData() as Result<DeliveryMethodsAsObject, Error>
   )
@@ -121,7 +124,9 @@ export default function MagentoPage() {
 
   const handleKeyboard: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-      getOrders()
+      // console.log(`/magento/${orderNumbers}`)
+      navigate(`/magento/${orderNumbers}`)
+      // getOrders()
     }
   }
   return (
@@ -143,70 +148,55 @@ export default function MagentoPage() {
         <Button
           variant="contained"
           startIcon={<SearchIcon />}
-          onClick={() => getOrders()}
+          // onClick={() => getOrders()}
+          onClick={() => {
+            navigate(`/magento/${orderNumbers}`)
+          }}
         >
           search
         </Button>
 
         {order ? (
-          <>
-            {/* <pre>
-            {order.customer.firstName} {order.customer.lastName}{' '}
-            {`\n\n${order.orderNumber} - ${String(order.magento?.status)}\n\n`}
-            {order?.products
-              .map((product) => {
-                const { name, brand, configuration } = product
-                const title = `${
-                  configuration.qtyOrdered
-                }× ${name}${getBrandInfo(brand)}`
-                const options = configuration.options
-                  .map(({ label, value }) => ` > ${label}: ${value}`)
-                  .join('\n')
-                return `${title}\n${options}`
+          <Button
+            variant="contained"
+            sx={{ ml: 2 }}
+            onClick={() => {
+              console.log('importing order', order)
+              // fetch('http://192.168.168.236:8080/order/magento', {
+              fetch(`${dbHost}/order/magento`, {
+                method: 'PUT',
+                body: JSON.stringify(order),
+                headers: {
+                  'Content-Type': 'application/json',
+                },
               })
-              .join('\n\n')}
-          </pre> */}
-            <Button
-              variant="contained"
-              sx={{ ml: 2 }}
-              onClick={() => {
-                console.log('importing order', order)
-                // fetch('http://192.168.168.236:8080/order/magento', {
-                fetch(`${dbHost}/order/magento`, {
-                  method: 'PUT',
-                  body: JSON.stringify(order),
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
+                .then((res) => {
+                  if (!res.ok) {
+                    let errorText = `${res.statusText} - `
+                    return res.json().then((err) => {
+                      console.log('err', err)
+                      if (err && typeof err === 'object' && 'error' in err) {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                        errorText += String(err.error)
+                      }
+                      throw new Error(errorText)
+                    })
+                  }
+                  return res.json()
                 })
-                  .then((res) => {
-                    if (!res.ok) {
-                      let errorText = `${res.statusText} - `
-                      return res.json().then((err) => {
-                        console.log('err', err)
-                        if (err && typeof err === 'object' && 'error' in err) {
-                          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                          errorText += String(err.error)
-                        }
-                        throw new Error(errorText)
-                      })
-                    }
-                    return res.json()
-                  })
-                  .then((res) => {
-                    console.log('res', res)
-                    snack.success('order imported')
-                  })
-                  .catch((err) => {
-                    console.log('err', err)
-                    snack.error(String(err))
-                  })
-                // snack.success('order imported')
-              }}
-            >
-              Import
-            </Button>
-          </>
+                .then((res) => {
+                  console.log('res', res)
+                  snack.success('order imported')
+                })
+                .catch((err) => {
+                  console.log('err', err)
+                  snack.error(String(err))
+                })
+              // snack.success('order imported')
+            }}
+          >
+            Import
+          </Button>
         ) : null}
       </Stack>
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="start">
