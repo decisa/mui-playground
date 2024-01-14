@@ -4,10 +4,10 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 
-type Option = {
+export type Option = {
   id: string
   label: string
-  action: () => void
+  action?: () => void
 }
 
 type DotMenuProps = {
