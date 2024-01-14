@@ -1,6 +1,7 @@
 import { Result, ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { parseISO } from 'date-fns'
 import {
+  Carrier,
   Order,
   // Product,
   ProductSummary,
@@ -41,8 +42,9 @@ const safeJsonFetch = <T>(
           throw new Error('Error occured, but no message provided')
         })
       }
-      return response.json()
-    }) as Promise<T>,
+      // parse json and convert all dates to Date objects:
+      return response.json().then((data) => handleDates(data) as Promise<T>)
+    }),
     (error) => error
   )
 
@@ -84,12 +86,14 @@ export const getPurchaseOrders = () =>
   safeJsonFetch<PurchaseOrderFullData[]>(`${dbHost}/purchaseorder/all`, {
     method: 'GET',
     mode: 'cors',
-  }).map((res) =>
-    res.map((po) => ({
-      ...po,
-      dateSubmitted: parseISO(String(po.dateSubmitted)),
-    }))
-  )
+  })
+
+// .map((res) =>
+//   res.map((po) => ({
+//     ...po,
+//     dateSubmitted: parseISO(String(po.dateSubmitted)),
+//   }))
+// )
 
 // .andThen((res) => okAsync(res.results))
 
@@ -214,7 +218,7 @@ export const autoOrder = (orderNumber: string) =>
           .filter(canAutoOrder)
           .map((product) => ({
             configurationId: product.congfigId,
-            qtyOrdered: maxAutoOrder(product),
+            qtyPurchased: maxAutoOrder(product),
             // brandId: Number(brandId),
           }))
         // ignore brands that have no products for auto-ordering
@@ -266,23 +270,43 @@ export const autoOrder = (orderNumber: string) =>
       return err
     })
 
-// export const autoReceive = (poNumber: string) =>
-//   getPurchaseOrder(Number(poNumber))
-//     .andThen((po) => {
-//       const result = po.items.map((item) => {
-//         const receivedQty = item.qtyOrdered - item.
-//         return updatePurchaseOrder(po.id, {
-//           items: [
-//             {
-//               id: item.id,
-//               qtyReceived: receivedQty,
-//             },
-//           ],
-//         })
-//       })
-//       return ResultAsync.combine(result)
-//     })
-//     .mapErr((err) => {
-//       console.log('error encountered: ', err)
-//       return err
-//     })
+// regex for ISO date format:
+const ISODateFormat =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d*)?(?:[-+]\d{2}:?\d{2}|Z)?$/
+
+const isIsoDateString = (value: unknown): value is string =>
+  typeof value === 'string' && ISODateFormat.test(value)
+
+// helper function that recursively goes over the object and converts all date strings to Date objects
+const handleDates = (data: unknown) => {
+  if (isIsoDateString(data)) {
+    // if data is a string, then parse it and return a date. original data is not mutated
+    return parseISO(data)
+  }
+  if (data === null || data === undefined || typeof data !== 'object') {
+    // if data is anything but the object, then return it as is
+    return data
+  }
+
+  for (const [key, val] of Object.entries(data)) {
+    if (isIsoDateString(val)) {
+      // if val is a string, then mutate its value inside the object
+      // @ts-expect-error this is a hack to make the type checker happy
+      data[key] = parseISO(val)
+    } else if (typeof val === 'object') {
+      // mutate the nested object if needed:
+      handleDates(val)
+    }
+  }
+
+  return data
+}
+
+export const getAllCarriers = () =>
+  safeJsonFetch<Carrier[]>(`${dbHost}/carrier/all`, {
+    method: 'GET',
+    mode: 'cors',
+  }).andThen((res) => {
+    console.log('carriers = ', res)
+    return okAsync(res)
+  })
