@@ -24,18 +24,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from '@mui/material/Link'
 import { styled } from '@mui/material/styles'
 import { alpha } from '@mui/system'
-
-import { format, getDate, parseISO, set } from 'date-fns'
-
-import { okAsync } from 'neverthrow'
-import { CellContext } from '@tanstack/react-table'
-import { get } from 'http'
+import { format } from 'date-fns'
 import { Chip } from '@mui/material'
 import {
   getPurchaseOrders,
   updatePurchaseOrder,
 } from '../utils/inventoryManagement'
-import { POStatus, PurchaseOrderFullData } from '../Types/dbtypes'
+import { PurchaseOrderFullData } from '../Types/dbtypes'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import {
   getGridActions,
@@ -43,36 +38,31 @@ import {
   poStatusColor,
 } from '../Components/DataGrid/gridActions'
 import type { GridRowEditControls } from '../Components/DataGrid/gridActions'
-import PurchaseOrderActions from '../Components/DotMenu/PurchaseOrderActions'
 import CreateShipment from '../Components/CreateShipment/CreateShipment'
+import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
 
-const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
-  '& .MuiDataGrid-columnHeaders': {
-    backgroundColor: theme.palette.primary.lightest,
-  },
-  '& .MuiDataGrid-row--editing': {
-    // backgroundColor: theme.palette.secondary.light,
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.primary.light, 0.4),
-    },
+// const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
+//   backgroundColor: theme.palette.background.paper,
+//   '& .MuiDataGrid-columnHeaders': {
+//     backgroundColor: theme.palette.primary.lightest,
+//   },
+//   '& .MuiDataGrid-row--editing': {
+//     // backgroundColor: theme.palette.secondary.light,
+//     '&:hover': {
+//       backgroundColor: alpha(theme.palette.primary.light, 0.4),
+//     },
 
-    '& .MuiDataGrid-cell': {
-      backgroundColor: 'transparent',
-      borderBottomColor: 'transparent',
-      '&.MuiDataGrid-cell--editable': {
-        backgroundColor: alpha(theme.palette.primary.light, 0.2),
-        // borderBottomColor: 'transparent',
-      },
-    },
-  },
-})) as typeof DataGrid
+//     '& .MuiDataGrid-cell': {
+//       backgroundColor: 'transparent',
+//       borderBottomColor: 'transparent',
+//       '&.MuiDataGrid-cell--editable': {
+//         backgroundColor: alpha(theme.palette.primary.light, 0.2),
+//         // borderBottomColor: 'transparent',
+//       },
+//     },
+//   },
+// })) as typeof DataGrid
 
-const renderDotMenu = ({
-  row,
-}: GridRenderCellParams<PurchaseOrderFullData, unknown>) => (
-  <PurchaseOrderActions row={row} />
-)
 const renderPOStatus = ({
   row,
   value,
