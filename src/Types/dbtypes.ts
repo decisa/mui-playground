@@ -287,7 +287,7 @@ export type POItemSummary = {
   qtyReceived: number
 }
 
-type POItem = {
+export type POItem = {
   id: number
   qtyPurchased: number
   configurationId: number

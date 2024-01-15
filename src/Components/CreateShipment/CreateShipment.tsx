@@ -10,6 +10,8 @@ import { SnackBar, useSnackBar } from '../SnackBar'
 import Fieldset from '../Form/Fieldset'
 import Dropdown from '../Form/Dropdown'
 import DatePicker from '../Form/DatePicker'
+import POItems from '../PurchaseOrder/POItems'
+import NumberInput from '../Form/NumberInput'
 
 const poData: PurchaseOrderFullData = {
   id: 6,
@@ -243,6 +245,8 @@ export default function CreateShipmentForm() {
             error={errors.eta}
           />
         </FormGroup>
+        <NumberInput name="qty" size="small" />
+        <POItems items={poData.items} />
         <Stack direction="row" gap={2}>
           <Button type="submit" variant="contained">
             {busy ? 'submitting ...' : 'create shipment'}
