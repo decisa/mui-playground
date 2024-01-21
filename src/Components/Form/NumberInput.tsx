@@ -1,48 +1,51 @@
-import { useState } from 'react'
 import {
   Box,
-  Button,
   IconButton,
   TextField,
   TextFieldProps,
+  FormHelperText,
 } from '@mui/material'
 import RemoveIcon from '@mui/icons-material/Remove'
 import AddIcon from '@mui/icons-material/Add'
+import { Control, FieldValues, FieldPath, useController } from 'react-hook-form'
 
-type NumberInputProps = {
-  initialValue?: number
+type NumberInputProps<FormData extends FieldValues> = {
+  control: Control<FormData>
+  name: FieldPath<FormData>
   min?: number
   max?: number
   step?: number
   size?: 'small' | 'medium'
 } & TextFieldProps
 
-export default function NumberInput({
-  initialValue = 0,
+export default function NumberInput<FormData extends FieldValues>({
+  name,
+  control,
   min,
   max,
   step = 1,
-  size = 'medium',
+  size = 'small',
   ...textFieldProps
-}: NumberInputProps) {
-  const [value, setValue] = useState<number>(initialValue)
+}: NumberInputProps<FormData>) {
+  const {
+    field: { onChange, value },
+    fieldState: { error },
+  } = useController({ control, name })
+  // const [value, setValue] = useState<number>(initialValue)
 
-  const handleIncrement = () => {
-    setValue((prevValue) => {
-      const newValue = prevValue + step
-      return max !== undefined ? Math.min(newValue, max) : newValue
-    })
+  let errorMessage = error?.message
+  if (error?.type === 'typeError') {
+    errorMessage = `${name}: invalid number`
   }
 
-  const handleDecrement = () => {
-    setValue((prevValue) => {
-      const newValue = prevValue - step
-      return min !== undefined ? Math.max(newValue, min) : newValue
-    })
-  }
+  const handleIncrement = () =>
+    onChange({ target: { value: (Number(value) || 0) + step } })
+
+  const handleDecrement = () =>
+    onChange({ target: { value: (Number(value) || 0) - step } })
 
   return (
-    <Box display="flex" alignItems="center">
+    <Box display="flex" flexWrap="wrap" alignItems="center">
       <IconButton
         size={size === 'medium' ? 'large' : size}
         onClick={handleDecrement}
@@ -54,7 +57,9 @@ export default function NumberInput({
         {...textFieldProps}
         type="number"
         value={value}
-        onChange={(e) => setValue(Number(e.target.value))}
+        onChange={onChange}
+        // onChange={(e) => onChange(e.target.value.length ? e.target.value : 0)}
+        // onChange={(e) => onChange(Number(e.target.value) || 0)}
         inputProps={{ min, max, step }}
         size={size}
         // disable the arrows on the number input:
@@ -71,6 +76,8 @@ export default function NumberInput({
             textAlign: 'center',
           },
         }}
+        error={!!error}
+        // helperText={errorMessage}
       />
       <IconButton
         // size="medium"
@@ -80,6 +87,8 @@ export default function NumberInput({
       >
         <AddIcon />
       </IconButton>
+      <Box flexBasis="100%" height={0} />
+      <FormHelperText error={!!error}>{errorMessage}</FormHelperText>
     </Box>
   )
 }
