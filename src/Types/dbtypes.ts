@@ -1,7 +1,4 @@
-import { type } from 'os'
-import { number } from 'yup'
 import { CommentType, OrderStatus, ProductType } from './magentoTypes'
-import OrderNumber from '../Components/Order/OrderNumber'
 
 export const carrierTypes = ['container', 'freight', 'parcel', 'auto'] as const
 
@@ -329,4 +326,40 @@ export type PurchaseOrderFullData = {
     >
     shippingAddress: Pick<Address, 'firstName' | 'lastName' | 'state'>
   }
+}
+
+export type ShipmentItem = {
+  id: number
+  qtyShipped: number
+  qtyPurchased: number
+  qtyOrdered: number
+  qtyRefunded: number
+  qtyShippedExternal: number
+  purchaseOrderItemId: number
+  productId: number
+  configurationId: number
+  orderId: number
+  name: string
+  url: string
+  image: string
+  sku: string
+  brandId: number
+  brand: Brand
+  purchaseOrderId: number
+  purchaseOrder: {
+    id: number
+    poNumber: string
+  }
+}
+
+export type ShipmentData = {
+  id: number
+  trackingNumber: string | null
+  eta: Date | null
+  dateShipped: Date
+  carrierId: number
+  carrier: Carrier
+  items: ShipmentItem[]
+  createdAt: Date
+  updatedAt: Date
 }
