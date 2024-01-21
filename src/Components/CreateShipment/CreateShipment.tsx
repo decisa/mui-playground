@@ -3,130 +3,40 @@ import * as yup from 'yup'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Box, Stack } from '@mui/system'
-import { Button, FormGroup, TextField } from '@mui/material'
+import {
+  Button,
+  Card,
+  FormGroup,
+  Paper,
+  TextField,
+  Typography,
+} from '@mui/material'
+
+import { format } from 'date-fns'
 import { Carrier, PurchaseOrderFullData } from '../../Types/dbtypes'
-import { getAllCarriers } from '../../utils/inventoryManagement'
+import {
+  createShipment,
+  getAllCarriers,
+  getPurchaseOrder,
+} from '../../utils/inventoryManagement'
 import { SnackBar, useSnackBar } from '../SnackBar'
 import Fieldset from '../Form/Fieldset'
 import Dropdown from '../Form/Dropdown'
 import DatePicker from '../Form/DatePicker'
 import POItems from '../PurchaseOrder/POItems'
-import NumberInput from '../Form/NumberInput'
 
-const poData: PurchaseOrderFullData = {
-  id: 6,
-  poNumber: 'Auto-3-47',
-  dateSubmitted: new Date('2024-01-04T05:00:00.000Z'),
-  productionWeeks: null,
-  status: 'in production',
-  createdAt: '2024-01-09T15:52:07.000Z',
-  updatedAt: '2024-01-09T15:52:31.000Z',
-  brand: {
-    id: 47,
-    name: 'Bontempi Casa',
-    externalId: 36109,
-  },
-  items: [
-    {
-      id: 2,
-      qtyPurchased: 1,
-      configurationId: 30,
-      summary: {
-        purchaseOrderItemId: 2,
-        qtyPurchased: 1,
-        qtyShipped: 1,
-        qtyReceived: 0,
-      },
-      product: {
-        name: 'Artistico Glass Dining Table',
-        sku: 'BC-ARTISTICO-GDT',
-        configuration: {
-          qtyOrdered: 1,
-          qtyRefunded: 0,
-          qtyShippedExternal: 1,
-          sku: 'BC-ARTISTICO-GDT-rect-160x90-anthr-gl',
-          options: [
-            {
-              label: 'shape',
-              value: 'rectangular',
-            },
-            {
-              label: 'size',
-              value: '63"W × 35½"D',
-            },
-            {
-              label: 'top',
-              value: 'C196 Glossy Anthracite Lacquered Glass',
-            },
-            {
-              label: 'frame',
-              value: 'M328 Aged Brass Metal',
-            },
-          ],
-        },
-      },
-    },
-    {
-      id: 1,
-      qtyPurchased: 6,
-      configurationId: 31,
-      summary: {
-        purchaseOrderItemId: 1,
-        qtyPurchased: 6,
-        qtyShipped: 6,
-        qtyReceived: 5,
-      },
-      product: {
-        name: 'Aida Dining Chair',
-        sku: 'BC-AIDA-DC',
-        configuration: {
-          qtyOrdered: 6,
-          qtyRefunded: 0,
-          qtyShippedExternal: 6,
-          sku: 'BC-AIDA-DC-aida-dc-TR517-eco',
-          options: [
-            {
-              label: 'version',
-              value: 'Side Chair',
-            },
-            {
-              label: 'upholstery',
-              value: 'TR517 Anthracite Eco Leather',
-            },
-            {
-              label: 'frame',
-              value: 'M328 Aged Brass Metal',
-            },
-          ],
-        },
-      },
-    },
-  ],
-  order: {
-    orderNumber: '200023414',
-    id: 3,
-    customer: {
-      id: 3,
-      firstName: 'John',
-      lastName: 'Smith',
-      company: null,
-      phone: '215.676.6100',
-      altPhone: null,
-      email: 'john.smith@email.com',
-    },
-    shippingAddress: {
-      firstName: 'John',
-      lastName: 'Smith',
-      state: 'NJ',
-    },
-  },
-}
+import { isEmptyObject } from '../../utils/utils'
+import { RowActionComponentProps } from '../DataGrid/RowActionDialog'
 
 type CreateShipmentFormData = {
   carrierId: number | ''
   trackingNumber: string | null
   shipDate: Date | null
   eta: Date | null
+  items?: {
+    purchaseOrderItemId: number
+    qtyToShip: number
+  }[]
 }
 
 const shipmentFormSchema: yup.ObjectSchema<CreateShipmentFormData> = yup
@@ -151,11 +61,28 @@ const shipmentFormSchema: yup.ObjectSchema<CreateShipmentFormData> = yup
           // Check if shipDate is not null or undefined
           value !== null && value !== undefined
       ),
-
     eta: yup.date().nullable().defined(),
+    items: yup.array().of(
+      yup.object().shape({
+        purchaseOrderItemId: yup.number().required(),
+        qtyToShip: yup.number().required(),
+      })
+    ),
   })
 
-export default function CreateShipmentForm() {
+export default function CreateShipmentForm({
+  rowParams: poRowParams,
+  apiRef,
+  onSuccess,
+  actionRef,
+}: RowActionComponentProps<PurchaseOrderFullData>) {
+  const [poData, setPOData] = useState<PurchaseOrderFullData>()
+
+  // if poData changes, reset the form
+  useEffect(() => {
+    setPOData(poRowParams.row)
+  }, [poRowParams.row])
+
   const [busy, setBusy] = useState(false)
   // all carriers
   const [carriers, setCarriers] = useState<Carrier[]>([])
@@ -181,6 +108,7 @@ export default function CreateShipmentForm() {
     trackingNumber: '',
     shipDate: new Date(),
     eta: null,
+    items: [],
   }
 
   const {
@@ -202,58 +130,163 @@ export default function CreateShipmentForm() {
     }
   }, [carrierOptions, setValue])
 
+  // when poItems change, set the values for them:
+  useEffect(() => {
+    if (!poData?.items?.length) return
+    if (poData.items.length > 0) {
+      setValue(
+        'items',
+        poData.items.map((item) => {
+          const { id, qtyPurchased, summary } = item
+          return {
+            purchaseOrderItemId: id,
+            qtyToShip: summary
+              ? Math.max(qtyPurchased - summary.qtyShipped, 0)
+              : qtyPurchased,
+          }
+        })
+      )
+    }
+  }, [poData?.items, setValue])
+
   const snack = useSnackBar()
 
   const onSubmit = (data: CreateShipmentFormData) => {
     console.log('data', data)
-    snack.success('shipment created')
+    const parsedData = { ...data }
+    parsedData.items = parsedData.items
+      ?.filter((item) => item.qtyToShip > 0)
+      .map((item) => ({
+        ...item,
+        qtyShipped: Number(item.qtyToShip),
+      }))
+    setBusy(true)
+    // create a shipment in DB
+    createShipment(parsedData)
+      .andThen((res) => {
+        console.log('res', res)
+        setBusy(false)
+        snack.success('shipment created')
+        // todo: need to update the poData in consideration with the new shipment
+        const purchaseOrderId = poRowParams.row.id
+        // return okAsync(res)
+        return getPurchaseOrder(purchaseOrderId)
+      })
+      .map((updatedPO) => {
+        // the new updated PO is in the same format of PurchaseOrderFullData
+        // so we can just update the state of the grid with new data
+        console.log('res', updatedPO)
+        console.log('current poData', poData)
+        snack.success('received new po data')
+        const updatedData = { ...poData }
+        updatedData.items = [...updatedPO.items]
+        if (apiRef) {
+          apiRef.current?.updateRows([updatedData])
+        }
+        setBusy(false)
+        onSuccess()
+        return updatedPO
+      })
+      .mapErr((err) => {
+        console.error(err)
+        setBusy(false)
+        snack.error('error creating shipment')
+      })
+  }
+
+  if (isEmptyObject(poData)) {
+    console.log('LOADING ...')
+    console.log('poData', poData)
+    return <p>loading ...</p>
+  }
+
+  actionRef.current = {
+    save: handleSubmit(onSubmit),
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-      <Fieldset aria-busy={busy} disabled={busy}>
-        <FormGroup row sx={{ gap: 2, my: 2 }}>
-          <Dropdown
-            name="carrierId"
-            control={control}
-            label="Carrier"
-            typographyVariant="body1"
-            options={carrierOptions}
-            size="small"
-          />
-          <TextField
-            // fullWidth
-            variant="outlined"
-            size="small"
-            placeholder="tracking number"
-            label={errors.trackingNumber?.message || 'tracking number'}
-            error={!!errors.trackingNumber}
-            {...register('trackingNumber')}
-          />
-          <DatePicker
-            label="ship date"
-            slotProps={{ textField: { size: 'small' } }}
-            name="shipDate"
-            control={control}
-            error={errors.shipDate}
-          />
-          <DatePicker
-            label="eta"
-            slotProps={{ textField: { size: 'small' } }}
-            name="eta"
-            control={control}
-            error={errors.eta}
-          />
-        </FormGroup>
-        <NumberInput name="qty" size="small" />
-        <POItems items={poData.items} />
-        <Stack direction="row" gap={2}>
-          <Button type="submit" variant="contained">
-            {busy ? 'submitting ...' : 'create shipment'}
-          </Button>
+    <Paper
+      sx={{ maxWidth: 1100, minWidth: 690, p: 2 }}
+      className="printable-paper"
+    >
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <Stack direction="row" gap={2} sx={{ mb: 2 }} width="100%">
+          <Card sx={{ border: 'none', boxShadow: 'none' }}>
+            <Typography variant="body1">{`${poData.brand.name}`}</Typography>
+            <Typography
+              variant="body2"
+              sx={{ whiteSpace: 'pre-wrap' }}
+              color="textSecondary"
+            >{`po.${poData.poNumber}`}</Typography>
+            <Typography
+              variant="body2"
+              sx={{ whiteSpace: 'pre-wrap' }}
+              color="textSecondary"
+            >{`ordered date: ${format(
+              poData.dateSubmitted,
+              'dd MMM yyyy'
+            )}`}</Typography>
+          </Card>
+          <Card sx={{ border: 'none', boxShadow: 'none' }}>
+            <Typography variant="body1">{`order #${poData.order.orderNumber}`}</Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+            >{`${poData.order.customer.firstName} ${poData.order.customer.lastName}`}</Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+            >{`phone: ${poData.order.customer.phone}`}</Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+            >{`email: ${poData.order.customer.email}`}</Typography>
+          </Card>
         </Stack>
-      </Fieldset>
-      <SnackBar snack={snack} />
-    </Box>
+        <Fieldset aria-busy={busy} disabled={busy}>
+          <FormGroup row sx={{ gap: 2, my: 2 }}>
+            <Dropdown
+              name="carrierId"
+              control={control}
+              label="Carrier"
+              typographyVariant="body1"
+              options={carrierOptions}
+              size="small"
+            />
+            <TextField
+              // fullWidth
+              variant="outlined"
+              size="small"
+              placeholder="tracking number"
+              label={errors.trackingNumber?.message || 'tracking number'}
+              error={!!errors.trackingNumber}
+              {...register('trackingNumber')}
+            />
+            <DatePicker
+              label="ship date"
+              slotProps={{ textField: { size: 'small' } }}
+              name="shipDate"
+              control={control}
+              error={errors.shipDate}
+            />
+
+            <DatePicker
+              label="eta"
+              slotProps={{ textField: { size: 'small' } }}
+              name="eta"
+              control={control}
+              error={errors.eta}
+            />
+          </FormGroup>
+          <POItems items={poData.items} control={control} name="items" />
+          {/* <Stack direction="row" gap={2}>
+            <Button type="submit" variant="contained">
+              {busy ? 'submitting ...' : 'create shipment'}
+            </Button>
+          </Stack> */}
+        </Fieldset>
+        <SnackBar snack={snack} />
+      </Box>
+    </Paper>
   )
 }

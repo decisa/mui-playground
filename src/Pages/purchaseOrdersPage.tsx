@@ -5,25 +5,21 @@ import ListItem from '@mui/material/ListItem'
 import ListItemIcon from '@mui/material/ListItemIcon'
 
 import {
-  DataGrid,
   GridRowsProp,
   GridColDef,
   GridToolbar,
   GridRowModesModel,
   GridEventListener,
   GridRowEditStopReasons,
-  GridValueFormatterParams,
   GridRowModes,
-  useGridApiContext,
-  GridActionsCellItem,
   GridRowId,
   GridRenderCellParams,
+  GridRowParams,
+  useGridApiRef,
 } from '@mui/x-data-grid'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Link from '@mui/material/Link'
-import { styled } from '@mui/material/styles'
-import { alpha } from '@mui/system'
 import { format } from 'date-fns'
 import { Chip } from '@mui/material'
 import {
@@ -33,35 +29,16 @@ import {
 import { PurchaseOrderFullData } from '../Types/dbtypes'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import {
+  OpenActionDialogProps,
   getGridActions,
   getPurchaseOrderStatus,
   poStatusColor,
 } from '../Components/DataGrid/gridActions'
 import type { GridRowEditControls } from '../Components/DataGrid/gridActions'
-import CreateShipment from '../Components/CreateShipment/CreateShipment'
 import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
-
-// const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
-//   backgroundColor: theme.palette.background.paper,
-//   '& .MuiDataGrid-columnHeaders': {
-//     backgroundColor: theme.palette.primary.lightest,
-//   },
-//   '& .MuiDataGrid-row--editing': {
-//     // backgroundColor: theme.palette.secondary.light,
-//     '&:hover': {
-//       backgroundColor: alpha(theme.palette.primary.light, 0.4),
-//     },
-
-//     '& .MuiDataGrid-cell': {
-//       backgroundColor: 'transparent',
-//       borderBottomColor: 'transparent',
-//       '&.MuiDataGrid-cell--editable': {
-//         backgroundColor: alpha(theme.palette.primary.light, 0.2),
-//         // borderBottomColor: 'transparent',
-//       },
-//     },
-//   },
-// })) as typeof DataGrid
+import RowActionDialog, {
+  RowActionComponent,
+} from '../Components/DataGrid/RowActionDialog'
 
 const renderPOStatus = ({
   row,
@@ -93,10 +70,50 @@ const renderPOStatus = ({
   )
 }
 
+// note: currently using gridAPI to control edit mode of rows. this means that the state is handled inside the grid component under the hood. because of this whenever the grid's internal state is updated through API like apiRef.current.updateRows([...]) there is no re-render triggered on the Page and Dialogs do not trigger rerender with updated data. Need to either switch to full controlled mode or find a way to trigger re-render on page when grid's internal state is updated.
+
 export default function PurchaseOrdersPage() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderFullData[]>(
     []
   )
+  const apiRef = useGridApiRef()
+  // todo: maybe create a composite type that forces you to provide both row and actionComponent when setting open to true?
+  const [actionDialog, setActionDialog] = useState({
+    open: false,
+    rowParams: undefined as GridRowParams<PurchaseOrderFullData> | undefined,
+    rowAction: undefined as
+      | RowActionComponent<PurchaseOrderFullData>
+      | undefined,
+    actionTitle: undefined as string | undefined,
+    actionCallToAction: undefined as string | undefined,
+  })
+
+  const openActionDialog = useCallback(
+    ({
+      rowParams,
+      rowAction,
+      actionTitle,
+      actionCallToAction,
+    }: OpenActionDialogProps<PurchaseOrderFullData>) => {
+      setActionDialog({
+        open: true,
+        rowParams,
+        rowAction,
+        actionTitle,
+        actionCallToAction,
+      })
+    },
+    []
+  )
+
+  const closeActionDialog = () =>
+    setActionDialog({
+      open: false,
+      rowParams: undefined,
+      rowAction: undefined,
+      actionTitle: undefined,
+      actionCallToAction: undefined,
+    })
 
   // create custom rows modes model for datagrid
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({})
@@ -136,8 +153,9 @@ export default function PurchaseOrdersPage() {
       startEditMode,
       cancelEditMode,
       exitRowEditAndSave,
+      apiRef,
     }),
-    [rowModesModel, startEditMode, cancelEditMode, exitRowEditAndSave]
+    [rowModesModel, startEditMode, cancelEditMode, exitRowEditAndSave, apiRef]
   )
 
   const columns: GridColDef<PurchaseOrderFullData>[] = [
@@ -264,7 +282,8 @@ export default function PurchaseOrdersPage() {
       headerName: 'Actions',
       type: 'actions',
       width: 120,
-      getActions: (params) => getGridActions(params, rowEditControls),
+      getActions: (params) =>
+        getGridActions(params, rowEditControls, openActionDialog),
     },
   ]
 
@@ -280,26 +299,16 @@ export default function PurchaseOrdersPage() {
 
   const [rows, setRows] = useState<GridRowsProp<PurchaseOrderFullData>>([])
 
-  // useEffect(() => {
-  //   console.log('rows:', rows)
-  // }, [rows])
-
-  // const deleteRow = (id: number) =>
-  //   setRows((prevRows) => prevRows.filter((row) => row.id !== id))
-
-  // const [errors, setErrors] = useState<Record<string, Record<string, string>>>(
-  //   {}
-  // )
-
   const snack = useSnackBar()
 
   // get all purchase orders from database:
   useEffect(() => {
     getPurchaseOrders()
-      .map((purchaseOrder) => {
+      .map((purchaseOrdersResult) => {
         // console.log('all orders:', purchaseOrder)
-        setPurchaseOrders(purchaseOrder)
-        return purchaseOrder
+        // setPurchaseOrders(purchaseOrder)
+        setRows(purchaseOrdersResult)
+        return purchaseOrdersResult
       })
       .mapErr((err) => {
         console.log(err)
@@ -308,16 +317,18 @@ export default function PurchaseOrdersPage() {
   }, [])
 
   // fixme: this could be an issue if server side filtering is enabled and result is an empty array. please monitor.
-  useEffect(() => {
-    if (purchaseOrders.length === 0) {
-      return
-    }
-    setRows(purchaseOrders)
-  }, [purchaseOrders])
+  // useEffect(() => {
+  //   if (purchaseOrders.length === 0) {
+  //     return
+  //   }
+  //   setRows(purchaseOrders)
+  // }, [purchaseOrders])
 
+  console.log('IS ROWS mutable ???', rows)
   return (
     <Box p={2} maxWidth={1100} height="calc(100vh - 32px)">
       <StripedDataGrid
+        apiRef={apiRef}
         editMode="row"
         rows={rows}
         rowModesModel={rowModesModel}
@@ -372,7 +383,16 @@ export default function PurchaseOrdersPage() {
           }
         }}
       />
-      <CreateShipment />
+      <RowActionDialog<PurchaseOrderFullData>
+        dialogId="po-action-dialog"
+        open={actionDialog.open}
+        handleClose={closeActionDialog}
+        rowParams={actionDialog.rowParams}
+        actionComponent={actionDialog.rowAction}
+        apiRef={apiRef}
+        actionCallToAction={actionDialog.actionCallToAction}
+        actionTitle={actionDialog.actionTitle}
+      />
       <SnackBar snack={snack} />
     </Box>
   )

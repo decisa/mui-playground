@@ -8,9 +8,13 @@ import {
   GridRowModes,
   GridRowModesModel,
   GridRowParams,
+  GridValidRowModel,
 } from '@mui/x-data-grid'
+import { GridApiCommunity } from '@mui/x-data-grid/internals'
 import { POItemSummary, PurchaseOrderFullData } from '../../Types/dbtypes'
 import { ChipColor } from '../../Types/muiTypes'
+import CreateShipmentForm from '../CreateShipment/CreateShipment'
+import { RowActionComponent } from './RowActionDialog'
 
 export type GridRowEditControls = {
   rowModesModel: GridRowModesModel
@@ -19,9 +23,19 @@ export type GridRowEditControls = {
   exitRowEditAndSave: (id: GridRowId) => void
 }
 
+export type OpenActionDialogProps<RowData extends GridValidRowModel> = {
+  rowParams: GridRowParams<RowData>
+  rowAction: RowActionComponent<RowData>
+  actionTitle?: string
+  actionCallToAction?: string
+}
+
 export function getGridActions(
   params: GridRowParams<PurchaseOrderFullData>,
-  rowEditControls: GridRowEditControls
+  rowEditControls: GridRowEditControls,
+  openActionDialog: (
+    props: OpenActionDialogProps<PurchaseOrderFullData>
+  ) => void
 ) {
   const { id } = params
   const { rowModesModel, startEditMode, cancelEditMode, exitRowEditAndSave } =
@@ -98,7 +112,13 @@ export function getGridActions(
         label="Create Shipment"
         // size="medium"
         onClick={() => {
-          console.log('params', params)
+          openActionDialog({
+            rowParams: params,
+            rowAction: CreateShipmentForm,
+            actionTitle: 'Create Shipment for Purchase Order',
+            actionCallToAction: 'Create Shipment',
+          })
+          // console.log('params', params)
         }}
         showInMenu
       />
