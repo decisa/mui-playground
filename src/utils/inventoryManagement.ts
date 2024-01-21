@@ -8,6 +8,7 @@ import {
   PurchaseOrderCreateResponse,
   PurchaseOrderFullData,
   PurchaseOrderRequest,
+  ShipmentItem,
   ShortOrder,
   // ShortProduct,
 } from '../Types/dbtypes'
@@ -306,7 +307,25 @@ export const getAllCarriers = () =>
   safeJsonFetch<Carrier[]>(`${dbHost}/carrier/all`, {
     method: 'GET',
     mode: 'cors',
-  }).andThen((res) => {
-    console.log('carriers = ', res)
-    return okAsync(res)
-  })
+  }).andThen((res) =>
+    // console.log('carriers = ', res)
+    okAsync(res)
+  )
+
+export const createShipment = (shipmentData: unknown) => {
+  const request = {
+    method: 'POST',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(shipmentData),
+  }
+  console.log('request = ', request)
+  return safeJsonFetch<ShipmentItem>(`${dbHost}/shipment`, request).andThen(
+    (res) => {
+      console.log('shipment created = ', res)
+      return okAsync(res)
+    }
+  )
+}
