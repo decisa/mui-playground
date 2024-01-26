@@ -3,14 +3,13 @@ import { parseISO } from 'date-fns'
 import {
   Carrier,
   Order,
-  // Product,
+  POShipmentParsed,
+  POShipmentResponseRaw,
   ProductSummary,
   PurchaseOrderCreateResponse,
   PurchaseOrderFullData,
   PurchaseOrderRequest,
-  ShipmentItem,
   ShortOrder,
-  // ShortProduct,
 } from '../Types/dbtypes'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
@@ -241,7 +240,7 @@ export const autoOrder = (orderNumber: string) =>
     })
     .andThen((purchaseOrdersToCreate) => {
       // create purchase orders
-      console.log('purchase orders = ', purchaseOrdersToCreate)
+      // console.log('purchase orders = ', purchaseOrdersToCreate)
       const result = purchaseOrdersToCreate.map((po) =>
         createPurchaseOrder(po)
           .map((res) => {
@@ -255,17 +254,50 @@ export const autoOrder = (orderNumber: string) =>
       )
       return ResultAsync.combine(result)
     })
-    // return the updated order information:
-    .andThen(() => searchShortOrders(orderNumber))
-    .andThen((orders) => {
-      if (orders.length > 1) {
-        return errAsync(new Error('more than one order found'))
+    .andThen((newPurchaseOrders) => {
+      // todo: refactor to convert poToShipmentItems and account for summaries
+      // need to ship all purchase orders
+      // console.log('new purchase orders: ', newPurchaseOrders)
+      const items = newPurchaseOrders
+        .map((po) => po.items)
+        .flat(1)
+        .map((item) => ({
+          purchaseOrderItemId: item.id,
+          qtyShipped: item.qtyPurchased,
+        }))
+      const newShipment: ShipmentCreateData = {
+        carrierId: 1,
+        trackingNumber: null,
+        shipDate: new Date(),
+        eta: new Date(),
+        items,
       }
-      if (orders.length === 0) {
-        return errAsync(new Error('no order found'))
-      }
-      return okAsync(orders[0])
+      // console.log('creating new shipment:', newShipment)
+      return createShipment(newShipment)
     })
+    .andThen((shipment) => {
+      const itemsToReceive: ReceivingItem[] = shipment.items.map((item) => {
+        const { id, qtyShipped } = item
+        return {
+          shipmentItemId: id,
+          notes: 'auto',
+          qtyReceived: qtyShipped,
+          receivedDate: new Date(),
+        }
+      })
+      return receiveItems(itemsToReceive)
+    })
+    // return the updated order information:
+    // .andThen(() => searchShortOrders(orderNumber))
+    // .andThen((orders) => {
+    //   if (orders.length > 1) {
+    //     return errAsync(new Error('more than one order found'))
+    //   }
+    //   if (orders.length === 0) {
+    //     return errAsync(new Error('no order found'))
+    //   }
+    //   return okAsync(orders[0])
+    // })
     .mapErr((err) => {
       console.log('error encountered: ', err)
       return err
@@ -312,7 +344,18 @@ export const getAllCarriers = () =>
     okAsync(res)
   )
 
-export const createShipment = (shipmentData: unknown) => {
+type ShipmentCreateData = {
+  carrierId: number
+  trackingNumber: string | null
+  shipDate: Date | null
+  eta: Date | null
+  items?: {
+    purchaseOrderItemId: number
+    qtyShipped: number
+  }[]
+}
+
+export const createShipment = (shipmentData: ShipmentCreateData) => {
   const request = {
     method: 'POST',
     mode: 'cors' as RequestMode,
@@ -322,10 +365,69 @@ export const createShipment = (shipmentData: unknown) => {
     body: JSON.stringify(shipmentData),
   }
   console.log('request = ', request)
-  return safeJsonFetch<ShipmentItem>(`${dbHost}/shipment`, request).andThen(
-    (res) => {
-      console.log('shipment created = ', res)
-      return okAsync(res)
-    }
+  return safeJsonFetch<POShipmentResponseRaw>(
+    `${dbHost}/shipment`,
+    request
+  ).andThen((res) =>
+    // console.log('shipment created = ', res)
+    okAsync(res)
+  )
+}
+
+export const getPOShipments = (poId: number) => {
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<POShipmentResponseRaw[]>(
+    `${dbHost}/purchaseorder/${poId}/shipments`,
+    request
+  ).andThen((shipments) => {
+    const result: POShipmentParsed[] = shipments.map((shipment) => {
+      const parsedItems = shipment.items.map((item) => {
+        const { purchaseOrderItem, ...rest } = item
+        const parsedItem = {
+          ...rest,
+          name:
+            purchaseOrderItem?.product?.product?.name || 'name not received',
+        }
+        return parsedItem
+      })
+      return {
+        ...shipment,
+        items: parsedItems,
+      }
+    })
+    // console.log('shipment received:', result)
+    return okAsync(result)
+  })
+}
+
+export type ReceivingItem = {
+  shipmentItemId: number
+  qtyReceived: number
+  receivedDate: Date
+  notes: string | null
+}
+
+// receive shipment items:
+export const receiveItems = (items: ReceivingItem[]) => {
+  const request = {
+    method: 'POST',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(items),
+  }
+  return safeJsonFetch<ReceivingItem[]>(
+    `${dbHost}/receiving/`,
+    request
+  ).andThen((receivedItems) =>
+    // console.log('received items:', receivedItems)
+    okAsync(receivedItems)
   )
 }
