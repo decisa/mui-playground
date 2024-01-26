@@ -1,8 +1,4 @@
-import {
-  createTheme,
-  PaletteColorOptions,
-  ThemeOptions,
-} from '@mui/material/styles'
+import { createTheme, ThemeOptions } from '@mui/material/styles'
 import { PaletteMode } from '@mui/material'
 import { createContext, useMemo, useState } from 'react'
 import type {} from '@mui/x-data-grid/themeAugmentation'
@@ -12,6 +8,9 @@ import LinkBehavior from './Components/LinkBehavior'
 export type ColorPalette = ReturnType<typeof tokens>
 
 declare module '@mui/material/styles' {
+  interface Palette {
+    neutral: SimplePaletteColorOptions
+  }
   interface PaletteColor {
     lightest?: string
   }
@@ -36,15 +35,24 @@ export const tokens = (mode: string) => ({
           900: '#efefef',
         },
         primary: {
-          100: '#d0d1d5',
-          200: '#a1a4ab',
-          300: '#727681',
-          400: '#434957',
-          500: '#141b2d',
-          600: '#101624',
-          700: '#0c101b',
-          800: '#080b12',
-          900: '#040509',
+          100: '#E6EDFF',
+          200: '#C9D5F2',
+          300: '#B5C3E6',
+          400: '#8496C2',
+          500: '#6879A1',
+          600: '#576C9C',
+          700: '#31436E',
+          800: '#212D4A',
+          900: '#101624',
+          // 100: '#d0d1d5',
+          // 200: '#a1a4ab',
+          // 300: '#727681',
+          // 400: '#434957',
+          // 500: '#141b2d',
+          // 600: '#101624',
+          // 700: '#0c101b',
+          // 800: '#080b12',
+          // 900: '#040509',
         },
         background: {
           50: '#384158',
@@ -107,7 +115,7 @@ export const tokens = (mode: string) => ({
     : {
         grey: {
           100: '#fafafa',
-          200: '#c2c2c2',
+          200: '#eeeeee',
           300: '#a3a3a3',
           400: '#858585',
           500: '#666666',
@@ -117,15 +125,24 @@ export const tokens = (mode: string) => ({
           900: '#141414',
         },
         primary: {
-          100: '#040509',
-          200: '#080b12',
-          300: '#0c101b',
-          400: '#101624', // f2f0f0
-          500: '#141b2d',
-          600: '#434957',
-          700: '#727681',
-          800: '#a1a4ab',
-          900: '#d0d1d5',
+          100: '#101624',
+          200: '#212D4A',
+          300: '#31436E',
+          400: '#576C9C',
+          500: '#6879A1',
+          600: '#8496C2',
+          700: '#B5C3E6',
+          800: '#C9D5F2',
+          900: '#E6EDFF',
+          // 100: '#040509',
+          // 200: '#080b12',
+          // 300: '#0c101b',
+          // 400: '#101624', // f2f0f0
+          // 500: '#141b2d',
+          // 600: '#434957',
+          // 700: '#727681',
+          // 800: '#a1a4ab',
+          // 900: '#d0d1d5',
         },
         background: {
           50: '#f3f4f7',
@@ -285,9 +302,10 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
               main: colors.greenAccent[300],
             },
             neutral: {
-              dark: colors.grey[700],
-              main: colors.grey[500],
-              light: colors.grey[100],
+              dark: colors.primary[300],
+              main: colors.primary[500],
+              light: colors.primary[800],
+              lightest: colors.primary[900],
             },
             background: {
               default: colors.background[200],
@@ -316,7 +334,8 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             neutral: {
               dark: colors.grey[700],
               main: colors.grey[500],
-              light: colors.grey[100],
+              light: colors.grey[200],
+              lightest: colors.grey[100],
             },
             background: {
               // default: '#fcfcfc',
