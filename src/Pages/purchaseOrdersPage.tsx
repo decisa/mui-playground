@@ -73,9 +73,6 @@ const renderPOStatus = ({
 // note: currently using gridAPI to control edit mode of rows. this means that the state is handled inside the grid component under the hood. because of this whenever the grid's internal state is updated through API like apiRef.current.updateRows([...]) there is no re-render triggered on the Page and Dialogs do not trigger rerender with updated data. Need to either switch to full controlled mode or find a way to trigger re-render on page when grid's internal state is updated.
 
 export default function PurchaseOrdersPage() {
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderFullData[]>(
-    []
-  )
   const apiRef = useGridApiRef()
   // todo: maybe create a composite type that forces you to provide both row and actionComponent when setting open to true?
   const [actionDialog, setActionDialog] = useState({
@@ -332,6 +329,14 @@ export default function PurchaseOrdersPage() {
         editMode="row"
         rows={rows}
         rowModesModel={rowModesModel}
+        initialState={{
+          columns: {
+            columnVisibilityModel: {
+              order: false,
+              tag: false,
+            },
+          },
+        }}
         onRowModesModelChange={(newModel) => {
           console.log('changing mode model to:', newModel)
           setRowModesModel(newModel)
@@ -363,8 +368,7 @@ export default function PurchaseOrdersPage() {
           // console.log('updatedRow:', updatedRow)
           // console.log('originalRow:', originalRow)
           updatePurchaseOrder(originalRow.id, updatedRow).match(
-            (result) => {
-              // console.log('result:', result)
+            () => {
               // notify of success:
               snack.success('Purchase order updated!')
               return Promise.resolve(updatedRow)

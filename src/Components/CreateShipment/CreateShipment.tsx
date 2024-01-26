@@ -3,14 +3,7 @@ import * as yup from 'yup'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Box, Stack } from '@mui/system'
-import {
-  Button,
-  Card,
-  FormGroup,
-  Paper,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Card, FormGroup, Paper, TextField, Typography } from '@mui/material'
 
 import { format } from 'date-fns'
 import { Carrier, PurchaseOrderFullData } from '../../Types/dbtypes'
@@ -152,39 +145,48 @@ export default function CreateShipmentForm({
   const snack = useSnackBar()
 
   const onSubmit = (data: CreateShipmentFormData) => {
-    console.log('data', data)
-    const parsedData = { ...data }
-    parsedData.items = parsedData.items
+    const items = data.items
       ?.filter((item) => item.qtyToShip > 0)
       .map((item) => ({
         ...item,
         qtyShipped: Number(item.qtyToShip),
       }))
+    const parsedData = {
+      ...data,
+      carrierId: Number(data.carrierId) || 1,
+      items,
+    }
+
     setBusy(true)
     // create a shipment in DB
     createShipment(parsedData)
-      .andThen((res) => {
-        console.log('res', res)
+      .andThen(() => {
         setBusy(false)
         snack.success('shipment created')
         // todo: need to update the poData in consideration with the new shipment
         const purchaseOrderId = poRowParams.row.id
-        // return okAsync(res)
+        // refetch the purchase order data from DB
         return getPurchaseOrder(purchaseOrderId)
       })
       .map((updatedPO) => {
         // the new updated PO is in the same format of PurchaseOrderFullData
         // so we can just update the state of the grid with new data
-        console.log('res', updatedPO)
-        console.log('current poData', poData)
-        snack.success('received new po data')
+
+        // typescript safety. should never happen that poData is empty at this point:
+        if (!poData) {
+          return updatedPO
+        }
+
         const updatedData = { ...poData }
         updatedData.items = [...updatedPO.items]
         if (apiRef) {
           apiRef.current?.updateRows([updatedData])
         }
+        setPOData(updatedData)
         setBusy(false)
-        onSuccess()
+        if (onSuccess && typeof onSuccess === 'function') {
+          onSuccess()
+        }
         return updatedPO
       })
       .mapErr((err) => {

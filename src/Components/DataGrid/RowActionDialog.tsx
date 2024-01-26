@@ -9,7 +9,7 @@ import { DialogActions } from '@mui/material'
 export type RowActionComponentProps<RowData extends GridValidRowModel> = {
   rowParams: GridRowParams<RowData>
   apiRef: React.MutableRefObject<GridApiCommunity>
-  onSuccess: () => void
+  onSuccess?: () => void
   actionRef: React.MutableRefObject<any>
 }
 
@@ -70,7 +70,7 @@ export default function RowActionDialog<RowData extends GridValidRowModel>({
       <Action
         rowParams={rowParams}
         apiRef={apiRef}
-        onSuccess={handleClose}
+        // onSuccess={handleClose}
         actionRef={actionRef}
       />
       <DialogActions sx={{ justifyContent: 'start', px: 2 }}>
