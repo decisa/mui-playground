@@ -3,10 +3,9 @@ import {
   FieldValues,
   FieldPath,
   ArrayPath,
-  useController,
   useFieldArray,
 } from 'react-hook-form'
-import { GridColDef, GridValueGetterParams } from '@mui/x-data-grid'
+import { GridColDef } from '@mui/x-data-grid'
 import { Box } from '@mui/material'
 import { useMemo } from 'react'
 import { POItem } from '../../Types/dbtypes'
@@ -72,7 +71,11 @@ export default function POItems<FormData extends FieldValues>({
   })
 
   const columns: GridColDef<POItemWithFieldIndex>[] = [
-    { field: 'id', headerName: 'ID', width: 70 },
+    {
+      field: 'id',
+      headerName: 'ID',
+      width: 70,
+    },
     { field: 'configurationId', headerName: 'Config ID', width: 130 },
 
     {
@@ -146,12 +149,14 @@ export default function POItems<FormData extends FieldValues>({
         hideFooterSelectedRowCount
         disableDensitySelector
         disableRowSelectionOnClick
-        columnVisibilityModel={
-          {
-            // id: false,
-            // configurationId: false,
-          }
-        }
+        initialState={{
+          columns: {
+            columnVisibilityModel: {
+              id: false,
+              configurationId: false,
+            },
+          },
+        }}
       />
     </Box>
   )
