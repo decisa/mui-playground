@@ -10,11 +10,11 @@ import {
   GridRowParams,
   GridValidRowModel,
 } from '@mui/x-data-grid'
-import { GridApiCommunity } from '@mui/x-data-grid/internals'
 import { POItemSummary, PurchaseOrderFullData } from '../../Types/dbtypes'
 import { ChipColor } from '../../Types/muiTypes'
 import CreateShipmentForm from '../CreateShipment/CreateShipment'
 import { RowActionComponent } from './RowActionDialog'
+import ReceiveShipmentsForm from '../ReceiveShipments/ReceiveShipments'
 
 export type GridRowEditControls = {
   rowModesModel: GridRowModesModel
@@ -130,7 +130,12 @@ export function getGridActions(
         label="Receive Shipment"
         // size="medium"
         onClick={() => {
-          console.log('params', params)
+          openActionDialog({
+            rowParams: params,
+            rowAction: ReceiveShipmentsForm,
+            actionTitle: `Receive Shipments for Purchase Order ${params.row.poNumber}`,
+            actionCallToAction: 'Receive Shipments',
+          })
         }}
         showInMenu
       />
