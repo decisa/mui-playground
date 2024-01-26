@@ -271,7 +271,7 @@ export type PurchaseOrderCreateResponse = {
     createdAt: Date | string
     updatedAt: Date | string
     id: number
-    qtyOrdered: number
+    qtyPurchased: number
     configurationId: number
     purchaseOrderId: number
   }[]
@@ -362,4 +362,54 @@ export type ShipmentData = {
   items: ShipmentItem[]
   createdAt: Date
   updatedAt: Date
+}
+
+export type POShipmentItemParsed = Pick<
+  ShipmentItem,
+  'qtyShipped' | 'purchaseOrderItemId'
+> & {
+  id: number | string
+  name: string
+  receivedSummary?: {
+    totalQtyReceived: number
+  }
+}
+
+export type POShipmentData = Pick<
+  ShipmentData,
+  | 'id'
+  | 'trackingNumber'
+  | 'eta'
+  | 'dateShipped'
+  | 'carrierId'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+export type POShipmentItemRawResponse = Pick<
+  ShipmentItem,
+  'id' | 'qtyShipped' | 'purchaseOrderItemId'
+> & {
+  receivedSummary?: {
+    totalQtyReceived: number
+  }
+  purchaseOrderItem: {
+    configurationId: number
+    product: {
+      productId: number
+      product: {
+        name: string
+      }
+    }
+  }
+}
+
+export type POShipmentResponseRaw = POShipmentData & {
+  items: POShipmentItemRawResponse[]
+  carrier: Pick<Carrier, 'name' | 'type'>
+}
+
+export type POShipmentParsed = POShipmentData & {
+  items: POShipmentItemParsed[]
+  carrier: Pick<Carrier, 'name' | 'type'>
 }
