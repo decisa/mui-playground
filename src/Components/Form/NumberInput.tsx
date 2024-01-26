@@ -9,7 +9,7 @@ import RemoveIcon from '@mui/icons-material/Remove'
 import AddIcon from '@mui/icons-material/Add'
 import { Control, FieldValues, FieldPath, useController } from 'react-hook-form'
 
-type NumberInputProps<FormData extends FieldValues> = {
+export type NumberInputProps<FormData extends FieldValues> = {
   control: Control<FormData>
   name: FieldPath<FormData>
   min?: number
