@@ -22,6 +22,14 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
       },
     },
   },
+  '& .MuiDataGrid-cell': {
+    '&.subheader': {
+      backgroundColor: theme.palette.neutral.light,
+      '&:hover': {
+        backgroundColor: theme.palette.neutral.light,
+      },
+    },
+  },
 })) as typeof DataGrid
 
 export default StripedDataGrid
