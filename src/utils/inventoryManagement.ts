@@ -431,3 +431,18 @@ export const receiveItems = (items: ReceivingItem[]) => {
     okAsync(receivedItems)
   )
 }
+
+export const getAllOrders = () => {
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<SearchResponse>(`${dbHost}/order/all`, request).andThen(
+    (orders) =>
+      // console.log('received items:', orders)
+      okAsync(orders)
+  )
+}

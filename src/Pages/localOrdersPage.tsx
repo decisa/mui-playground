@@ -42,6 +42,7 @@ import { ChipColor } from '../Types/muiTypes'
 import { tokens } from '../theme'
 
 import LocalOrderActions from '../Components/DotMenu/LocalOrderActions'
+import { getAllOrders } from '../utils/inventoryManagement'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -353,6 +354,33 @@ export default function OrderPage() {
   )
 
   useEffect(() => {
+    if (!search.length) {
+      // get all orders
+      getAllOrders().map((orderSearchResults) => {
+        const parsedOrders = orderSearchResults.results.map((orderInfo) => {
+          const { products, ...otherFields } = orderInfo
+          const parsedProducts = products.map((product) => {
+            const { configuration, ...otherProductFields } = product
+            return {
+              ...otherProductFields,
+              configuration: {
+                ...configuration,
+                status: getProductStatus(configuration),
+              },
+            }
+          })
+          return {
+            ...otherFields,
+            products: parsedProducts,
+          }
+        })
+        setData(parsedOrders)
+        return orderSearchResults
+      })
+    }
+    if (search.length < 2) {
+      return
+    }
     // reset showOrder when search changes
     setShowOrder(false)
     scrollPosition.current = 1
@@ -366,7 +394,6 @@ export default function OrderPage() {
       })
         .then((res) => res.json())
         .then((res: SearchResponse) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, prettier/prettier
           console.log(res.results.map((x) => x.orderNumber).join(', '))
           const parsedOrders = res.results.map((orderInfo) => {
             const { products, ...otherFields } = orderInfo
