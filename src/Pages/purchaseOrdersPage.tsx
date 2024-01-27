@@ -30,11 +30,11 @@ import { PurchaseOrderFullData } from '../Types/dbtypes'
 import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import {
   OpenActionDialogProps,
-  getGridActions,
+  getPOGridActions,
   getPurchaseOrderStatus,
   poStatusColor,
-} from '../Components/DataGrid/gridActions'
-import type { GridRowEditControls } from '../Components/DataGrid/gridActions'
+} from '../Components/PurchaseOrder/gridPOActions'
+import type { GridRowEditControls } from '../Components/PurchaseOrder/gridPOActions'
 import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
 import RowActionDialog, {
   RowActionComponent,
@@ -280,7 +280,7 @@ export default function PurchaseOrdersPage() {
       type: 'actions',
       width: 120,
       getActions: (params) =>
-        getGridActions(params, rowEditControls, openActionDialog),
+        getPOGridActions(params, rowEditControls, openActionDialog),
     },
   ]
 
@@ -323,7 +323,16 @@ export default function PurchaseOrdersPage() {
 
   console.log('IS ROWS mutable ???', rows)
   return (
-    <Box p={2} maxWidth={1100} height="calc(100vh - 32px)">
+    <Box
+      p={2}
+      maxWidth={1100}
+      sx={{
+        height: 'calc(100vh - 32px)',
+        '@media print': {
+          height: 'auto',
+        },
+      }}
+    >
       <StripedDataGrid
         apiRef={apiRef}
         editMode="row"

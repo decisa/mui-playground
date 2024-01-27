@@ -13,7 +13,7 @@ import {
 import { POItemSummary, PurchaseOrderFullData } from '../../Types/dbtypes'
 import { ChipColor } from '../../Types/muiTypes'
 import CreateShipmentForm from '../CreateShipment/CreateShipment'
-import { RowActionComponent } from './RowActionDialog'
+import { RowActionComponent } from '../DataGrid/RowActionDialog'
 import ReceiveShipmentsForm from '../ReceiveShipments/ReceiveShipments'
 
 export type GridRowEditControls = {
@@ -30,7 +30,7 @@ export type OpenActionDialogProps<RowData extends GridValidRowModel> = {
   actionCallToAction?: string
 }
 
-export function getGridActions(
+export function getPOGridActions(
   params: GridRowParams<PurchaseOrderFullData>,
   rowEditControls: GridRowEditControls,
   openActionDialog: (
