@@ -30,6 +30,18 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
       },
     },
   },
+  '@media print': {
+    '& .MuiDataGrid-main': {
+      overflow: 'visible',
+    },
+    '& .MuiDataGrid-footerContainer': {
+      // opacity: 0,
+      display: 'none',
+    },
+    '& .MuiDataGrid-toolbarContainer': {
+      display: 'none',
+    },
+  },
 })) as typeof DataGrid
 
 export default StripedDataGrid
