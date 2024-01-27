@@ -202,7 +202,7 @@ export default function ReceiveShipmentsForm({
   actionRef.current = {
     save: handleSubmit(onSubmit),
   }
-
+  // todo: refactor PO header to be a separate component
   return (
     <Paper
       sx={{ maxWidth: 1100, minWidth: 690, p: 2 }}
@@ -255,8 +255,8 @@ export default function ReceiveShipmentsForm({
               // fullWidth
               variant="outlined"
               size="small"
-              placeholder="notes"
-              label={errors.notes?.message || 'notes'}
+              placeholder="(optional)"
+              label={errors.notes?.message || 'shipping notes'}
               error={!!errors.notes}
               {...register('notes')}
             />
