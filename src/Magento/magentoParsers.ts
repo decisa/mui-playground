@@ -696,7 +696,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
   const taxRate =
     Math.round((taxAmount * 100000) / (grandTotal - taxAmount)) / 1000
 
-  console.log('taxRate', taxRate, taxAmount, grandTotal)
+  // console.log('taxRate', taxRate, taxAmount, grandTotal)
   const collectedTaxes = appliedTaxes
     .filter((x) => x.code !== 'shipping')
     .map((x) => x.title)
