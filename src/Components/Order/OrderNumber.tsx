@@ -14,7 +14,7 @@ const OrderNumber = ({ order }: OrderNumberProps) => {
     magento && magento.externalId && admin
       ? `${admin}/${magento.externalId}`
       : null
-  console.log('OrderNumber:', adminUrl, magento, admin)
+  // console.log('OrderNumber:', adminUrl, magento, admin)
   if (!adminUrl) {
     return (
       <Typography variant="h6" component="span" pl={2}>
