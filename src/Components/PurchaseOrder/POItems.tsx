@@ -149,6 +149,10 @@ export default function POItems<FormData extends FieldValues>({
         hideFooterSelectedRowCount
         disableDensitySelector
         disableRowSelectionOnClick
+        slots={{
+          pagination: () => null,
+          footer: () => null,
+        }}
         initialState={{
           columns: {
             columnVisibilityModel: {
