@@ -446,3 +446,20 @@ export const getAllOrders = () => {
       okAsync(orders)
   )
 }
+
+export const deletePO = (id: number) => {
+  const request = {
+    method: 'DELETE',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<SearchResponse>(
+    `${dbHost}/purchaseorder/${id}`,
+    request
+  ).andThen((deletedPO) =>
+    // console.log('deleted po:', deletedPO)
+    okAsync(deletedPO)
+  )
+}

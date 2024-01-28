@@ -2,6 +2,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import BlockIcon from '@mui/icons-material/Block'
 import CheckIcon from '@mui/icons-material/Check'
 import OutputIcon from '@mui/icons-material/Output'
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
 import {
   GridActionsCellItem,
   GridRowId,
@@ -10,17 +11,21 @@ import {
   GridRowParams,
   GridValidRowModel,
 } from '@mui/x-data-grid'
+import { GridApiCommunity } from '@mui/x-data-grid/internals'
+import { okAsync } from 'neverthrow'
 import { POItemSummary, PurchaseOrderFullData } from '../../Types/dbtypes'
 import { ChipColor } from '../../Types/muiTypes'
 import CreateShipmentForm from '../CreateShipment/CreateShipment'
 import { RowActionComponent } from '../DataGrid/RowActionDialog'
 import ReceiveShipmentsForm from '../ReceiveShipments/ReceiveShipments'
+import { deletePO } from '../../utils/inventoryManagement'
 
 export type GridRowEditControls = {
   rowModesModel: GridRowModesModel
   startEditMode: (id: GridRowId) => void
   cancelEditMode: (id: GridRowId) => void
   exitRowEditAndSave: (id: GridRowId) => void
+  apiRef: React.MutableRefObject<GridApiCommunity>
 }
 
 export type OpenActionDialogProps<RowData extends GridValidRowModel> = {
@@ -38,11 +43,20 @@ export function getPOGridActions(
   ) => void
 ) {
   const { id } = params
-  const { rowModesModel, startEditMode, cancelEditMode, exitRowEditAndSave } =
+  const { rowModesModel, startEditMode, cancelEditMode, exitRowEditAndSave, apiRef } =
     rowEditControls
 
   const isEditMode = rowModesModel[id]?.mode === GridRowModes.Edit
   const actions = []
+
+  const handleDeletePO = (poId: number) => {
+    deletePO(poId)
+      .andThen((deletedPO) => {
+        console.log('!!! deleted PO !!!', deletedPO)
+        return okAsync(deletedPO)
+      })
+      .mapErr((error) => console.log(error))
+  }
 
   // editing actions
   if (isEditMode) {
@@ -82,6 +96,25 @@ export function getPOGridActions(
       label="Console Log"
       color="primary"
       onClick={() => console.log(params)}
+      showInMenu
+    />
+  )
+
+  // add delete purchase order button
+  // fixme: add are you sure dialog
+  actions.push(
+    <GridActionsCellItem
+      icon={<DeleteForeverIcon titleAccess="delete purchase order" />}
+      label="Delete PO"
+      color="alert"
+      onClick={() => {
+        console.log(params)
+        handleDeletePO(params.row.id)
+        if (apiRef.current) {
+          // use gridAPI to delete the PO:
+          apiRef.current.
+        }
+      }}
       showInMenu
     />
   )
