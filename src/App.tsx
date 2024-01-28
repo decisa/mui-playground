@@ -11,6 +11,7 @@ import {
   MagentoProviderNeverthrow,
 } from './Magento/magentoAPIContext'
 import { ColorModeContext, useMode } from './theme'
+import { SnackBarProvider } from './Components/GlobalSnackBar'
 // import type
 
 // import React from 'react'
@@ -46,10 +47,12 @@ function App({ children }: Props) {
             <CssBaseline />
             <AppContainer>
               <Navbar className="nav" />
-              <Box sx={{ marginLeft: 35, p: 2 }} className="main">
-                <Outlet />
-                {children || null}
-              </Box>
+              <SnackBarProvider>
+                <Box sx={{ marginLeft: 35, p: 2 }} className="main">
+                  <Outlet />
+                  {children || null}
+                </Box>
+              </SnackBarProvider>
             </AppContainer>
           </LocalizationProvider>
         </ThemeProvider>
