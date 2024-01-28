@@ -43,8 +43,13 @@ export function getPOGridActions(
   ) => void
 ) {
   const { id } = params
-  const { rowModesModel, startEditMode, cancelEditMode, exitRowEditAndSave, apiRef } =
-    rowEditControls
+  const {
+    rowModesModel,
+    startEditMode,
+    cancelEditMode,
+    exitRowEditAndSave,
+    apiRef,
+  } = rowEditControls
 
   const isEditMode = rowModesModel[id]?.mode === GridRowModes.Edit
   const actions = []
@@ -53,6 +58,10 @@ export function getPOGridActions(
     deletePO(poId)
       .andThen((deletedPO) => {
         console.log('!!! deleted PO !!!', deletedPO)
+        if (apiRef.current) {
+          // use gridAPI to delete the PO:
+          apiRef.current.updateRows([{ id: params.row.id, _action: 'delete' }])
+        }
         return okAsync(deletedPO)
       })
       .mapErr((error) => console.log(error))
@@ -110,10 +119,6 @@ export function getPOGridActions(
       onClick={() => {
         console.log(params)
         handleDeletePO(params.row.id)
-        if (apiRef.current) {
-          // use gridAPI to delete the PO:
-          apiRef.current.
-        }
       }}
       showInMenu
     />
