@@ -70,7 +70,7 @@ export default function RowActionDialog<RowData extends GridValidRowModel>({
       <Action
         rowParams={rowParams}
         apiRef={apiRef}
-        // onSuccess={handleClose}
+        onSuccess={handleClose}
         actionRef={actionRef}
       />
       <DialogActions sx={{ justifyContent: 'start', px: 2 }}>

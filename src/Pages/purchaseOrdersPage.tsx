@@ -27,7 +27,6 @@ import {
   updatePurchaseOrder,
 } from '../utils/inventoryManagement'
 import { PurchaseOrderFullData } from '../Types/dbtypes'
-import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import {
   OpenActionDialogProps,
   getPOGridActions,
@@ -39,6 +38,7 @@ import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
 import RowActionDialog, {
   RowActionComponent,
 } from '../Components/DataGrid/RowActionDialog'
+import { useSnackBar } from '../Components/GlobalSnackBar'
 
 const renderPOStatus = ({
   row,
@@ -392,7 +392,7 @@ export default function PurchaseOrdersPage() {
           if (err instanceof Error) {
             snack.error(err.message)
           } else {
-            snack.error('Error occured, but no message provided.') //  + String(err))
+            snack.error('Error occured, but no message provided.')
           }
         }}
       />
@@ -406,7 +406,6 @@ export default function PurchaseOrdersPage() {
         actionCallToAction={actionDialog.actionCallToAction}
         actionTitle={actionDialog.actionTitle}
       />
-      <SnackBar snack={snack} />
     </Box>
   )
 }

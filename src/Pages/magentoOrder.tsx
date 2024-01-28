@@ -1,22 +1,15 @@
 import React, { useEffect } from 'react'
-import { Result, ResultAsync, errAsync } from 'neverthrow'
-import {
-  LoaderFunctionArgs,
-  useLoaderData,
-  useLocation,
-  useNavigate,
-  useParams,
-} from 'react-router'
-import { Box, Button, Paper, TextField } from '@mui/material'
+import { Result, ResultAsync } from 'neverthrow'
+import { useLoaderData, useNavigate, useParams } from 'react-router'
+import { Box, Button, Paper, TextField, Typography } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
-import { set } from 'date-fns'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
-import { SnackBar, useSnackBar } from '../Components/SnackBar'
 import { Order, OrderComment } from '../Types/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import Comments from '../Components/Order/Comments'
 import CommentsEditor from '../Components/Order/CommentsEditor'
+import { useSnackBar } from '../Components/GlobalSnackBar'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -33,7 +26,7 @@ export default function MagentoPage() {
   // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
 
   const { orderId } = useParams()
-  console.log('location', orderId)
+  // console.log('location', orderId)
   const [order, setOrder] = React.useState<Order | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState(orderId)
 
@@ -67,7 +60,7 @@ export default function MagentoPage() {
   const refetchComments = () => {
     getOrderComments(order?.magento?.externalId || 0).map((comments) => {
       // console.log('received comments:', comments)
-      // snack.success('comments updated')
+      snack.info(`comments re-sync'ed`)
       setOrder((prevOrder) => {
         if (!prevOrder) {
           return prevOrder
@@ -111,20 +104,13 @@ export default function MagentoPage() {
           getOrderDetails(orders[0])
             .map((orderResult) => {
               setOrder(orderResult)
-              console.log('final order:', orderResult)
+              // console.log('final order:', orderResult)
               return orderResult
             })
             .mapErr((error) => {
               console.log('ERRRRROR', error, error instanceof Error)
               if (error instanceof Error) {
                 snack.error(error.message)
-                console.log(
-                  'ERRRRROR',
-                  error.cause,
-                  error.code,
-                  error.name,
-                  error.stack
-                )
                 return error
               }
               const errors = error.map((z) => z.message)
@@ -204,7 +190,6 @@ export default function MagentoPage() {
                   console.log('err', err)
                   snack.error(String(err))
                 })
-              // snack.success('order imported')
             }}
           >
             Import
@@ -237,7 +222,6 @@ export default function MagentoPage() {
           </Paper>
         </Box>
       </Box>
-      <SnackBar snack={snack} />
     </Box>
   )
 }
@@ -265,8 +249,6 @@ const getDeliveryMethods = async (): Promise<DeliveryMethodsAsObject> => {
     acc[method.id] = method
     return acc
   }, {} as DeliveryMethodsAsObject)
-  console.log('!!! result = ', methods)
-  console.log('!!! result as object = ', methodsAsObject)
   return methodsAsObject
 }
 

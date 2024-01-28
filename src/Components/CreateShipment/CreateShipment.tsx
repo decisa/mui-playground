@@ -12,7 +12,6 @@ import {
   getAllCarriers,
   getPurchaseOrder,
 } from '../../utils/inventoryManagement'
-import { SnackBar, useSnackBar } from '../SnackBar'
 import Fieldset from '../Form/Fieldset'
 import Dropdown from '../Form/Dropdown'
 import DatePicker from '../Form/DatePicker'
@@ -20,6 +19,7 @@ import POItems from '../PurchaseOrder/POItems'
 
 import { isEmptyObject } from '../../utils/utils'
 import { RowActionComponentProps } from '../DataGrid/RowActionDialog'
+import { useSnackBar } from '../GlobalSnackBar'
 
 type CreateShipmentFormData = {
   carrierId: number | ''
@@ -184,6 +184,9 @@ export default function CreateShipmentForm({
         }
         setPOData(updatedData)
         setBusy(false)
+        snack.success(
+          `shipment successfully created for po${updatedPO.poNumber}`
+        )
         if (onSuccess && typeof onSuccess === 'function') {
           onSuccess()
         }
@@ -191,8 +194,12 @@ export default function CreateShipmentForm({
       })
       .mapErr((err) => {
         console.error(err)
+        let errorMessage = 'error creating shipment'
+        if (err instanceof Error) {
+          errorMessage += ` | ${err.message}`
+        }
         setBusy(false)
-        snack.error('error creating shipment')
+        snack.error(errorMessage)
       })
   }
 
@@ -287,7 +294,6 @@ export default function CreateShipmentForm({
             </Button>
           </Stack> */}
         </Fieldset>
-        <SnackBar snack={snack} />
       </Box>
     </Paper>
   )

@@ -15,13 +15,13 @@ import {
   getPurchaseOrder,
   receiveItems,
 } from '../../utils/inventoryManagement'
-import { SnackBar, useSnackBar } from '../SnackBar'
 import Fieldset from '../Form/Fieldset'
 import DatePicker from '../Form/DatePicker'
 
 import { isEmptyObject } from '../../utils/utils'
 import { RowActionComponentProps } from '../DataGrid/RowActionDialog'
 import ShipmentsGrid from './ShipmentsGrid'
+import { useSnackBar } from '../GlobalSnackBar'
 
 type ReceiveShipmentsFormData = {
   receivedDate: Date
@@ -181,6 +181,7 @@ export default function ReceiveShipmentsForm({
         }
         setPOData(updatedData)
         setBusy(false)
+        snack.success('items were successfully received')
         if (onSuccess && typeof onSuccess === 'function') {
           onSuccess()
         }
@@ -188,8 +189,12 @@ export default function ReceiveShipmentsForm({
       })
       .mapErr((err) => {
         console.error(err)
+        let errorMessage = 'error receiving items'
+        if (err instanceof Error) {
+          errorMessage += ` | ${err.message}`
+        }
         setBusy(false)
-        snack.error('error creating shipment')
+        snack.error(errorMessage)
       })
   }
 
@@ -267,7 +272,6 @@ export default function ReceiveShipmentsForm({
             shipments={shipments}
           />
         </Fieldset>
-        <SnackBar snack={snack} />
       </Box>
     </Paper>
   )

@@ -16,9 +16,9 @@ import {
 import { getPossibleOrderStatuses } from '../../utils/magentoHelpers'
 
 import { useMagentoAPI } from '../../Magento/useMagentoAPI'
-import { SnackBar, useSnackBar } from '../SnackBar'
 import { OrderComment } from '../../Types/dbtypes'
 import Fieldset from '../Form/Fieldset'
+import { useSnackBar } from '../GlobalSnackBar'
 
 const formSchema = yup.object().shape({
   comment: yup.string().required('comment is required'),
@@ -114,7 +114,12 @@ export default function AddCommentForm({
         return success
       })
       .mapErr((error) => {
-        snack.error(error.message)
+        console.error(error)
+        let errorMessage = 'error adding comment'
+        if (error instanceof Error) {
+          errorMessage += ` | ${error.message}`
+        }
+        snack.error(errorMessage)
         setBusy(false)
         return error
       })
@@ -195,7 +200,6 @@ export default function AddCommentForm({
           </Button> */}
         </Stack>
       </Fieldset>
-      <SnackBar snack={snack} />
     </Box>
   )
 }
