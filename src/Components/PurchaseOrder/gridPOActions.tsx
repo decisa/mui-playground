@@ -189,6 +189,30 @@ export function getPurchaseOrderStatus(po: PurchaseOrderFullData): POStatus {
 
 function statusReport(items: PurchaseOrderFullData['items']): POStatus {
   const statuses = items.map((item) =>
+    item.summary ? getItemStatus(item.summary) : 'unknown'
+  )
+
+  if (statuses.every((status) => status === 'complete')) {
+    return 'complete'
+  }
+
+  if (statuses.some((status) => status === 'in transit')) {
+    return 'in transit'
+  }
+
+  if (statuses.some((status) => status === 'part. shipped')) {
+    return 'part. shipped'
+  }
+
+  if (statuses.some((status) => status === 'part. received')) {
+    return 'part. received'
+  }
+
+  return 'in production'
+}
+
+function statusReports(items: PurchaseOrderFullData['items']): POStatus {
+  const statuses = items.map((item) =>
     item.summary ? getItemStatus(item.summary) : 'complete'
   )
 
@@ -252,3 +276,23 @@ function getItemStatus(itemSummary: POItemSummary): POStatus {
   }
   return 'in production'
 }
+
+// function getItemStatuses(itemSummary: POItemSummary): Set<POStatus> {
+//   const { qtyPurchased, qtyReceived, qtyShipped } = itemSummary
+
+//   const statuses = new Set<POStatus>()
+
+//   if (qtyReceived >= qtyPurchased) {
+//     statuses.add('complete')
+//   }
+//   if (qtyReceived < qtyShipped) {
+//     statuses.add('in transit')
+//   }
+//   if (qtyShipped > 0 && qtyShipped < qtyPurchased) {
+//     return 'part. shipped'
+//   }
+//   if (qtyReceived > 0 && qtyReceived < qtyPurchased) {
+//     return 'part. received'
+//   }
+//   return 'in production'
+// }
