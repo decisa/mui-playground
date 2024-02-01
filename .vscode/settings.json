@@ -15,8 +15,8 @@
     "editor.formatOnSave": false
   },
   "editor.codeActionsOnSave": {
-    "source.fixAll": true
-  }
+    "source.fixAll": "explicit"
+  },
   "todohighlight.isEnable": true,
   "todohighlight.isCaseSensitive": false,
   "todohighlight.keywords": [
