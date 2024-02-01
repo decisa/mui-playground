@@ -48,7 +48,7 @@ import { useSnackBar } from '../Components/GlobalSnackBar'
 const renderPOStatus = ({
   row,
   value,
-}: GridRenderCellParams<PurchaseOrderFullData, POGridStatus[]>) => {
+}: GridRenderCellParams<PurchaseOrderFullData, Set<POGridStatus>>) => {
   // console.log('row:', value)
   const { items } = row
   const title = items
@@ -65,7 +65,7 @@ const renderPOStatus = ({
     .join('\n')
 
   const statuses = value || []
-  const badges = statuses.map((status, ind) => (
+  const badges = [...statuses].map((status, ind) => (
     <Chip
       size="small"
       variant="outlined"
@@ -92,6 +92,7 @@ const renderPOStatus = ({
 
 export default function PurchaseOrdersPage() {
   const apiRef = useGridApiRef()
+  const snack = useSnackBar()
   // todo: maybe create a composite type that forces you to provide both row and actionComponent when setting open to true?
   const [actionDialog, setActionDialog] = useState({
     open: false,
@@ -290,10 +291,10 @@ export default function PurchaseOrdersPage() {
       headerName: 'Status',
       width: 120,
       valueGetter: (
-        params: GridValueGetterParams<PurchaseOrderFullData, POGridStatus[]>
-      ) => getPurchaseOrderStatus(params.row),
+        params: GridValueGetterParams<PurchaseOrderFullData, Set<POGridStatus>>
+      ) => getPurchaseOrderStatus(params.row) satisfies Set<POGridStatus>,
       renderCell: (
-        params: GridRenderCellParams<PurchaseOrderFullData, POGridStatus[]>
+        params: GridRenderCellParams<PurchaseOrderFullData, Set<POGridStatus>>
       ) => renderPOStatus(params),
     },
     {
@@ -302,7 +303,7 @@ export default function PurchaseOrdersPage() {
       type: 'actions',
       width: 120,
       getActions: (params) =>
-        getPOGridActions(params, rowEditControls, openActionDialog),
+        getPOGridActions(params, rowEditControls, openActionDialog, snack),
     },
   ]
 
@@ -317,8 +318,6 @@ export default function PurchaseOrdersPage() {
   )
 
   const [rows, setRows] = useState<GridRowsProp<PurchaseOrderFullData>>([])
-
-  const snack = useSnackBar()
 
   // get all purchase orders from database:
   useEffect(() => {
@@ -420,11 +419,11 @@ export default function PurchaseOrdersPage() {
       />
       <RowActionDialog<PurchaseOrderFullData>
         dialogId="po-action-dialog"
-        open={actionDialog.open}
+        apiRef={apiRef}
         handleClose={closeActionDialog}
+        open={actionDialog.open}
         rowParams={actionDialog.rowParams}
         actionComponent={actionDialog.rowAction}
-        apiRef={apiRef}
         actionCallToAction={actionDialog.actionCallToAction}
         actionTitle={actionDialog.actionTitle}
       />
