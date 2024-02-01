@@ -16,12 +16,14 @@ import {
   GridRenderCellParams,
   GridRowParams,
   useGridApiRef,
+  GridValueGetterParams,
 } from '@mui/x-data-grid'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Link from '@mui/material/Link'
 import { format } from 'date-fns'
 import { Chip } from '@mui/material'
+import { Stack } from '@mui/system'
 import {
   getPurchaseOrders,
   updatePurchaseOrder,
@@ -33,7 +35,10 @@ import {
   getPurchaseOrderStatus,
   poStatusColor,
 } from '../Components/PurchaseOrder/gridPOActions'
-import type { GridRowEditControls } from '../Components/PurchaseOrder/gridPOActions'
+import type {
+  GridRowEditControls,
+  POGridStatus,
+} from '../Components/PurchaseOrder/gridPOActions'
 import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
 import RowActionDialog, {
   RowActionComponent,
@@ -43,7 +48,7 @@ import { useSnackBar } from '../Components/GlobalSnackBar'
 const renderPOStatus = ({
   row,
   value,
-}: GridRenderCellParams<PurchaseOrderFullData, unknown>) => {
+}: GridRenderCellParams<PurchaseOrderFullData, POGridStatus[]>) => {
   // console.log('row:', value)
   const { items } = row
   const title = items
@@ -59,15 +64,28 @@ const renderPOStatus = ({
     })
     .join('\n')
 
-  return (
+  const statuses = value || []
+  const badges = statuses.map((status, ind) => (
     <Chip
       size="small"
       variant="outlined"
-      color={poStatusColor(String(value))}
-      label={String(value)}
+      color={poStatusColor(status)}
+      label={status}
       title={title}
+      key={ind}
     />
-  )
+  ))
+
+  // return (
+  //   <Chip
+  //     size="small"
+  //     variant="outlined"
+  //     color={poStatusColor(String(value))}
+  //     label={String(value)}
+  //     title={title}
+  //   />
+  // )
+  return <Stack>{badges}</Stack>
 }
 
 // note: currently using gridAPI to control edit mode of rows. this means that the state is handled inside the grid component under the hood. because of this whenever the grid's internal state is updated through API like apiRef.current.updateRows([...]) there is no re-render triggered on the Page and Dialogs do not trigger rerender with updated data. Need to either switch to full controlled mode or find a way to trigger re-render on page when grid's internal state is updated.
@@ -271,8 +289,12 @@ export default function PurchaseOrdersPage() {
       field: 'status',
       headerName: 'Status',
       width: 120,
-      valueGetter: (params) => getPurchaseOrderStatus(params.row),
-      renderCell: (params) => renderPOStatus(params),
+      valueGetter: (
+        params: GridValueGetterParams<PurchaseOrderFullData, POGridStatus[]>
+      ) => getPurchaseOrderStatus(params.row),
+      renderCell: (
+        params: GridRenderCellParams<PurchaseOrderFullData, POGridStatus[]>
+      ) => renderPOStatus(params),
     },
     {
       field: 'actions',

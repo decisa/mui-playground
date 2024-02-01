@@ -183,116 +183,76 @@ export function getPOGridActions(
   return actions
 }
 
-export function getPurchaseOrderStatus(po: PurchaseOrderFullData): POStatus {
-  return statusReport(po.items)
-}
-
-function statusReport(items: PurchaseOrderFullData['items']): POStatus {
-  const statuses = items.map((item) =>
-    item.summary ? getItemStatus(item.summary) : 'unknown'
-  )
-
-  if (statuses.every((status) => status === 'complete')) {
-    return 'complete'
-  }
-
-  if (statuses.some((status) => status === 'in transit')) {
-    return 'in transit'
-  }
-
-  if (statuses.some((status) => status === 'part. shipped')) {
-    return 'part. shipped'
-  }
-
-  if (statuses.some((status) => status === 'part. received')) {
-    return 'part. received'
-  }
-
-  return 'in production'
-}
-
-function statusReports(items: PurchaseOrderFullData['items']): POStatus {
-  const statuses = items.map((item) =>
-    item.summary ? getItemStatus(item.summary) : 'complete'
-  )
-
-  if (statuses.every((status) => status === 'complete')) {
-    return 'complete'
-  }
-
-  if (statuses.some((status) => status === 'in transit')) {
-    return 'in transit'
-  }
-
-  if (statuses.some((status) => status === 'part. shipped')) {
-    return 'part. shipped'
-  }
-
-  if (statuses.some((status) => status === 'part. received')) {
-    return 'part. received'
-  }
-
-  return 'in production'
-}
-
-type POStatus =
+export type POGridStatus =
   | 'in production'
-  | 'part. shipped'
   | 'part. received'
   | 'in transit'
+  | 'part. complete'
   | 'complete'
+  | 'unknown'
 
-export const poStatusColor = (status: string): ChipColor => {
+export function getPurchaseOrderStatus(
+  po: PurchaseOrderFullData
+): POGridStatus[] {
+  return statusesReport(po.items)
+}
+
+function statusesReport(items: PurchaseOrderFullData['items']): POGridStatus[] {
+  const statuses = items.map((item) => getItemStatuses(item?.summary))
+
+  // overall status is the union of all item statuses
+  const result = statuses.reduce(
+    (acc, itemStatuses) => new Set([...acc, ...itemStatuses]),
+    new Set<POGridStatus>()
+  )
+
+  // check if not all items are complete, then replace 'complete' with 'part. complete'
+  if (!statuses.every((itemStatuses) => itemStatuses.has('complete'))) {
+    if (result.has('complete')) {
+      result.delete('complete')
+      result.add('part. complete')
+    }
+  }
+
+  return [...result]
+}
+
+export const poStatusColor = (status: POGridStatus): ChipColor => {
   switch (status) {
     case 'in production':
       return 'warning'
-    case 'part. shipped':
-      return 'info'
     case 'part. received':
-      return 'info'
     case 'in transit':
       return 'info'
     case 'complete':
+    case 'part. complete':
       return 'success'
     default:
       return 'default'
   }
 }
 
-function getItemStatus(itemSummary: POItemSummary): POStatus {
+function getItemStatuses(itemSummary?: POItemSummary): Set<POGridStatus> {
+  const statuses = new Set<POGridStatus>()
+
+  if (!itemSummary) {
+    statuses.add('unknown')
+    return statuses
+  }
+
   const { qtyPurchased, qtyReceived, qtyShipped } = itemSummary
 
   if (qtyReceived >= qtyPurchased) {
-    return 'complete'
+    statuses.add('complete')
   }
-  if (qtyShipped === qtyPurchased && qtyReceived < qtyShipped) {
-    return 'in transit'
+  if (qtyReceived < qtyShipped) {
+    statuses.add('in transit')
   }
-  if (qtyShipped > 0 && qtyShipped < qtyPurchased) {
-    return 'part. shipped'
+  if (qtyPurchased > qtyShipped) {
+    statuses.add('in production')
   }
   if (qtyReceived > 0 && qtyReceived < qtyPurchased) {
-    return 'part. received'
+    statuses.add('part. received')
   }
-  return 'in production'
+  return statuses
 }
-
-// function getItemStatuses(itemSummary: POItemSummary): Set<POStatus> {
-//   const { qtyPurchased, qtyReceived, qtyShipped } = itemSummary
-
-//   const statuses = new Set<POStatus>()
-
-//   if (qtyReceived >= qtyPurchased) {
-//     statuses.add('complete')
-//   }
-//   if (qtyReceived < qtyShipped) {
-//     statuses.add('in transit')
-//   }
-//   if (qtyShipped > 0 && qtyShipped < qtyPurchased) {
-//     return 'part. shipped'
-//   }
-//   if (qtyReceived > 0 && qtyReceived < qtyPurchased) {
-//     return 'part. received'
-//   }
-//   return 'in production'
-// }
