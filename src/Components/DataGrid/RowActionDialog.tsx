@@ -6,11 +6,15 @@ import React, { useRef } from 'react'
 import { GridApiCommunity } from '@mui/x-data-grid/internals'
 import { DialogActions } from '@mui/material'
 
+export type RefTriggers = {
+  save: () => void
+}
+
 export type RowActionComponentProps<RowData extends GridValidRowModel> = {
   rowParams: GridRowParams<RowData>
   apiRef: React.MutableRefObject<GridApiCommunity>
   onSuccess?: () => void
-  ref?: React.Ref<any>
+  ref?: React.ForwardedRef<RefTriggers>
 }
 
 export type RowActionComponent<RowData extends GridValidRowModel> =
@@ -37,7 +41,7 @@ export default function RowActionDialog<RowData extends GridValidRowModel>({
   rowParams,
   apiRef,
 }: RowActionDialogProps<RowData>) {
-  const actionRef = useRef<unknown>()
+  const actionRef = useRef<RefTriggers>(null)
 
   if (!rowParams || !Action) return null
 
