@@ -455,7 +455,7 @@ export const deletePO = (id: number) => {
       'Content-Type': 'application/json',
     },
   }
-  return safeJsonFetch<SearchResponse>(
+  return safeJsonFetch<PurchaseOrderFullData>(
     `${dbHost}/purchaseorder/${id}`,
     request
   ).andThen((deletedPO) =>
