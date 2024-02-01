@@ -19,6 +19,7 @@ import CreateShipmentForm from '../CreateShipment/CreateShipment'
 import { RowActionComponent } from '../DataGrid/RowActionDialog'
 import ReceiveShipmentsForm from '../ReceiveShipments/ReceiveShipments'
 import { deletePO } from '../../utils/inventoryManagement'
+import { useSnackBar } from '../GlobalSnackBar'
 
 export type GridRowEditControls = {
   rowModesModel: GridRowModesModel
@@ -40,7 +41,8 @@ export function getPOGridActions(
   rowEditControls: GridRowEditControls,
   openActionDialog: (
     props: OpenActionDialogProps<PurchaseOrderFullData>
-  ) => void
+  ) => void,
+  snackBar?: ReturnType<typeof useSnackBar>
 ) {
   const { id } = params
   const {
@@ -62,9 +64,24 @@ export function getPOGridActions(
           // use gridAPI to delete the PO:
           apiRef.current.updateRows([{ id: params.row.id, _action: 'delete' }])
         }
+        if (snackBar) {
+          snackBar.success(`successfully deleted PO ${deletedPO.poNumber}`)
+        }
         return okAsync(deletedPO)
       })
-      .mapErr((error) => console.log(error))
+      .mapErr((error) => {
+        let errorMessage = 'Cannot delete PO. Error occurred.'
+        if (error instanceof Error) {
+          if (error.message.includes('shipmentitems_ibfk_2')) {
+            errorMessage = 'Cannot delete PO with associated shipments'
+          }
+        }
+        if (snackBar) {
+          snackBar.error(errorMessage)
+        }
+        console.log(errorMessage, error)
+        return error
+      })
   }
 
   // editing actions
@@ -124,24 +141,13 @@ export function getPOGridActions(
     />
   )
 
-  // dot menu actions
-  const poItems = params.row.items
+  const poStatus = getPurchaseOrderStatus(params.row)
 
   // figure out if there are items on purchase order that still need to be shipped
-  const itemsNeedToBeShipped =
-    poItems.find((item) =>
-      item.summary ? item.summary.qtyShipped < item.summary.qtyPurchased : false
-    ) !== undefined
+  const itemsNeedToBeShipped = poStatus.has('in production')
 
   // figure out if there are items on purchase order that still need to be received
-  const itemNeedToBeReceived = poItems.find((item) => {
-    if (!item.summary) {
-      return false
-    }
-    const { qtyShipped, qtyReceived, qtyPurchased } = item.summary
-
-    return qtyReceived < qtyPurchased && qtyShipped > qtyReceived
-  })
+  const itemsNeedToBeReceived = poStatus.has('in transit')
 
   // add actions to the dot menu:
   if (itemsNeedToBeShipped) {
@@ -162,7 +168,7 @@ export function getPOGridActions(
       />
     )
   }
-  if (itemNeedToBeReceived) {
+  if (itemsNeedToBeReceived) {
     actions.push(
       <GridActionsCellItem
         label="Receive Shipment"
@@ -193,11 +199,13 @@ export type POGridStatus =
 
 export function getPurchaseOrderStatus(
   po: PurchaseOrderFullData
-): POGridStatus[] {
+): Set<POGridStatus> {
   return statusesReport(po.items)
 }
 
-function statusesReport(items: PurchaseOrderFullData['items']): POGridStatus[] {
+function statusesReport(
+  items: PurchaseOrderFullData['items']
+): Set<POGridStatus> {
   const statuses = items.map((item) => getItemStatuses(item?.summary))
 
   // overall status is the union of all item statuses
@@ -214,7 +222,7 @@ function statusesReport(items: PurchaseOrderFullData['items']): POGridStatus[] {
     }
   }
 
-  return [...result]
+  return result
 }
 
 export const poStatusColor = (status: POGridStatus): ChipColor => {
