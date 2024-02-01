@@ -10,7 +10,7 @@ export type RowActionComponentProps<RowData extends GridValidRowModel> = {
   rowParams: GridRowParams<RowData>
   apiRef: React.MutableRefObject<GridApiCommunity>
   onSuccess?: () => void
-  actionRef: React.MutableRefObject<any>
+  ref?: React.Ref<any>
 }
 
 export type RowActionComponent<RowData extends GridValidRowModel> =
@@ -71,7 +71,7 @@ export default function RowActionDialog<RowData extends GridValidRowModel>({
         rowParams={rowParams}
         apiRef={apiRef}
         onSuccess={handleClose}
-        actionRef={actionRef}
+        ref={actionRef}
       />
       <DialogActions sx={{ justifyContent: 'start', px: 2 }}>
         <Button type="button" onClick={handleSave} variant="contained">
