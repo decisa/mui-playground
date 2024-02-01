@@ -220,10 +220,6 @@ const CreateShipmentForm: RowActionComponent<PurchaseOrderFullData> =
         save: handleSubmit(onSubmit),
       }))
 
-      // actionRef.current = {
-      //   save: handleSubmit(onSubmit),
-      // }
-
       if (isEmptyObject(poData)) {
         console.log('LOADING ...')
         console.log('poData', poData)
@@ -305,11 +301,6 @@ const CreateShipmentForm: RowActionComponent<PurchaseOrderFullData> =
                 />
               </FormGroup>
               <POItems items={poData.items} control={control} name="items" />
-              {/* <Stack direction="row" gap={2}>
-            <Button type="submit" variant="contained">
-              {busy ? 'submitting ...' : 'create shipment'}
-            </Button>
-          </Stack> */}
             </Fieldset>
           </Box>
         </Paper>
