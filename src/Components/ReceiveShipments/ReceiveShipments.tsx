@@ -77,7 +77,7 @@ const ReceiveShipmentsForm: RowActionComponent<PurchaseOrderFullData> =
 
       // get all shipments for current PO
       useEffect(() => {
-        console.log('PO entry has changed, getting shipment records')
+        // console.log('PO entry has changed, getting shipment records')
         // exit early if no purchase order info available
         if (!poData) {
           return

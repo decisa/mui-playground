@@ -296,7 +296,6 @@ export default function PurchaseOrdersPage() {
   //   setRows(purchaseOrders)
   // }, [purchaseOrders])
 
-  console.log('IS ROWS mutable ???', rows)
   return (
     <Box
       p={2}

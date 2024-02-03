@@ -43,7 +43,7 @@ type SnackBarProviderProps = {
 const DEFAULT_DURATION = 2500
 
 const SnackBarProvider = ({ children }: SnackBarProviderProps) => {
-  console.log('Rendering SnackBarProvider')
+  // console.log('Rendering SnackBarProvider')
   const [snackState, setSnackState] = React.useState<SnackInnerState>({
     open: false,
     message: '',
