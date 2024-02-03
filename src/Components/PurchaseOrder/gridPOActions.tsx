@@ -10,6 +10,7 @@ import {
   GridRowModesModel,
   GridRowParams,
   GridValidRowModel,
+  GridValueGetterParams,
 } from '@mui/x-data-grid'
 import { GridApiCommunity } from '@mui/x-data-grid/internals'
 import { okAsync } from 'neverthrow'
@@ -190,11 +191,11 @@ export function getPOGridActions(
 }
 
 export const poGridStatuses = [
-  'in production',
-  'part. received',
-  'in transit',
-  'part. complete',
   'complete',
+  'in production',
+  'in transit',
+  'part. received',
+  'part. complete',
   'unknown',
 ] as const
 
@@ -227,6 +228,10 @@ function statusesReport(
 
   return result
 }
+
+export const getPOGridStatus = (
+  params: GridValueGetterParams<PurchaseOrderFullData, Set<POGridStatus>>
+) => getPurchaseOrderStatus(params.row) satisfies Set<POGridStatus>
 
 export const poStatusColor = (status: POGridStatus): ChipColor => {
   switch (status) {
