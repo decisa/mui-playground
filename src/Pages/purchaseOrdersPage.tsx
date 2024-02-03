@@ -17,12 +17,21 @@ import {
   GridRowParams,
   useGridApiRef,
   GridValueGetterParams,
+  GridFilterOperator,
+  GridFilterItem,
+  GridFilterInputValueProps,
 } from '@mui/x-data-grid'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import React, {
+  JSXElementConstructor,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 
 import Link from '@mui/material/Link'
 import { format } from 'date-fns'
-import { Chip } from '@mui/material'
+import { Chip, Input, InputProps } from '@mui/material'
 import { Stack } from '@mui/system'
 import {
   getPurchaseOrders,
@@ -33,6 +42,7 @@ import {
   OpenActionDialogProps,
   getPOGridActions,
   getPurchaseOrderStatus,
+  poGridStatuses,
   poStatusColor,
 } from '../Components/PurchaseOrder/gridPOActions'
 import type {
@@ -44,6 +54,7 @@ import RowActionDialog, {
   RowActionComponent,
 } from '../Components/DataGrid/RowActionDialog'
 import { useSnackBar } from '../Components/GlobalSnackBar'
+import { setsIntersectOrMissing } from '../utils/utils'
 
 const renderPOStatus = ({
   row,
@@ -86,6 +97,87 @@ const renderPOStatus = ({
   //   />
   // )
   return <Stack>{badges}</Stack>
+}
+
+type StatusInputFilterProps<StatusValues> = GridFilterInputValueProps & {
+  values?: readonly StatusValues[]
+}
+
+function StatusInput<StatusValues>(
+  props: StatusInputFilterProps<StatusValues>
+) {
+  const {
+    item,
+    applyValue,
+    // focusElementRef,
+    values,
+  } = props
+
+  const [filterValue, setFilterValue] = React.useState(() => {
+    if (item.value instanceof Set) {
+      return item.value
+    }
+    return new Set<StatusValues>()
+  })
+
+  React.useEffect(() => {
+    // need to reset filter if item.value is undefined
+    console.log('item.value has changed:', item.value)
+    // if (item.value instanceof Set) {
+    //   setFilterValue(item.value)
+    // }
+    if (item.value === undefined) {
+      setFilterValue(new Set())
+    }
+  }, [item.value])
+
+  // const inputRef: React.Ref<HTMLInputElement> = React.useRef(null)
+
+  // React.useImperativeHandle(focusElementRef, () => ({
+  //   focus: () => {
+  //     if (inputRef && inputRef !== null && inputRef?.current) {
+  //       inputRef.current.querySelector('input')?.focus()
+  //     }
+  //   },
+  // }))
+
+  // const handleFilterChange: InputProps['onChange'] = (event) => {
+  //   console.log('filterValue:', filterValue)
+  //   applyValue({ ...item, value: event.target.value })
+  // }
+
+  const chips = values?.map((status, ind) => (
+    <Chip
+      key={ind}
+      label={String(status)}
+      color={filterValue.has(status) ? 'primary' : 'default'}
+      onClick={() => {
+        setFilterValue((prev) => {
+          const next = new Set(prev)
+          if (next.has(status)) {
+            next.delete(status)
+          } else {
+            next.add(status)
+          }
+          applyValue({ ...item, value: next })
+          return next
+        })
+      }}
+    />
+  ))
+
+  return (
+    <Stack
+      sx={{
+        // flexDirection: 'row',
+        alignItems: 'center',
+        // height: 48,
+        // pl: '20px',
+      }}
+    >
+      {chips}
+    </Stack>
+  )
 }
 
 // note: currently using gridAPI to control edit mode of rows. this means that the state is handled inside the grid component under the hood. because of this whenever the grid's internal state is updated through API like apiRef.current.updateRows([...]) there is no re-render triggered on the Page and Dialogs do not trigger rerender with updated data. Need to either switch to full controlled mode or find a way to trigger re-render on page when grid's internal state is updated.
@@ -173,6 +265,34 @@ export default function PurchaseOrdersPage() {
     }),
     [rowModesModel, startEditMode, cancelEditMode, exitRowEditAndSave, apiRef]
   )
+
+  const AdvancedStatusInput = useCallback(
+    (props: GridFilterInputValueProps) => (
+      <StatusInput<POGridStatus> {...props} values={poGridStatuses} />
+    ),
+    []
+  )
+  const statusOperators: GridFilterOperator[] = [
+    {
+      label: 'Is one of',
+      value: 'one of',
+      getApplyFilterFn: (filterItem: GridFilterItem) => {
+        // console.log('filterItem:', filterItem)
+        if (filterItem.value instanceof Set && filterItem.value.size === 0) {
+          return null
+        }
+
+        return ({ value }) => {
+          // console.log('value:', value)
+          const status = value as Set<any>
+          // return status.has(filterItem.value)
+          return setsIntersectOrMissing(status, filterItem.value as Set<any>)
+        }
+      },
+      // InputComponent: StatusInput<POGridStatus>,
+      InputComponent: AdvancedStatusInput,
+    },
+  ]
 
   const columns: GridColDef<PurchaseOrderFullData>[] = [
     {
@@ -296,6 +416,7 @@ export default function PurchaseOrdersPage() {
       renderCell: (
         params: GridRenderCellParams<PurchaseOrderFullData, Set<POGridStatus>>
       ) => renderPOStatus(params),
+      filterOperators: statusOperators,
     },
     {
       field: 'actions',
