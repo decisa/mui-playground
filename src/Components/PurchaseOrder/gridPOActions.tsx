@@ -189,13 +189,16 @@ export function getPOGridActions(
   return actions
 }
 
-export type POGridStatus =
-  | 'in production'
-  | 'part. received'
-  | 'in transit'
-  | 'part. complete'
-  | 'complete'
-  | 'unknown'
+export const poGridStatuses = [
+  'in production',
+  'part. received',
+  'in transit',
+  'part. complete',
+  'complete',
+  'unknown',
+] as const
+
+export type POGridStatus = (typeof poGridStatuses)[number]
 
 export function getPurchaseOrderStatus(
   po: PurchaseOrderFullData
