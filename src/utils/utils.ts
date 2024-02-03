@@ -18,3 +18,18 @@ export function isEmptyObject(obj: unknown): obj is EmptyObject {
   }
   return Object.keys(obj).length === 0
 }
+
+export function setsIntersectOrMissing(
+  set1: Set<any>,
+  set2: Set<any>
+): boolean {
+  if (!set1 || !set2) {
+    return true
+  }
+  for (const item of set1) {
+    if (set2.has(item)) {
+      return true // Intersection found
+    }
+  }
+  return false // No intersection
+}
