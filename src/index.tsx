@@ -22,6 +22,7 @@ import MagentoOrder, {
 } from './Pages/magentoOrder'
 import ContainersPage from './Pages/containersPage'
 import PurchaseOrdersPage from './Pages/purchaseOrdersPage'
+import OrdersPage from './Pages/ordersPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -46,6 +47,7 @@ const router = createBrowserRouter(
       <Route path="po" element={<PurchaseOrdersPage />} />
       <Route path="containers" element={<ContainersPage />} />
       <Route path="order" element={<OrderPage />} />
+      <Route path="orders" element={<OrdersPage />} />
       <Route path="multicheckbox" element={<MultiCheckboxPage />} />
       <Route path="customer">
         <Route index element={<CustomersPage />} loader={getAllCustomers} />

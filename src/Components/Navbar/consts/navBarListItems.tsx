@@ -24,6 +24,12 @@ export const mainNavbarItems = [
     icon: <SavedSearchIcon />,
   },
   {
+    id: 6,
+    label: 'Local DB Orders Grid',
+    path: 'orders',
+    icon: <SavedSearchIcon />,
+  },
+  {
     id: 3,
     label: 'PurchaseOrders',
     path: 'po',
