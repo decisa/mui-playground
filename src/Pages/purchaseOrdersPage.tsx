@@ -131,7 +131,7 @@ export default function PurchaseOrdersPage() {
 
   const statusColumn = useStatusFilter<PurchaseOrderFullData, POGridStatus>({
     field: 'status',
-    headerName: 'Status 1',
+    headerName: 'Status',
     width: 120,
     getStatus: getPOGridStatus,
     getStatusColor: poStatusColor,
