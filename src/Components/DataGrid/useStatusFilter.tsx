@@ -68,13 +68,15 @@ function StatusCustomInput<StatusValues>(
   )
 }
 
+export type StatusGetter<TableData extends GridValidRowModel, StatusValues> = (
+  params: GridValueGetterParams<TableData, Set<StatusValues>>
+) => Set<StatusValues>
+
 type UseStatusFilterProps<TableData extends GridValidRowModel, StatusValues> = {
-  field?: keyof TableData
+  field?: string
   headerName?: string
   values: readonly StatusValues[]
-  getStatus: (
-    params: GridValueGetterParams<TableData, Set<StatusValues>>
-  ) => Set<StatusValues>
+  getStatus: StatusGetter<TableData, StatusValues>
   getStatusColor: (status: StatusValues) => ChipColor
   width?: number
 }
