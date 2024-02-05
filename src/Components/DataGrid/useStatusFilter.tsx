@@ -1,5 +1,6 @@
 import { Chip, Stack } from '@mui/material'
 import {
+  GridColDef,
   GridFilterInputValueProps,
   GridFilterItem,
   GridFilterOperator,
@@ -72,7 +73,10 @@ export type StatusGetter<TableData extends GridValidRowModel, StatusValues> = (
   params: GridValueGetterParams<TableData, Set<StatusValues>>
 ) => Set<StatusValues>
 
-type UseStatusFilterProps<TableData extends GridValidRowModel, StatusValues> = {
+type UseStatusFilterProps<
+  TableData extends GridValidRowModel,
+  StatusValues
+> = GridColDef<TableData> & {
   field?: string
   headerName?: string
   values: readonly StatusValues[]
@@ -91,7 +95,8 @@ export default function useStatusFilter<
   values,
   getStatus: valueGetter,
   getStatusColor,
-}: UseStatusFilterProps<TableData, StatusValues>) {
+  ...gridColDefProps
+}: UseStatusFilterProps<TableData, StatusValues>): GridColDef<TableData> {
   const AdvancedStatusInput = useCallback(
     (props: GridFilterInputValueProps) => (
       <StatusCustomInput<StatusValues> {...props} values={values} />
@@ -132,6 +137,7 @@ export default function useStatusFilter<
     renderCell: (params: GridRenderCellParams<TableData, Set<StatusValues>>) =>
       renderStatus(params, getStatusColor),
     filterOperators: statusOperators,
+    ...gridColDefProps,
   }
 }
 

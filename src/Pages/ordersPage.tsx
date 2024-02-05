@@ -50,6 +50,9 @@ export default function OrdersPage() {
     getStatus: getOrderGridStatus,
     getStatusColor: orderStatusColor,
     values: orderStatuses,
+    align: 'center',
+    headerAlign: 'center',
+    sortable: false,
   })
 
   const columns: GridColDef<ShortOrder>[] = [
