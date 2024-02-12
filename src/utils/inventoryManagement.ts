@@ -88,15 +88,6 @@ export const getPurchaseOrders = () =>
     mode: 'cors',
   })
 
-// .map((res) =>
-//   res.map((po) => ({
-//     ...po,
-//     dateSubmitted: parseISO(String(po.dateSubmitted)),
-//   }))
-// )
-
-// .andThen((res) => okAsync(res.results))
-
 const createPurchaseOrder = (po: PurchaseOrderRequest) =>
   safeJsonFetch<PurchaseOrderCreateResponse>(`${dbHost}/purchaseorder`, {
     method: 'POST',
@@ -107,24 +98,15 @@ const createPurchaseOrder = (po: PurchaseOrderRequest) =>
     body: JSON.stringify(po),
   }).andThen((res) => okAsync(res))
 
-const getOrderByNumber = async (orderNumber: string): Promise<Order> => {
-  const result = await fetch(`${dbHost}/order/number/${orderNumber}`)
-  if (!result.ok) {
-    throw new Error(
-      `Failed throw to fetch customer with id=${orderNumber}: ${result.statusText}`
-    )
-  }
-
-  const order = (await result.json()) as Order
-  // console.log('!!! result = ', order)
-  return order
-}
-
-export const safeGetOrderByNumber = (orderNumber: string) =>
-  ResultAsync.fromPromise(
-    getOrderByNumber(orderNumber),
-    () => new Error('database error neverthrow')
+export const getOrderByNumber = (orderNumber: string) =>
+  safeJsonFetch<Order>(`${dbHost}/order/number/${orderNumber}`, {
+    method: 'GET',
+    mode: 'cors',
+  }).andThen((order) =>
+    // console.log('order = ', order)
+    okAsync(order)
   )
+
 type ParsedProduct = {
   orderId: number
   congfigId: number
