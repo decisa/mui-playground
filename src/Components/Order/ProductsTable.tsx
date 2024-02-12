@@ -17,11 +17,10 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import { height } from '@mui/system'
 import { Product } from '../../Types/dbtypes'
 import Thumbnail from './Thumbnail'
 import ProductInfo from './ProductInfo'
-import Price from './Price'
+import Price from '../Common/Price'
 import Qty from './Qty'
 import { tokens } from '../../theme'
 
