@@ -98,7 +98,7 @@ export default function useStatusFilter<
     ),
     [values]
   )
-  const statusOperators: GridFilterOperator[] = [
+  const statusOperators: GridFilterOperator<TableData, Set<StatusValues>>[] = [
     {
       label: 'Is one of',
       value: 'one of',
@@ -113,6 +113,38 @@ export default function useStatusFilter<
           const status = value as Set<any>
           // return status.has(filterItem.value)
           return setsIntersectOrMissing(status, filterItem.value as Set<any>)
+        }
+      },
+      // InputComponent: StatusInput<POGridStatus>,
+      InputComponent: AdvancedStatusInput,
+      getValueAsString: (value: Set<StatusValues>) =>
+        Array.from(value)
+          .map((status) => `"${String(status)}"`)
+          .join(', '),
+    },
+    {
+      label: 'Is exactly',
+      value: 'is exactly',
+      getApplyFilterFn: (filterItem: GridFilterItem) => {
+        // console.log('filterItem:', filterItem)
+        if (filterItem.value instanceof Set && filterItem.value.size === 0) {
+          return null
+        }
+
+        return ({ value }) => {
+          // console.log('value:', value)
+          const currentStatus = value
+          // return status.has(filterItem.value)
+          const selectedFilters = filterItem.value as Set<StatusValues>
+          // if no filters are selected, return true
+          if (!selectedFilters || selectedFilters.size === 0) return true
+          return (
+            currentStatus instanceof Set &&
+            currentStatus.size === selectedFilters?.size &&
+            [...selectedFilters].every((selectedFilter) =>
+              currentStatus.has(selectedFilter)
+            )
+          )
         }
       },
       // InputComponent: StatusInput<POGridStatus>,
