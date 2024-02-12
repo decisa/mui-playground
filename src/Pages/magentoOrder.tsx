@@ -172,10 +172,16 @@ export default function MagentoPage() {
                   if (!res.ok) {
                     let errorText = `${res.statusText} - `
                     return res.json().then((err) => {
-                      console.log('err', err)
                       if (err && typeof err === 'object' && 'error' in err) {
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         errorText += String(err.error)
+                        // if there was a validation error, it will be in the errors property
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                        const { errors } = err || {}
+                        if (Array.isArray(errors)) {
+                          const errorDetails = errors.map(String).join('\n')
+                          errorText += `\n${errorDetails}`
+                        }
                       }
                       throw new Error(errorText)
                     })
