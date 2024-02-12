@@ -195,8 +195,9 @@ export type Order = {
 
 export type ProductSummary = {
   configurationId: number
-  qtyInProduction: number
-  qtyInTransit: number
+  qtyPlanned: number
+  qtyScheduled: number
+  qtyConfirmed: number
   qtyPurchased: number
   qtyReceived: number
   qtyShipped: number
@@ -225,10 +226,12 @@ export type ShortOrder = {
     email: string
   }
   shippingAddress: {
+    id: number
     firstName: string
     lastName: string
   }
   billingAddress: {
+    id: number
     firstName: string
     lastName: string
   }
@@ -412,4 +415,38 @@ export type POShipmentResponseRaw = POShipmentData & {
 export type POShipmentParsed = POShipmentData & {
   items: POShipmentItemParsed[]
   carrier: Pick<Carrier, 'name' | 'type'>
+}
+
+export type Period = {
+  start: number
+  end: number
+}
+
+export type DeliveryItemCreational = {
+  // deliveryId?: number
+  configurationId: number
+  qty: number
+}
+
+export const deliveryStatuses = ['pending', 'scheduled', 'confirmed'] as const
+export type DeliveryStatus = (typeof deliveryStatuses)[number]
+
+export type DeliveryCreational = {
+  // id: number
+  orderId: number
+  shippingAddressId: number
+  amountDue?: string | null
+  coiRequired?: boolean // has default value (false)
+  coiReceived?: boolean // has default value (false)
+  coiNotes?: string | null
+  days?: [boolean, boolean, boolean, boolean, boolean, boolean, boolean] // virtual Sunday-Saturday
+  deliveryStopId?: number | null
+  estimatedDuration?: [number, number] | null
+  items: DeliveryItemCreational[]
+  timePeriod?: Period // virtual
+  notes?: string | null
+  status?: DeliveryStatus
+  title?: string
+  createdAt?: Date
+  updatedAt?: Date
 }
