@@ -2,7 +2,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import Button from '@mui/material/Button'
 import { GridRowParams, GridValidRowModel } from '@mui/x-data-grid'
-import React, { useRef } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { GridApiCommunity } from '@mui/x-data-grid/internals'
 import { DialogActions } from '@mui/material'
 
@@ -31,7 +31,7 @@ type RowActionDialogProps<RowData extends GridValidRowModel> = {
   apiRef: React.MutableRefObject<GridApiCommunity>
 }
 
-export default function RowActionDialog<RowData extends GridValidRowModel>({
+function ActionDialog<RowData extends GridValidRowModel>({
   dialogId,
   open,
   handleClose,
@@ -87,4 +87,71 @@ export default function RowActionDialog<RowData extends GridValidRowModel>({
       </DialogActions>
     </Dialog>
   )
+}
+
+export type OpenActionDialogProps<RowData extends GridValidRowModel> = {
+  rowParams: GridRowParams<RowData>
+  rowAction: RowActionComponent<RowData>
+  actionTitle?: string
+  actionCallToAction?: string
+}
+
+export const useRowActionDialog = <RowData extends GridValidRowModel>(
+  apiRef: React.MutableRefObject<GridApiCommunity>,
+  dialogId: string
+) => {
+  console.log('use RowActionDialog called')
+  const [actionDialog, setActionDialog] = useState({
+    open: false,
+    rowParams: undefined as GridRowParams<RowData> | undefined,
+    rowAction: undefined as RowActionComponent<RowData> | undefined,
+    actionTitle: undefined as string | undefined,
+    actionCallToAction: undefined as string | undefined,
+  })
+
+  const openActionDialog = useCallback(
+    ({
+      rowParams,
+      rowAction,
+      actionTitle,
+      actionCallToAction,
+    }: OpenActionDialogProps<RowData>) => {
+      setActionDialog({
+        open: true,
+        rowParams,
+        rowAction,
+        actionTitle,
+        actionCallToAction,
+      })
+    },
+    []
+  )
+  const closeActionDialog = useCallback(
+    () =>
+      setActionDialog({
+        open: false,
+        rowParams: undefined,
+        rowAction: undefined,
+        actionTitle: undefined,
+        actionCallToAction: undefined,
+      }),
+    []
+  )
+
+  const RowActionDialog = useMemo(
+    () => (
+      <ActionDialog<RowData>
+        dialogId={dialogId}
+        open={actionDialog.open}
+        handleClose={closeActionDialog}
+        rowParams={actionDialog.rowParams}
+        actionComponent={actionDialog.rowAction}
+        actionCallToAction={actionDialog.actionCallToAction}
+        actionTitle={actionDialog.actionTitle}
+        apiRef={apiRef}
+      />
+    ),
+    [actionDialog, closeActionDialog, apiRef, dialogId]
+  )
+  return { openActionDialog, RowActionDialog }
 }

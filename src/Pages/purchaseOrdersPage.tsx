@@ -13,7 +13,6 @@ import {
   GridRowEditStopReasons,
   GridRowModes,
   GridRowId,
-  GridRowParams,
   useGridApiRef,
 } from '@mui/x-data-grid'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -26,7 +25,6 @@ import {
 } from '../utils/inventoryManagement'
 import { PurchaseOrderFullData } from '../Types/dbtypes'
 import {
-  OpenActionDialogProps,
   getPOGridActions,
   getPOGridStatus,
   poGridStatuses,
@@ -37,9 +35,7 @@ import type {
   POGridStatus,
 } from '../Components/PurchaseOrder/gridPOActions'
 import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
-import RowActionDialog, {
-  RowActionComponent,
-} from '../Components/DataGrid/RowActionDialog'
+import { useRowActionDialog } from '../Components/DataGrid/RowActionDialog'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 import useStatusFilter from '../Components/DataGrid/useStatusFilter'
 
@@ -48,43 +44,9 @@ import useStatusFilter from '../Components/DataGrid/useStatusFilter'
 export default function PurchaseOrdersPage() {
   const apiRef = useGridApiRef()
   const snack = useSnackBar()
-  // todo: maybe create a composite type that forces you to provide both row and actionComponent when setting open to true?
-  const [actionDialog, setActionDialog] = useState({
-    open: false,
-    rowParams: undefined as GridRowParams<PurchaseOrderFullData> | undefined,
-    rowAction: undefined as
-      | RowActionComponent<PurchaseOrderFullData>
-      | undefined,
-    actionTitle: undefined as string | undefined,
-    actionCallToAction: undefined as string | undefined,
-  })
 
-  const openActionDialog = useCallback(
-    ({
-      rowParams,
-      rowAction,
-      actionTitle,
-      actionCallToAction,
-    }: OpenActionDialogProps<PurchaseOrderFullData>) => {
-      setActionDialog({
-        open: true,
-        rowParams,
-        rowAction,
-        actionTitle,
-        actionCallToAction,
-      })
-    },
-    []
-  )
-
-  const closeActionDialog = () =>
-    setActionDialog({
-      open: false,
-      rowParams: undefined,
-      rowAction: undefined,
-      actionTitle: undefined,
-      actionCallToAction: undefined,
-    })
+  const { RowActionDialog, openActionDialog } =
+    useRowActionDialog<PurchaseOrderFullData>(apiRef, 'po-action-dialog')
 
   // create custom rows modes model for datagrid
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({})
@@ -370,16 +332,7 @@ export default function PurchaseOrdersPage() {
           }
         }}
       />
-      <RowActionDialog<PurchaseOrderFullData>
-        dialogId="po-action-dialog"
-        apiRef={apiRef}
-        handleClose={closeActionDialog}
-        open={actionDialog.open}
-        rowParams={actionDialog.rowParams}
-        actionComponent={actionDialog.rowAction}
-        actionCallToAction={actionDialog.actionCallToAction}
-        actionTitle={actionDialog.actionTitle}
-      />
+      {RowActionDialog}
     </Box>
   )
 }

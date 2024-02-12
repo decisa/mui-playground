@@ -17,7 +17,10 @@ import { okAsync } from 'neverthrow'
 import { POItemSummary, PurchaseOrderFullData } from '../../Types/dbtypes'
 import { ChipColor } from '../../Types/muiTypes'
 import CreateShipmentForm from '../CreateShipment/CreateShipment'
-import { RowActionComponent } from '../DataGrid/RowActionDialog'
+import {
+  OpenActionDialogProps,
+  RowActionComponent,
+} from '../DataGrid/RowActionDialog'
 import ReceiveShipmentsForm from '../ReceiveShipments/ReceiveShipments'
 import { deletePO } from '../../utils/inventoryManagement'
 import { useSnackBar } from '../GlobalSnackBar'
@@ -28,13 +31,6 @@ export type GridRowEditControls = {
   cancelEditMode: (id: GridRowId) => void
   exitRowEditAndSave: (id: GridRowId) => void
   apiRef: React.MutableRefObject<GridApiCommunity>
-}
-
-export type OpenActionDialogProps<RowData extends GridValidRowModel> = {
-  rowParams: GridRowParams<RowData>
-  rowAction: RowActionComponent<RowData>
-  actionTitle?: string
-  actionCallToAction?: string
 }
 
 export function getPOGridActions(

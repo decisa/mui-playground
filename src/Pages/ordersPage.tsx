@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
-import { GridColDef, GridRowsProp, GridToolbar } from '@mui/x-data-grid'
+import { GridColDef, GridToolbar, useGridApiRef } from '@mui/x-data-grid'
 import { okAsync } from 'neverthrow'
-import { Box, List } from '@mui/material'
+import { Box } from '@mui/material'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 import { ShortOrder } from '../Types/dbtypes'
 import { getAllOrders } from '../utils/inventoryManagement'
 import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
-import RowActionDialog from '../Components/DataGrid/RowActionDialog'
+import { useRowActionDialog } from '../Components/DataGrid/RowActionDialog'
 import { ListItemsShort } from '../Components/Order/ListItemsShort'
 import useStatusFilter from '../Components/DataGrid/useStatusFilter'
 import {
   OrderStatus,
+  getOrderGridActions,
   getOrderGridStatus,
   orderStatusColor,
   orderStatuses,
@@ -18,7 +19,11 @@ import {
 
 export default function OrdersPage() {
   const snack = useSnackBar()
-  // const [rows, setRows] = useState<GridRowsProp<ShortOrder>>([])
+  const apiRef = useGridApiRef()
+  const { RowActionDialog, openActionDialog } = useRowActionDialog<ShortOrder>(
+    apiRef,
+    'order-action-dialog'
+  )
 
   const [orders, setOrders] = useState<ShortOrder[]>([])
 
@@ -109,13 +114,26 @@ export default function OrdersPage() {
       field: 'products',
       headerName: 'Products',
       editable: false,
-      // eslint-disable-next-line react/no-unstable-nested-components
       valueGetter: (params) =>
         params.row.products.map((p) => p.name).join(', '),
       renderCell: (params) => <ListItemsShort params={params} maxLines={5} />,
       width: 300,
     },
     orderStatusesColumn,
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      type: 'actions',
+      width: 120,
+      align: 'right',
+      getActions: (params) =>
+        getOrderGridActions({
+          params,
+          // rowEditControls,
+          openActionDialog,
+          snackBar: snack,
+        }),
+    },
   ]
 
   return (
@@ -130,7 +148,7 @@ export default function OrdersPage() {
       }}
     >
       <StripedDataGrid
-        // apiRef={apiRef}
+        apiRef={apiRef}
         // editMode="row"
         rows={orders}
         // rowModesModel={rowModesModel}
@@ -150,16 +168,7 @@ export default function OrdersPage() {
         getRowHeight={() => 'auto'}
         rowSelection={false}
       />
-      {/* <RowActionDialog<ShortOrder>
-      dialogId="po-action-dialog"
-      apiRef={apiRef}
-      handleClose={closeActionDialog}
-      open={actionDialog.open}
-      rowParams={actionDialog.rowParams}
-      actionComponent={actionDialog.rowAction}
-      actionCallToAction={actionDialog.actionCallToAction}
-      actionTitle={actionDialog.actionTitle}
-    /> */}
+      {RowActionDialog}
     </Box>
   )
 }
