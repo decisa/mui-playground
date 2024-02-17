@@ -5,7 +5,7 @@ import { Outlet } from 'react-router'
 import styled from '@emotion/styled'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import Navbar from './Components/Navbar/Navbar'
+import Navbar, { drawerMenuWidth } from './Components/Navbar/Navbar'
 import {
   // MagentoProvider,
   MagentoProviderNeverthrow,
@@ -48,7 +48,16 @@ function App({ children }: Props) {
             <AppContainer>
               <Navbar className="nav" />
               <SnackBarProvider>
-                <Box sx={{ marginLeft: 35, p: 2 }} className="main">
+                <Box
+                  sx={{
+                    marginLeft: {
+                      xs: 0,
+                      sm: `${drawerMenuWidth}px`,
+                    },
+                    p: 2,
+                  }}
+                  className="main"
+                >
                   <Outlet />
                   {children || null}
                 </Box>

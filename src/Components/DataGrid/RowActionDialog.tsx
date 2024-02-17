@@ -5,6 +5,7 @@ import { GridRowParams, GridValidRowModel } from '@mui/x-data-grid'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { GridApiCommunity } from '@mui/x-data-grid/internals'
 import { DialogActions } from '@mui/material'
+import { drawerMenuWidth } from '../Navbar/Navbar'
 
 export type RefTriggers = {
   save: () => void
@@ -63,7 +64,10 @@ function ActionDialog<RowData extends GridValidRowModel>({
       onClose={handleClose}
       fullScreen
       sx={{
-        ml: 35,
+        marginLeft: {
+          xs: 0,
+          sm: `${drawerMenuWidth}px`,
+        },
       }}
     >
       {actionTitle && (
