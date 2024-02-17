@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"
+    xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    preserveAspectRatio="xMidYMid">
+    <g>
+        <path xmlns="http://www.w3.org/2000/svg"
+            d="M22.4 6V18l-2.97 1.71V7.72L12 3.43 4.32 7.72l0.02 12L1.6 18V6L12 0l10.38 6zM13.38 19.71L12 20.57l-1.49-0.85v-12.00l-2.97 1.72 0.00 12.00 4.45 2.57 4.46-2.57v-12.00l-2.97-1.72v12.00z"
+        ></path>
+    </g>
+</svg>
