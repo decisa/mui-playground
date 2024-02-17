@@ -4,6 +4,11 @@ export interface ErrorWithMessage extends Error {
   name: string
 }
 
+export interface ValidationErrorWithMessages {
+  error: string
+  errors: string[]
+}
+
 export function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (
     typeof error === 'object' &&
@@ -13,6 +18,21 @@ export function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
     'name' in error &&
     // typeof (error as Record<string, unknown>).message === 'string'
     typeof error.message === 'string'
+  )
+}
+
+export function isValidationError(
+  unknownError: unknown
+): unknownError is ValidationErrorWithMessages {
+  return (
+    typeof unknownError === 'object' &&
+    unknownError !== null &&
+    'error' in unknownError &&
+    'errors' in unknownError &&
+    // typeof (error as Record<string, unknown>).message === 'string'
+    typeof unknownError.error === 'string' &&
+    Array.isArray(unknownError.errors) &&
+    unknownError.errors.every((error) => typeof error === 'string')
   )
 }
 
@@ -27,6 +47,8 @@ export function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
     return new Error(String(maybeError))
   }
 }
+
+// todo: add validation error handling (currenly manual inside the safeJsonFetch function):
 
 export function getErrorMessage(error: unknown) {
   return toErrorWithMessage(error).message
