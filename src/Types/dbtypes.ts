@@ -17,25 +17,25 @@ export type Carrier = {
 
 export type Address = {
   id?: number
-  email: string
+  // email?: string
   firstName: string
   lastName: string
-  company?: string
+  company?: string | null
   street: string[]
   city: string
   state: string
   zipCode: string
   country: 'US' | 'CA' | string
   phone: string
-  altPhone?: string
-  notes?: string
-  coordinates?: number[]
+  altPhone?: string | null
+  notes?: string | null
+  coordinates?: [number, number] | null
   customerId?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   magento?: {
     externalId: number // 4583
-    externalCustomerAddressId?: number // 5972
+    externalCustomerAddressId?: number | null // 5972
     externalOrderId: number // 2292
     addressType: 'billing' | 'shipping'
   }
@@ -449,4 +449,60 @@ export type DeliveryCreational = {
   title?: string
   createdAt?: Date
   updatedAt?: Date
+}
+
+export const magentoAddressTypes = ['billing', 'shipping'] as const
+export type MagentoAddressType = (typeof magentoAddressTypes)[number]
+
+export type OrderAddressDBRead = {
+  altPhone: string | null
+  city: string
+  company: string | null
+  coordinates: [number, number] | null
+  country: 'US' | 'CA' | string
+  customerAddressId: number | null
+  firstName: string
+  id: number
+  lastName: string
+  notes: string | null
+  orderId: number
+  phone: string
+  state: string
+  street: string[]
+  zipCode: string
+  createdAt: Date
+  updatedAt: Date
+  magento?: {
+    externalId: number
+    externalCustomerAddressId: number | null
+    externalOrderId: number
+    addressType: MagentoAddressType
+  }
+}
+
+export type OrderAddressCreate = {
+  orderId: number
+  firstName: string
+  lastName: string
+  company: string | null
+  street?: string[]
+  street1?: string
+  street2?: string | null
+  city: string
+  state: string
+  zipCode: string
+  country: 'US' | 'CA' | string
+  phone: string
+  altPhone?: string | null
+  coordinates?: [number, number] | null
+  latitude?: number | null
+  longitude?: number | null
+  notes?: string | null
+  customerAddressId?: number | null
+  magento?: {
+    externalId: number
+    externalCustomerAddressId?: number | null
+    externalOrderId: number
+    addressType: MagentoAddressType
+  }
 }
