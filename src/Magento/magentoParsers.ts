@@ -548,7 +548,7 @@ const parseMagentoOrderAddress = (
     zipCode,
     country,
     phone,
-    email,
+    // email,
     magento,
   }
 }
