@@ -1,7 +1,7 @@
 import Card from '@mui/material/Card'
 import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
-import OrderAddress from '../OrderAddress'
+import OrderAddress from './OrderAddress'
 import { Order } from '../../../Types/dbtypes'
 
 type OrderInfoProps = {
