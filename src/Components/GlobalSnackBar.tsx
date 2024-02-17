@@ -130,7 +130,7 @@ const SnackBarProvider = ({ children }: SnackBarProviderProps) => {
         <Alert
           onClose={handleClose}
           severity={snackState.severity}
-          sx={{ width: '100%' }}
+          sx={{ width: '100%', whiteSpace: 'pre-wrap' }}
         >
           {snackState.message}
         </Alert>
