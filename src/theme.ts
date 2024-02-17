@@ -19,11 +19,33 @@ declare module '@mui/material/styles' {
   }
 }
 
+type ColorShades = {
+  50: string
+  100: string
+  200: string
+  300: string
+  400: string
+  500: string
+  600: string
+  700: string
+  800: string
+  900: string
+}
+
+export type DesignColors = {
+  grey: ColorShades
+  primary: ColorShades
+  background: ColorShades
+  greenAccent: ColorShades
+  redAccent: ColorShades
+  blueAccent: ColorShades
+}
 // color design tokens
-export const tokens = (mode: string) => ({
+export const tokens = (mode: string): DesignColors => ({
   ...(mode === 'dark'
     ? {
         grey: {
+          50: '#0F0F0F',
           100: '#141414',
           200: '#292929',
           300: '#3d3d3d',
@@ -35,6 +57,7 @@ export const tokens = (mode: string) => ({
           900: '#efefef',
         },
         primary: {
+          50: 'EEF5FF',
           100: '#E6EDFF',
           200: '#C9D5F2',
           300: '#B5C3E6',
@@ -67,6 +90,7 @@ export const tokens = (mode: string) => ({
           900: '#d2d6e1',
         },
         greenAccent: {
+          50: '#e3f9f3',
           100: '#dcf0eb',
           200: '#bae0d6',
           300: '#97d1c2',
@@ -78,6 +102,7 @@ export const tokens = (mode: string) => ({
           900: '#10241f',
         },
         redAccent: {
+          50: '#ffe5e7',
           100: '#f5d2d4',
           200: '#eba6a9',
           300: '#e1797d',
@@ -114,6 +139,7 @@ export const tokens = (mode: string) => ({
       }
     : {
         grey: {
+          50: '#fcfcfc',
           100: '#fafafa',
           200: '#eeeeee',
           300: '#a3a3a3',
@@ -125,6 +151,7 @@ export const tokens = (mode: string) => ({
           900: '#141414',
         },
         primary: {
+          50: '#0a101f',
           100: '#101624',
           200: '#212D4A',
           300: '#31436E',
@@ -157,6 +184,7 @@ export const tokens = (mode: string) => ({
           900: '#0b0e14',
         },
         greenAccent: {
+          50: '#041b15',
           100: '#10241f',
           200: '#21473d',
           300: '#316b5c',
@@ -168,6 +196,7 @@ export const tokens = (mode: string) => ({
           900: '#dcf0eb',
         },
         redAccent: {
+          50: '#270102',
           100: '#290608',
           200: '#520d10',
           300: '#7b1317',
