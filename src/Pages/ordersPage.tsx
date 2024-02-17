@@ -36,14 +36,7 @@ export default function OrdersPage() {
         return okAsync(res)
       })
       .mapErr((err) => {
-        let errorMessage = 'Cannot fetch orders: '
-        if (err instanceof Error) {
-          errorMessage += err.message
-        } else {
-          errorMessage += 'unknown error'
-        }
-        console.error(err)
-        snack.error(errorMessage)
+        snack.error(err)
         return err
       })
   }, [snack])

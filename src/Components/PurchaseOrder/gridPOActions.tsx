@@ -67,11 +67,9 @@ export function getPOGridActions(
         return okAsync(deletedPO)
       })
       .mapErr((error) => {
-        let errorMessage = 'Cannot delete PO. Error occurred.'
-        if (error instanceof Error) {
-          if (error.message.includes('shipmentitems_ibfk_2')) {
-            errorMessage = 'Cannot delete PO with associated shipments'
-          }
+        let errorMessage = error
+        if (error.includes('shipmentitems_ibfk_2')) {
+          errorMessage = 'Cannot delete PO with associated shipments'
         }
         if (snackBar) {
           snackBar.error(errorMessage)

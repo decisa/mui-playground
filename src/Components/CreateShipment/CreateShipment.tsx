@@ -206,13 +206,8 @@ const CreateShipmentForm: RowActionComponent<PurchaseOrderFullData> =
             return updatedPO
           })
           .mapErr((err) => {
-            console.error(err)
-            let errorMessage = 'error creating shipment'
-            if (err instanceof Error) {
-              errorMessage += ` | ${err.message}`
-            }
             setBusy(false)
-            snack.error(errorMessage)
+            snack.error(err)
           })
       }
 
