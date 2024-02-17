@@ -1,8 +1,10 @@
 import { Result, ResultAsync, errAsync, okAsync } from 'neverthrow'
-import { parseISO } from 'date-fns'
+import { isValid, parseISO } from 'date-fns'
 import {
   Carrier,
   Order,
+  OrderAddressCreate,
+  OrderAddressDBRead,
   POShipmentParsed,
   POShipmentResponseRaw,
   ProductSummary,
@@ -11,6 +13,7 @@ import {
   PurchaseOrderRequest,
   ShortOrder,
 } from '../Types/dbtypes'
+import { isErrorWithMessage, isValidationError } from './errorHandling'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -33,20 +36,51 @@ const safeJsonFetch = <T>(
 ) =>
   ResultAsync.fromPromise(
     fetch(input, init).then((response) => {
+      console.log('safeJsonFetch got response', response)
       if (!response.ok) {
-        return response.json().then((err) => {
-          // console.log('safeJsonFetch non OK !', err)
-          if (isServerError(err)) {
-            throw new Error(err.error)
-          }
-          throw new Error('Error occured, but no message provided')
-        })
+        return response
+          .json()
+          .then((err) => {
+            console.log('safeJsonFetch non OK !', err)
+            let errorMessage = 'Error occured, but no message provided'
+            if (isValidationError(err)) {
+              console.log('validation error!')
+              errorMessage = `${err.error} : \n${err.errors.join('\n')}`
+            } else if (isErrorWithMessage(err)) {
+              console.log('error with MSG!')
+              errorMessage = err.message
+            } else if (isServerError(err)) {
+              errorMessage = err.error
+            }
+
+            throw new Error(errorMessage)
+          })
+          .catch((err) => {
+            // when error is due to 404 or 500, then response.json() will fail with SyntaxError
+            if (err instanceof SyntaxError) {
+              throw new Error(`${response.status} - ${response.statusText}`)
+            }
+
+            // re-throw the original error
+            throw err
+          })
       }
       // parse json and convert all dates to Date objects:
       return response.json().then((data) => handleDates(data) as Promise<T>)
     }),
     (error) => error
-  )
+  ).mapErr((err) => {
+    console.log('!!!!!!!!!!!!!!!!!!!!!!! ERROR !!!!!!!!!!!2', err)
+    let errorMessage = 'safeJsonFetch error occured'
+    if (isValidationError(err)) {
+      console.log('validation error!')
+      errorMessage = `${err.error} : \n${err.errors.join('\n')}`
+    } else if (isErrorWithMessage(err)) {
+      console.log('error with MSG!')
+      errorMessage = err.message
+    }
+    return errorMessage
+  })
 
 type SearchResponse = {
   count: number
@@ -105,6 +139,31 @@ export const getOrderByNumber = (orderNumber: string) =>
   }).andThen((order) =>
     // console.log('order = ', order)
     okAsync(order)
+  )
+
+export const getOrderAddresses = (id: number) =>
+  safeJsonFetch<OrderAddressDBRead[]>(`${dbHost}/order/${id}/address/all`, {
+    method: 'GET',
+    mode: 'cors',
+  }).andThen((order) =>
+    // console.log('order = ', order)
+    okAsync(order)
+  )
+
+export const createOrderAddress = (order: OrderAddressCreate) =>
+  safeJsonFetch<OrderAddressDBRead>(
+    `${dbHost}/order/${String(order.orderId)}/address`,
+    {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(order),
+    }
+  ).andThen((newOrderAddress) =>
+    // console.log('newOrderAddress = ', newOrderAddress)
+    okAsync(newOrderAddress)
   )
 
 type ParsedProduct = {
