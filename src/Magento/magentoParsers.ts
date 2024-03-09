@@ -810,7 +810,7 @@ function finalizeOrderDetails([products, attributes, notFullOrder]: [
     }
 
     // copy over the common attributes
-    if (externalId) {
+    if (externalId && products[externalId]) {
       updatedProduct.sku = products[externalId].sku
 
       const brandId = products[externalId].commonAttributes.product_brand
