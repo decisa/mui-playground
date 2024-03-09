@@ -13,25 +13,138 @@ import {
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useContext, useState } from 'react'
-import { useTheme } from '@mui/material/styles'
-import { Link } from 'react-router-dom'
+import {
+  useTheme,
+  Theme,
+  CSSObject,
+  styled,
+  ThemeProvider,
+} from '@mui/material/styles'
+import { Link, useMatch, useResolvedPath } from 'react-router-dom'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
-import { Box } from '@mui/system'
+import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar'
+import MuiDrawer, { DrawerProps as MuiDrawerProps } from '@mui/material/Drawer'
+import { Box, SxProps } from '@mui/system'
+import { set } from 'date-fns'
 import { mainNavbarItems } from './consts/navBarListItems'
 import { mainNavBarStyles } from './styles'
-import { ColorModeContext, tokens } from '../../theme'
+import { ColorModeContext, tokens, useDarkTheme } from '../../theme'
 
 export const drawerMenuWidth = 280
 // const drawerWidth = 240
+
+const openedMixin = (theme: Theme): CSSObject => ({
+  width: drawerMenuWidth,
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
+  overflowX: 'hidden',
+})
+
+const closedMixin = (theme: Theme): CSSObject => ({
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  overflowX: 'hidden',
+  width: `calc(${theme.spacing(7)} + 1px)`,
+  [theme.breakpoints.up('sm')]: {
+    width: `calc(${theme.spacing(8)} + 1px)`,
+  },
+})
+
+interface AppBarProps extends MuiAppBarProps {
+  open?: boolean
+}
+
+const AppBarX = styled(MuiAppBar, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})<AppBarProps>(({ theme, open }) => ({
+  zIndex: theme.zIndex.drawer + 1,
+  transition: theme.transitions.create(['width', 'margin'], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
+    marginLeft: drawerMenuWidth,
+    width: `calc(100% - ${drawerMenuWidth}px)`,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+}))
+
+const DrawerX = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+  width: drawerMenuWidth,
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+  boxSizing: 'border-box',
+  ...(open && {
+    ...openedMixin(theme),
+    '& .MuiDrawer-paper': openedMixin(theme),
+  }),
+  ...(!open && {
+    ...closedMixin(theme),
+    '& .MuiDrawer-paper': closedMixin(theme),
+  }),
+}))
+
+const navLinkStyle = (isActive: boolean): SxProps => ({
+  // backgroundColor: isActive ? 'red' : 'transparent',
+  mx: 1,
+})
+
+type CustomNavLinkProps = {
+  to: string
+  children: React.ReactNode
+}
+
+const ListItemNavLink = ({ to, children, ...props }: CustomNavLinkProps) => {
+  const resolved = useResolvedPath(to)
+  const match = useMatch({ path: resolved.pathname, end: false })
+  const theme = useTheme()
+
+  return (
+    <ListItemButton
+      component={Link}
+      // dense
+      to={to}
+      sx={{
+        ...navLinkStyle(!!match),
+        '& .MuiTypography-root': {
+          color: theme.palette.primary.contrastText,
+        },
+        '& .MuiListItemIcon-root': {
+          color: theme.palette.primary.contrastText,
+        },
+      }}
+      selected={!!match}
+      {...props}
+    >
+      {children}
+    </ListItemButton>
+  )
+}
 
 type NavbarProps = {
   className?: string
 }
 export default function Navbar({ className }: NavbarProps) {
-  const theme = useTheme()
-  const colors = tokens(theme.palette.mode)
+  const globalTheme = useTheme()
+  const colors = tokens(globalTheme.palette.mode)
+  const darkColors = tokens('dark')
   const { toggleColorMode } = useContext(ColorModeContext)
+
+  const [open, setOpen] = useState(true)
+
+  const toggleOpen = () => {
+    setOpen((prev) => !prev)
+  }
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -55,41 +168,61 @@ export default function Navbar({ className }: NavbarProps) {
     const { id, icon, label, path } = mainMenuItem
     return (
       <ListItem key={`nav-${id}`} disablePadding>
-        <Link to={path}>
-          <ListItemButton>
-            <ListItemIcon sx={mainNavBarStyles.items}>{icon}</ListItemIcon>
-            <ListItemText primary={label} sx={mainNavBarStyles.text} />
-          </ListItemButton>
-        </Link>
+        <ListItemNavLink to={path}>
+          {/* <ListItemButton> */}
+          <ListItemIcon sx={mainNavBarStyles.items}>{icon}</ListItemIcon>
+          <ListItemText primary={label} sx={{ opacity: open ? 1 : 0 }} />
+          {/* </ListItemButton> */}
+        </ListItemNavLink>
       </ListItem>
     )
   })
 
+  const darkTheme = useDarkTheme()
+
   const drawer = (
-    <>
-      <Toolbar>
-        <IconButton type="button" onClick={toggleColorMode}>
-          {theme.palette.mode === 'dark' ? (
-            <LightModeOutlinedIcon />
+    // drawer panel is always dark, so need elements better suited for dark theme
+    <ThemeProvider theme={darkTheme}>
+      <Toolbar
+        sx={{
+          color: darkTheme.palette.text.primary,
+          px: 2,
+        }}
+      >
+        <IconButton type="button" onClick={toggleColorMode} color="inherit">
+          {globalTheme.palette.mode === 'dark' ? (
+            <LightModeOutlinedIcon color="warning" />
           ) : (
-            <DarkModeOutlinedIcon sx={{ color: colors.primary[900] }} />
+            <DarkModeOutlinedIcon color="info" />
           )}
+        </IconButton>
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          onClick={toggleOpen}
+          edge="start"
+          sx={{
+            marginRight: 5,
+            // ...(open && { display: 'none' }),
+          }}
+        >
+          <MenuIcon />
         </IconButton>
       </Toolbar>
       <Divider />
       <List>{mainMenuItems}</List>
       <Divider />
-    </>
+    </ThemeProvider>
   )
 
   return (
-    <>
+    <Box className={className} sx={mainNavBarStyles.drawer}>
       <AppBar
         position="relative"
         className="no-print"
         sx={{
           // width: { sm: `calc(100% - ${drawerMenuWidth}px)` },
-          ml: { sm: `${drawerMenuWidth}px` },
+          // ml: { sm: `${drawerMenuWidth}px` },
           display: { sm: 'none' },
         }}
       >
@@ -108,50 +241,42 @@ export default function Navbar({ className }: NavbarProps) {
           </Typography>
         </Toolbar>
       </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerMenuWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
-        className="no-print"
+      <DrawerX
+        variant="temporary"
+        open={mobileOpen}
+        onTransitionEnd={handleDrawerTransitionEnd}
+        onClose={handleDrawerClose}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+        sx={{
+          display: { xs: 'flex', sm: 'none' },
+          // ...mainNavBarStyles.drawer,
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerMenuWidth,
+          },
+        }}
       >
-        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onTransitionEnd={handleDrawerTransitionEnd}
-          onClose={handleDrawerClose}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            // ...mainNavBarStyles.drawer,
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerMenuWidth,
-            },
-          }}
-        >
-          {drawer}
-          mobile drawer
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerMenuWidth,
-            },
-            // ...mainNavBarStyles.drawer,
-          }}
-          open
-        >
-          {drawer}
-          desktop drawer
-        </Drawer>
-      </Box>
-    </>
+        {drawer}
+        mobile drawer
+      </DrawerX>
+      <DrawerX
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', sm: 'flex' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            backgroundColor: darkColors.background[100],
+          },
+        }}
+        open={open}
+      >
+        {drawer}
+        desktop drawer
+      </DrawerX>
+      {/* </Box> */}
+    </Box>
     // <Drawer
     //   sx={mainNavBarStyles.drawer}
     //   variant="permanent"

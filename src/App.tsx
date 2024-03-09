@@ -1,8 +1,9 @@
 import './index.css'
-import { CssBaseline, ThemeProvider, Box } from '@mui/material'
+import { CssBaseline, Box } from '@mui/material'
 import { ReactNode } from 'react'
 import { Outlet } from 'react-router'
-import styled from '@emotion/styled'
+// import styled from '@emotion/styled'
+import { styled, ThemeProvider } from '@mui/material/styles'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import Navbar, { drawerMenuWidth } from './Components/Navbar/Navbar'
@@ -21,19 +22,36 @@ interface Props {
   children?: ReactNode
 }
 
-const AppContainer = styled.div`
-  .nav {
-    @media print {
-      display: none;
-    }
-  }
-  .main {
-    @media print {
-      margin: 0;
-      padding: 0;
-    }
-  }
-`
+// const AppContainer = styled.div`
+//   display: flex;
+//   .nav {
+//     @media print {
+//       display: none;
+//     }
+//   }
+//   .main {
+//     @media print {
+//       margin: 0;
+//       padding: 0;
+//     }
+//   }
+// `
+
+const AppContainer = styled(Box)(() => ({
+  display: 'flex',
+  justifyContent: 'flex-start',
+  '& .nav': {
+    '@media print': {
+      display: 'none',
+    },
+  },
+  '& .main': {
+    '@media print': {
+      margin: 0,
+      padding: 0,
+    },
+  },
+}))
 
 function App({ children }: Props) {
   // const [state, setState] = React.useState('')
@@ -45,17 +63,25 @@ function App({ children }: Props) {
         <ThemeProvider theme={theme}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <CssBaseline />
-            <AppContainer>
+            <AppContainer
+              sx={{
+                flexWrap: {
+                  xs: 'wrap',
+                  sm: 'nowrap',
+                },
+              }}
+            >
               <Navbar className="nav" />
               <SnackBarProvider>
                 <Box
-                  sx={{
-                    marginLeft: {
-                      xs: 0,
-                      sm: `${drawerMenuWidth}px`,
-                    },
-                    p: 2,
-                  }}
+                  // sx={{
+                  //   marginLeft: {
+                  //     xs: 0,
+                  //     sm: `${drawerMenuWidth}px`,
+                  //   },
+                  //   p: 2,
+                  // }}
+                  width="100%"
                   className="main"
                 >
                   <Outlet />

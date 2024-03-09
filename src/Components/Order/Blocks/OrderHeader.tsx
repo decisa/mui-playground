@@ -33,6 +33,7 @@ export default function OrderHeader({ order }: OrderHeaderProps) {
 
               aspectRatio: '10/3',
               position: 'relative',
+              filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none',
               // mb: 'auto',
             }}
           >

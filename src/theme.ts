@@ -1,4 +1,9 @@
-import { createTheme, ThemeOptions } from '@mui/material/styles'
+import {
+  alpha,
+  createTheme,
+  PaletteOptions,
+  ThemeOptions,
+} from '@mui/material/styles'
 import { PaletteMode } from '@mui/material'
 import { createContext, useMemo, useState } from 'react'
 import type {} from '@mui/x-data-grid/themeAugmentation'
@@ -11,8 +16,16 @@ declare module '@mui/material/styles' {
   interface Palette {
     neutral: SimplePaletteColorOptions
   }
+  interface PaletteOptions {
+    neutral: SimplePaletteColorOptions
+  }
   interface PaletteColor {
     lightest?: string
+  }
+
+  interface TypeBackground {
+    menu?: string
+    surface?: string
   }
   interface SimplePaletteColorOptions {
     lightest?: string
@@ -78,16 +91,26 @@ export const tokens = (mode: string): DesignColors => ({
           // 900: '#040509',
         },
         background: {
-          50: '#384158',
-          100: '#0b0e14',
-          200: '#141b2d',
-          300: '#1b2336',
-          400: '#262f44',
-          500: '#384158',
-          600: '#58627b',
-          700: '#8891aa',
-          800: '#aeb5c8',
-          900: '#d2d6e1',
+          50: '#0f1728',
+          100: '#162538',
+          200: '#253955',
+          300: '#344b6b',
+          400: '#526c92',
+          500: '#6a80a5',
+          600: '#8296b8',
+          700: '#a2b4d2',
+          800: '#c1d3ed',
+          900: '#e4ecff',
+          // 50: '#384158',
+          // 100: '#0b0e14',
+          // 200: '#141b2d',
+          // 300: '#1b2336',
+          // 400: '#262f44',
+          // 500: '#384158',
+          // 600: '#58627b',
+          // 700: '#8891aa',
+          // 800: '#aeb5c8',
+          // 900: '#d2d6e1',
         },
         greenAccent: {
           50: '#e3f9f3',
@@ -172,16 +195,26 @@ export const tokens = (mode: string): DesignColors => ({
           // 900: '#d0d1d5',
         },
         background: {
-          50: '#f3f4f7',
-          100: '#d2d6e1',
-          200: '#aeb5c8',
-          300: '#8891aa',
-          400: '#58627b',
-          500: '#384158',
-          600: '#262f44',
-          700: '#1b2336',
-          800: '#141b2d',
-          900: '#0b0e14',
+          50: '#e4ecff',
+          100: '#c1d3ed',
+          200: '#a2b4d2',
+          300: '#8296b8',
+          400: '#6a80a5',
+          500: '#526c92',
+          600: '#344b6b',
+          700: '#253955',
+          800: '#162538',
+          900: '#0f1728',
+          // 50: '#f3f4f7',
+          // 100: '#d2d6e1',
+          // 200: '#aeb5c8',
+          // 300: '#8891aa',
+          // 400: '#58627b',
+          // 500: '#384158',
+          // 600: '#262f44',
+          // 700: '#1b2336',
+          // 800: '#141b2d',
+          // 900: '#0b0e14',
         },
         greenAccent: {
           50: '#041b15',
@@ -237,6 +270,86 @@ export const tokens = (mode: string): DesignColors => ({
 
 export const themeSettings = (mode: PaletteMode): ThemeOptions => {
   const colors = tokens(mode)
+  const palette: PaletteOptions = {
+    mode,
+    action: {
+      // active: alpha(colors.greenAccent[500], 1),
+      // hover: alpha(colors.redAccent[500], 1),
+      // hoverOpacity: 1,
+      // selected: alpha(colors.redAccent[500], 1),
+      // selectedOpacity: 1,
+      // disabled: alpha(colors.redAccent[500], 1),
+      // disabledBackground: alpha(colors.redAccent[500], 1),
+      // disabledOpacity: 1,
+      // focus: alpha(colors.redAccent[500], 1),
+      // focusOpacity: 1,
+      // activatedOpacity: 1,
+    },
+    ...(mode === 'dark'
+      ? {
+          // primary: {
+          //   main: colors.primary[500],
+          // },
+          primary: {
+            main: colors.blueAccent[500],
+            light: colors.blueAccent[400],
+            lightest: colors.blueAccent[200],
+            dark: colors.blueAccent[700],
+            contrastText: colors.grey[900],
+          },
+          secondary: {
+            light: colors.greenAccent[400],
+            main: colors.greenAccent[300],
+          },
+          neutral: {
+            dark: colors.primary[300],
+            main: colors.primary[500],
+            light: colors.primary[800],
+            lightest: colors.primary[900],
+          },
+          background: {
+            default: colors.background[50],
+            paper: colors.background[100],
+          },
+          text: {
+            primary: `${colors.grey[900]}ff`,
+            secondary: `${colors.grey[900]}bb`,
+            disabled: `${colors.grey[700]}77`,
+          },
+        }
+      : {
+          // primary: {
+          //   main: colors.primary[100],
+          // },
+
+          primary: {
+            main: colors.blueAccent[500],
+            light: colors.blueAccent[300],
+            lightest: colors.blueAccent[200],
+            dark: colors.blueAccent[600],
+            contrastText: colors.grey[100],
+          },
+          secondary: {
+            main: colors.greenAccent[500],
+          },
+          neutral: {
+            dark: colors.grey[700],
+            main: colors.grey[500],
+            light: colors.grey[200],
+            lightest: colors.grey[100],
+          },
+          background: {
+            // default: '#fcfcfc',
+            default: colors.grey[100],
+            paper: '#ffffff',
+          },
+          text: {
+            primary: `${colors.grey[800]}ff`,
+            secondary: `${colors.grey[800]}aa`,
+            disabled: `${colors.grey[700]}55`,
+          },
+        }),
+  }
   const options: ThemeOptions = {
     components: {
       // MuiButton: {
@@ -289,6 +402,30 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
           },
         },
       },
+
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundColor: palette?.background?.paper,
+            backgroundImage: 'none',
+          },
+        },
+      },
+
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 4,
+            '&.Mui-selected': {
+              backgroundColor: alpha(colors.blueAccent[500], 0.5),
+              '& .MuiTypography-root': {
+                fontWeight: 500,
+              },
+            },
+          },
+        },
+      },
+
       // MuiDataGrid: {
       //   styleOverrides: {
       //     cell: {
@@ -312,72 +449,7 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
       //   },
       // },
     },
-    palette: {
-      mode,
-      ...(mode === 'dark'
-        ? {
-            // primary: {
-            //   main: colors.primary[500],
-            // },
-            primary: {
-              main: colors.blueAccent[500],
-              light: colors.blueAccent[400],
-              lightest: colors.blueAccent[200],
-              dark: colors.blueAccent[700],
-              contrastText: colors.grey[900],
-            },
-            secondary: {
-              light: colors.greenAccent[400],
-              main: colors.greenAccent[300],
-            },
-            neutral: {
-              dark: colors.primary[300],
-              main: colors.primary[500],
-              light: colors.primary[800],
-              lightest: colors.primary[900],
-            },
-            background: {
-              default: colors.background[200],
-              paper: colors.background[300],
-            },
-            text: {
-              primary: `${colors.grey[900]}ff`,
-              secondary: `${colors.grey[900]}bb`,
-              disabled: `${colors.grey[700]}77`,
-            },
-          }
-        : {
-            // primary: {
-            //   main: colors.primary[100],
-            // },
-            primary: {
-              main: colors.blueAccent[500],
-              light: colors.blueAccent[300],
-              lightest: colors.blueAccent[200],
-              dark: colors.blueAccent[600],
-              contrastText: colors.grey[100],
-            },
-            secondary: {
-              main: colors.greenAccent[500],
-            },
-            neutral: {
-              dark: colors.grey[700],
-              main: colors.grey[500],
-              light: colors.grey[200],
-              lightest: colors.grey[100],
-            },
-            background: {
-              // default: '#fcfcfc',
-              default: colors.background[50],
-              paper: '#ffffff',
-            },
-            text: {
-              primary: `${colors.grey[800]}ff`,
-              secondary: `${colors.grey[800]}aa`,
-              disabled: `${colors.grey[700]}55`,
-            },
-          }),
-    },
+    palette,
     typography: {
       fontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
       htmlFontSize: 16,
@@ -458,4 +530,9 @@ export const useMode = () => {
   const theme = useMemo(() => createTheme(themeSettings(mode)), [mode])
 
   return [theme, colorMode] as const
+}
+
+export const useDarkTheme = () => {
+  const darkTheme = useMemo(() => createTheme(themeSettings('dark')), [])
+  return darkTheme
 }
