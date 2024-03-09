@@ -65,6 +65,21 @@ const safeJsonFetch = <T>(
             throw err
           })
       }
+      // check if the body is empty
+      const bodyLength = Number(response.headers.get('content-length')) || 0
+      if (bodyLength === 0) {
+        // if body is empty, then return undefined as unknown as Promise<T>
+        // The cast to `undefined as unknown as Promise<T>` ensures a consistent return type for `safeJsonFetch`.
+        // This approach enables the use of `safeJsonFetch<void>` for API calls expected to return nothing,
+        // ensuring the return type is `ResultAsync<void, string>`. Without this cast, the function's return
+        // type would default to `ResultAsync<T | undefined, string>`, complicating the handling of results since
+        // consumers would always need to account for the possibility of `undefined`.
+        // By making this cast, we simplify the usage pattern: calls expecting a value can use
+        // `safeJsonFetch<string>()` and get `ResultAsync<string, string>`, and calls expecting no return value
+        // can use `safeJsonFetch<void>()` and receive `ResultAsync<void, string>`, without worrying about an `undefined`
+        // in the type signature.
+        return undefined as unknown as Promise<T>
+      }
       // parse json and convert all dates to Date objects:
       return response.json().then((data) => handleDates(data) as Promise<T>)
     }),
@@ -87,6 +102,7 @@ type SearchResponse = {
   results: ShortOrder[]
 }
 
+const x = safeJsonFetch<void>('text')
 export const searchShortOrders = (search: string) =>
   safeJsonFetch<SearchResponse>(`${dbHost}/order?search=${search}`, {
     method: 'GET',
