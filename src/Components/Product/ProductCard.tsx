@@ -6,6 +6,7 @@ import ProductOptions from './Blocks/ProductOptions'
 import ProductThumbnail from './Blocks/ProductThumbnail'
 
 type ProductCardVariant = 'imageSide' | 'imageBelow'
+type ProductCardSize = 'compact' | 'full' | 'responsive'
 
 type ProductCardProps = {
   product: Product
@@ -33,11 +34,18 @@ export default function ProductCard({
   }
 }
 
+// todo: add compact, full, responsive
+
 const ProductCardImageSide = ({ product, image, sx }: ProductCardProps) => (
   <Box
     sx={{
       display: 'grid',
-      gridTemplateColumns: '1fr 3fr ',
+      gridTemplateColumns: image
+        ? {
+            xs: '80px 1fr',
+            sm: '150px 1fr',
+          }
+        : '1fr',
       ...sx,
     }}
   >
@@ -58,7 +66,6 @@ const ProductCardImageSide = ({ product, image, sx }: ProductCardProps) => (
           product={product}
           sx={{
             my: 1,
-            gridColumn: 2,
           }}
         />
       </Box>
@@ -66,23 +73,43 @@ const ProductCardImageSide = ({ product, image, sx }: ProductCardProps) => (
 
     <ProductName
       product={product}
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignSelf: 'center',
-      }}
+      sx={
+        image
+          ? {
+              display: {
+                xs: 'flex',
+                sm: 'block',
+              },
+              flexDirection: 'column',
+              alignSelf: 'center',
+              ml: 2,
+            }
+          : {
+              ml: 0,
+            }
+      }
     />
     <Box
-      sx={{
-        gridColumnStart: {
-          xs: 1,
-          sm: 2,
-        },
-        gridColumnEnd: {
-          xs: 3,
-          sm: 3,
-        },
-      }}
+      sx={
+        image
+          ? {
+              gridColumnStart: {
+                xs: 1,
+                sm: 2,
+              },
+              gridColumnEnd: {
+                xs: 3,
+                sm: 3,
+              },
+              ml: {
+                xs: 0,
+                sm: 2,
+              },
+            }
+          : {
+              ml: 0,
+            }
+      }
     >
       <ProductOptions options={product.configuration.options} />
     </Box>
