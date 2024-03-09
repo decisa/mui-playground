@@ -196,7 +196,7 @@ export default function ContainersPage() {
     }
   }
   return (
-    <Box>
+    <Box sx={{ p: 2 }}>
       <Stack direction="row" alignItems="center" sx={{ mb: 4 }}>
         <TextField
           id="filled-basic"
