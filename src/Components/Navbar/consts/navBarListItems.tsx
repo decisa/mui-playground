@@ -9,6 +9,7 @@ import DnsIcon from '@mui/icons-material/Dns'
 import SearchIcon from '@mui/icons-material/Search'
 import SavedSearchIcon from '@mui/icons-material/SavedSearch'
 import GradingIcon from '@mui/icons-material/Grading'
+import BugReportIcon from '@mui/icons-material/BugReport'
 
 export const mainNavbarItems = [
   {
@@ -19,13 +20,13 @@ export const mainNavbarItems = [
   },
   {
     id: 2,
-    label: 'Local DB Orders',
+    label: 'Orders Table',
     path: 'order',
     icon: <SavedSearchIcon />,
   },
   {
     id: 6,
-    label: 'Local DB Orders Grid',
+    label: 'Orders Grid',
     path: 'orders',
     icon: <SavedSearchIcon />,
   },
@@ -46,6 +47,12 @@ export const mainNavbarItems = [
     label: 'Containers',
     path: 'containers',
     icon: <SailingIcon />,
+  },
+  {
+    id: 7,
+    label: 'Testing',
+    path: 'testing',
+    icon: <BugReportIcon />,
   },
   // {
   //   id: 10,
