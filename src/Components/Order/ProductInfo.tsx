@@ -1,7 +1,7 @@
 import { Link, List, ListItem, ListItemIcon, Typography } from '@mui/material'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import { Product } from '../../Types/dbtypes'
-import ProductName from './ProductName'
+import ProductName from '../Product/Blocks/ProductName'
 
 type ProductInfoProps = {
   product: Product

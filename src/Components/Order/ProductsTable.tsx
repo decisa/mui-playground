@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { Product } from '../../Types/dbtypes'
-import Thumbnail from './Thumbnail'
+import ProductThumbnail from '../Product/Blocks/ProductThumbnail'
 import ProductInfo from './ProductInfo'
 import Price from '../Common/Price'
 import Qty from './Qty'
@@ -74,7 +74,7 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
             flexDirection="column"
             justifyContent="start"
           >
-            <Thumbnail product={row.original} />
+            <ProductThumbnail product={row.original} />
           </Box>
         ),
         size: 180,

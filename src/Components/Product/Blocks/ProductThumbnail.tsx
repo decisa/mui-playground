@@ -1,12 +1,13 @@
-import { Box } from '@mui/material'
-import { Product } from '../../Types/dbtypes'
-import { cacheFolder, domain } from '../../Magento/magentoAuthorize'
+import { Box, SxProps } from '@mui/material'
+import { Product } from '../../../Types/dbtypes'
+import { cacheFolder, domain } from '../../../Magento/magentoAuthorize'
 
 type ThumbnailProps = {
   product: Product
+  sx?: SxProps
 }
 
-const Thumbnail = ({ product }: ThumbnailProps) => {
+const ProductThumbnail = ({ product, sx }: ThumbnailProps) => {
   const { image, name } = product
   const url = `${domain}${cacheFolder}/${image || 'noimage.jpg'}`
   // <Avatar src={image} variant="rounded" sx={{ width: 130 }} />
@@ -18,6 +19,7 @@ const Thumbnail = ({ product }: ThumbnailProps) => {
         minWidth: 120,
         aspectRatio: '3/2',
         position: 'relative',
+        ...sx,
         // mb: 'auto',
       }}
     >
@@ -29,7 +31,7 @@ const Thumbnail = ({ product }: ThumbnailProps) => {
           top: 0,
           left: 0,
           width: '100%',
-          height: '100%',
+          // height: '100%',
           objectFit: 'cover', // This will ensure the image scales correctly
           borderRadius: '3px',
         }}
@@ -38,4 +40,4 @@ const Thumbnail = ({ product }: ThumbnailProps) => {
   )
 }
 
-export default Thumbnail
+export default ProductThumbnail
