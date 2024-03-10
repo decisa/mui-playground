@@ -1,10 +1,11 @@
-import { Box, Typography } from '@mui/material'
+import { Box, SxProps, Typography } from '@mui/material'
 
 type QtyProps = {
   qty: number
+  sx?: SxProps
 }
 
-const Qty = ({ qty }: QtyProps) => (
+const Qty = ({ qty, sx }: QtyProps) => (
   <Box
     // alignItems="baseline"
     textAlign="center"
@@ -13,6 +14,7 @@ const Qty = ({ qty }: QtyProps) => (
     // justifyContent="end"
     // alignContent="end"
     // height={1}
+    sx={sx}
   >
     <Typography variant="body2" component="span">
       {qty}
