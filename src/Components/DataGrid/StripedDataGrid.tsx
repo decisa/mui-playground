@@ -16,6 +16,8 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
     '& .MuiDataGrid-cell': {
       backgroundColor: 'transparent',
       borderBottomColor: 'transparent',
+      alignItems: 'baseline',
+
       '&.MuiDataGrid-cell--editable': {
         backgroundColor: alpha(theme.palette.primary.light, 0.2),
         // borderBottomColor: 'transparent',
@@ -23,6 +25,8 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
     },
   },
   '& .MuiDataGrid-cell': {
+    padding: '8px 0',
+    alignItems: 'baseline',
     '&.subheader': {
       backgroundColor: theme.palette.neutral.light,
       '&:hover': {

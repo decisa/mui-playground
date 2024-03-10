@@ -460,7 +460,11 @@ export default function OrderPage() {
           </Button>
           <Box display="flex" gap={2} flexWrap="wrap" alignItems="start">
             <Paper
-              sx={{ maxWidth: 840, minWidth: 690, flex: '2 2 690px' }}
+              sx={{
+                maxWidth: 840,
+                // minWidth: 690,
+                flex: '2 2 690px',
+              }}
               className="printable-paper"
             >
               {order ? <OrderConfirmation order={order} /> : null}

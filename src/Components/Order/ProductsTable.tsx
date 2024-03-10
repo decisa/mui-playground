@@ -18,11 +18,11 @@ import {
   useTheme,
 } from '@mui/material'
 import { Product } from '../../Types/dbtypes'
-import ProductThumbnail from '../Product/Blocks/ProductThumbnail'
-import ProductInfo from './ProductInfo'
+
 import Price from '../Common/Price'
 import Qty from './Qty'
 import { tokens } from '../../theme'
+import ProductCard from '../Product/ProductCard'
 
 type ProductsTableProps = {
   products: Product[]
@@ -49,7 +49,11 @@ const RowMui = ({ row }: RowProps<Product>) => (
         key={cell.id}
         sx={{
           // maxWidth: cell.column.columnDef.id === 'image' ? 150 : undefined,
-          width: cell.column.getSize() === 20 ? 'auto' : cell.column.getSize(),
+          // width: cell.column.getSize() === 20 ? 'auto' : cell.column.getSize(),
+          p: {
+            xs: 1,
+            sm: 1.5,
+          },
         }}
       >
         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -65,24 +69,28 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
 
   const columns = useMemo<ColumnDef<Product>[]>(
     () => [
-      {
-        id: 'image',
-        cell: ({ row }) => (
-          <Box
-            height={1}
-            display="flex"
-            flexDirection="column"
-            justifyContent="start"
-          >
-            <ProductThumbnail product={row.original} />
-          </Box>
-        ),
-        size: 180,
-      },
+      // {
+      //   id: 'image',
+      //   cell: ({ row }) => (
+      //     <Box
+      //       height={1}
+      //       display="flex"
+      //       flexDirection="column"
+      //       justifyContent="start"
+      //     >
+      //       <ProductThumbnail product={row.original} />
+      //     </Box>
+      //   ),
+      //   size: 180,
+      // },
       {
         accessorKey: 'name',
         header: () => <Typography variant="h5">product</Typography>,
-        cell: ({ row }) => <ProductInfo product={row.original} />,
+        // cell: ({ row }) => <ProductInfo product={row.original} />,
+        cell: ({ row }) => (
+          <ProductCard product={row.original} variant="imageSide" />
+        ),
+
         size: 20, // auto
       },
       {
@@ -95,7 +103,7 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
         cell: (info) => (
           <Qty qty={info.row.original.configuration.qtyOrdered} />
         ),
-        size: 70,
+        // maxSize: 70,
       },
       {
         id: 'price',
@@ -112,7 +120,7 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
             }
           />
         ),
-        size: 100,
+        // maxSize: 100,
       },
     ],
     []
@@ -150,8 +158,12 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
                 key={header.id}
                 colSpan={header.colSpan}
                 sx={{
-                  width: header.getSize() === 20 ? 'auto' : header.getSize(),
-                  p: 1.5,
+                  // width: header.getSize() === 20 ? 'auto' : header.getSize(),
+                  p: {
+                    xs: 1,
+                    sm: 1.5,
+                  },
+
                   // maxWidth: header.s,
                 }}
                 // sx={{
