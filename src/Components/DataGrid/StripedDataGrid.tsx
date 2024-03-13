@@ -26,6 +26,7 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
   },
   '& .MuiDataGrid-cell': {
     padding: '8px 0',
+    // lineHeight: 1.7,
     alignItems: 'baseline',
     '&.subheader': {
       backgroundColor: theme.palette.neutral.light,

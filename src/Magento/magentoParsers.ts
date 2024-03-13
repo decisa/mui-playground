@@ -6,6 +6,7 @@ import {
   Order,
   OrderComment,
   Product,
+  ProductConfiguration,
   ProductOption,
 } from '../Types/dbtypes'
 import { toErrorWithMessage } from '../utils/errorHandling'
@@ -400,7 +401,13 @@ export function mapOptionValues(
 //   return x
 // }
 
-const parseProduct = (prod: TMagentoOrderProduct): Product => {
+// product types that are not in DB yet, and therefore missing IDs:
+type NonDBConfiguration = Omit<ProductConfiguration, 'id'>
+type NonDBProduct = Omit<Product, 'id' | 'mainProductId' | 'configuration'> & {
+  configuration: NonDBConfiguration
+}
+
+const parseProduct = (prod: TMagentoOrderProduct): NonDBProduct => {
   const {
     product_type: type,
     name,
@@ -471,11 +478,17 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
     name,
     type,
     externalId,
-    sku: undefined,
+    sku: null,
+    image: null,
+    url: null,
+    brand: undefined,
+    productSpecs: null,
+    assemblyInstructions: null,
+    volume: null,
     configuration: {
+      // id,
       totalTax,
       createdAt: parseISO(`${createdAt}Z`),
-      // id,
       // orderId,
       // productId,
       // updatedAt,
@@ -490,8 +503,9 @@ const parseProduct = (prod: TMagentoOrderProduct): Product => {
       price, // per item
       totalDiscount, // discount_amount (for all items)
       options,
+      volume: null,
     },
-  }
+  } satisfies NonDBProduct
 }
 
 const parseMagentoOrderAddress = (
@@ -822,7 +836,7 @@ function finalizeOrderDetails([products, attributes, notFullOrder]: [
         }
       }
 
-      updatedProduct.url = products[externalId].commonAttributes.url_key
+      updatedProduct.url = products[externalId].commonAttributes.url_key | null
       updatedProduct.assemblyInstructions =
         products[externalId].commonAttributes.assembly_instructions
       updatedProduct.productSpecs =

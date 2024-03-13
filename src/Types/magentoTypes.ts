@@ -1,6 +1,6 @@
 export type TMagentoInputType = 'multiselect'
 export type CommentType = 'shipment' | 'order' | 'invoice' | 'creditmemo'
-export type ProductType = 'configurable' | 'simple'
+export type ProductType = 'simple' | 'configurable' | 'warranty' | 'custom'
 
 export const orderStatuses = [
   'pending',

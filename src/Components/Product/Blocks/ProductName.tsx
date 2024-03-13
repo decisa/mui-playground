@@ -15,7 +15,9 @@ const ProductName = ({ product, sx }: ProductNameProps) => {
   if (!productUrl) {
     return (
       <Box sx={{ ...sx }}>
-        <Typography component="span">{name}</Typography>
+        <Typography component="span" variant="body2">
+          {name}
+        </Typography>
         {brand && brand.name && (
           <Typography component="span" color="textSecondary">
             {' '}
@@ -27,6 +29,7 @@ const ProductName = ({ product, sx }: ProductNameProps) => {
   }
   return (
     <Link href={productUrl} target="_blank" underline="hover" sx={{ ...sx }}>
+      {/* <Box sx={{ ...sx }}> */}
       <Typography component="span" color="textPrimary">
         {name}
       </Typography>
@@ -36,6 +39,7 @@ const ProductName = ({ product, sx }: ProductNameProps) => {
           by {brand.name}
         </Typography>
       )}
+      {/* </Box> */}
     </Link>
   )
 }

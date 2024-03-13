@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { GridColDef } from '@mui/x-data-grid'
-import { Box, Button } from '@mui/material'
+import { Box, Button, Stack, Typography } from '@mui/material'
+import { set } from 'date-fns'
 import { Order } from '../Types/dbtypes'
 import { getOrderByNumber } from '../utils/inventoryManagement'
 import { useSnackBar } from '../Components/GlobalSnackBar'
@@ -10,9 +11,12 @@ import ProductCard, {
   ProductCardVariant,
 } from '../Components/Product/ProductCard'
 import ProductThumbnail from '../Components/Product/Blocks/ProductThumbnail'
+import MagentoIcon from '../Components/Common/MagentoIcon'
+import ProductQtys from '../Components/Product/ProductQtys'
 
 // const orderNumber = '100005081'
-const orderNumber = '100008039'
+const orderNumber = '100008122'
+// const orderNumber = '100008039'
 
 export default function TestingPage() {
   // state to store Order
@@ -24,19 +28,23 @@ export default function TestingPage() {
     'responsive'
   )
 
+  // const cycleSize = () => {
+  //   setSize((oldSize) => {
+  //     switch (oldSize) {
+  //       case 'compact':
+  //         return 'full'
+
+  //       case 'full':
+  //         return 'responsive'
+
+  //       default:
+  //         return 'compact'
+  //     }
+  //   })
+  // }
+
   const cycleSize = () => {
-    setSize((oldSize) => {
-      switch (oldSize) {
-        case 'compact':
-          return 'full'
-
-        case 'full':
-          return 'responsive'
-
-        default:
-          return 'compact'
-      }
-    })
+    setSize((oldSize) => (oldSize === 'compact' ? 'full' : 'compact'))
   }
 
   const [image, setImage] = useState<boolean>(true)
@@ -55,6 +63,7 @@ export default function TestingPage() {
     getOrderByNumber(orderNumber)
       .map((result) => {
         setOrder(result)
+        console.log('result !', result)
         return result
       })
       .mapErr((err) => {
@@ -84,6 +93,18 @@ export default function TestingPage() {
       //   console.log('id:', params.row.configurationId)
       //   return params.row.configurationId || 0
       // },
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Typography
+          component="span"
+          color="textPrimary"
+          variant="body2"
+          // align="center"
+        >
+          {params.row.configurationId}
+        </Typography>
+      ),
     },
     {
       field: 'name',
@@ -92,20 +113,23 @@ export default function TestingPage() {
       renderCell: (params) => (
         <ProductCard
           product={params.row}
-          variant="imageBelow"
-          image
+          // variant="imageBelow"
+          variant={layout}
+          image={image}
+          size={size}
           // size="compact"
         />
       ),
     },
-    { field: 'sku', headerName: 'SKU', width: 130 },
     { field: 'price', headerName: 'Price', width: 130 },
     {
       field: 'qty',
       headerName: 'Qty',
+      align: 'left',
+      headerAlign: 'left',
       width: 130,
       valueGetter: (params) => params.row.configuration.qtyOrdered || 0,
-      align: 'left',
+      renderCell: (params) => <ProductQtys product={params.row} />,
     },
   ]
 
@@ -113,7 +137,7 @@ export default function TestingPage() {
     return <div>Loading...</div>
   }
   return (
-    <Box py={2} maxWidth={1100}>
+    <Box p={2} maxWidth={1100}>
       <ProductCard
         product={order.products[3]}
         variant={layout}

@@ -4,8 +4,7 @@ export const carrierTypes = ['container', 'freight', 'parcel', 'auto'] as const
 
 export type CarrierType = (typeof carrierTypes)[number]
 
-export type Carrier = {
-  id: number
+type CarrierCreate = {
   name: string
   type: CarrierType
   contactName: string | null
@@ -15,145 +14,281 @@ export type Carrier = {
   accountNumber: string | null
 }
 
-export type Address = {
-  id?: number
+type CarrierIDs = {
+  id: number
+}
+
+export type Carrier = CarrierCreate & CarrierIDs
+
+export const countries = ['US', 'CA'] as const
+
+export type Country = (typeof countries)[number]
+
+type OrderAddressCreate = {
   // email?: string
   firstName: string
   lastName: string
-  company?: string | null
+  company: string | null
   street: string[]
   city: string
   state: string
   zipCode: string
-  country: 'US' | 'CA' | string
+  country: Country
   phone: string
-  altPhone?: string | null
-  notes?: string | null
-  coordinates?: [number, number] | null
-  customerId?: number
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  magento?: {
-    externalId: number // 4583
-    externalCustomerAddressId?: number | null // 5972
-    externalOrderId: number // 2292
-    addressType: 'billing' | 'shipping'
-  }
+  altPhone: string | null
+  notes: string | null
+  coordinates: [number, number] | null
 }
 
-export type Customer = {
-  id?: number
+type OrderAddressIDs = {
+  id: number
+  customerAddressId: number | null // foreign key to keep record which address it was copied from.
+}
+
+type MagentoOrderAddress = {
+  externalId: number // 4583
+  externalCustomerAddressId: number | null // 5972
+  externalOrderId: number // 2292
+  addressType: 'billing' | 'shipping'
+}
+
+type OrderAddressAssociations = {
+  magento?: MagentoOrderAddress
+}
+
+export type Address = OrderAddressCreate &
+  OrderAddressIDs &
+  TimeStamps &
+  OrderAddressAssociations
+
+export type CustomerCreate = {
   firstName: string
   lastName: string
-  company?: string | null
+  company: string | null
   phone: string
-  altPhone?: string | null
+  altPhone: string | null
   email: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  defaultShipping?: Address
-  magento?: {
-    externalGroupId: number
-    isGuest: boolean
-    email: string
-    externalCustomerId?: number
-  }
+  defaultShippingId: number | null
 }
 
-export type OrderComment = {
-  id?: number
-  orderId?: number
+type CustomerIDs = {
+  id: number
+}
+
+type CustomerMagentoRecordCreate = {
+  externalId: number
+  externalGroupId: number
+  isGuest: boolean
+  email: string
+}
+
+type CustomerAssociations = {
+  magento?: CustomerMagentoRecord
+  defaultShipping?: Address
+}
+
+type CustomerMagentoRecord = CustomerMagentoRecordCreate
+
+export type Customer = CustomerCreate &
+  CustomerIDs &
+  TimeStamps &
+  Pick<CustomerAssociations, 'magento'>
+
+type OrderCommentCreate = {
   comment: string | null
-  customerNotified: boolean
-  visibleOnFront: boolean
+  customerNotified: boolean | null
+  visibleOnFront: boolean | null
   type: CommentType
   status: OrderStatus //
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  externalId?: number
-  externalParentId?: number
+  externalId: number | null
+  externalParentId: number | null
 }
 
-export type ProductOption = {
-  id?: number
-  configId?: number
+type OrderCommentIDs = {
+  id: number
+  orderId: number
+}
+
+export type OrderComment = OrderCommentCreate & OrderCommentIDs & TimeStamps
+
+type ProductOptionCreate = {
   label: string
   value: string
   sortOrder: number
-  externalId?: number
-  externalValue?: string | number
-  type?: 'attribute' | 'option'
-  createdAt?: Date | string
-  updatedAt?: Date | string
+  externalId: number | null
+  externalValue: string | number | null
+  // type?: 'attribute' | 'option'
 }
 
-export type ProductConfiguration = {
-  sku: string // 'CI-SPYDER-oblong-200x120-clear-11-s-titanium'
-  options: ProductOption[]
+type ProductOptionIDs = {
+  id: number
+}
+
+export type ProductOption = ProductOptionCreate & ProductOptionIDs & TimeStamps
+
+type ProductConfigurationCreate = {
   qtyOrdered: number
-  qtyShippedExternal: number
-  qtyRefunded?: number
-  volume?: number
-  price?: number
-  totalTax?: number
-  totalDiscount?: number
-  id?: number
-  orderId?: number
-  productId?: number
-  externalId?: number // 3994
-  createdAt?: Date | string
-  updatedAt?: Date | string
+  qtyRefunded: number
+  externalId: number | null // 3994
+  price: number | null
+  qtyShippedExternal: number | null
+  sku: string | null // 'CI-SPYDER-oblong-200x120-clear-11-s-titanium'
+  totalDiscount: number | null
+  totalTax: number | null
+  volume: number | null
+}
+// options: ProductOptionCreate[]
+// summary?: ProductSummary
 
-  qtyCanceled?: number // obsolete
-  qtyInvoiced?: number // obsolete
+type ProductConfigurationIDs = {
+  id: number
 }
 
-export type Brand = {
-  id?: number
-  name: string
-  externalId?: number
+type ProductConfigurationAssociations = {
+  options: ProductOption[]
+  summary: ProductSummary
 }
 
-export type BrandRead = Omit<Brand, 'id'> & { id: number }
+export type ProductConfiguration = ProductConfigurationCreate &
+  ProductConfigurationIDs &
+  TimeStamps &
+  Pick<ProductConfigurationAssociations, 'options' | 'summary'>
 
-export type Product = {
-  id?: number
+type BrandCreate = {
   name: string
-  sku?: string
-  url?: string
-  image?: string
-  brand?: Brand
-  // brandId: {
-  //   id,
-  //   name,
-  //   externalId,
-  // }
-  productSpecs?: string
-  assemblyInstructions?: string
-  volume?: number
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  externalId?: number // 167049
-  type?: ProductType
+  externalId: number | null
+}
+
+type BrandIDs = {
+  id: number
+}
+
+export type Brand = BrandCreate & BrandIDs
+
+type ProductCreate = {
+  name: string
+  configurationId: number
+  type: ProductType
+  assemblyInstructions: string | null
+  externalId: number | null // 167049
+  image: string | null
+  productSpecs: string | null
+  sku: string | null
+  url: string | null
+  volume: number | null
+}
+
+type ProductIDs = {
+  brandId: number
+  id: number
+  mainProductId: number
+}
+
+type ProductAssociations = {
+  brand: Brand
   configuration: ProductConfiguration
-  configurationId?: number
 }
 
-export type Order = {
-  orderId?: number
+export type Product = ProductCreate &
+  ProductIDs &
+  TimeStamps &
+  ProductAssociations
+
+export type OrderBaseCreate = {
   orderNumber: string
-  shippingCost: number
-  paymentMethod: string // 'checkmo' | 'stripe_payments' | 'mageworx_ordereditor_payment_method' | 'paypal_express'
-  taxRate: number
-  collectedTaxes?: string[]
-  orderDate: Date | string
+  orderDate: Date
+  shippingCost: number // default 0
+  taxRate: number // default 0
+  paymentMethod: string | null // 'checkmo' | 'stripe_payments' | 'mageworx_ordereditor_payment_method' | 'paypal_express'
+}
+
+type OrderBaseIDs = {
+  id: number
+  customerId: number
+  deliveryMethodId: number | null
+  shippingAddressId: number | null
+  billingAddressId: number | null
+}
+
+type TimeStamps = {
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type OrderBase = OrderBaseCreate & OrderBaseIDs & TimeStamps
+
+type DeliveryMethodCreate = {
+  name: string
+  description: string
+}
+
+type DeliveryMethodIDs = {
+  id: number
+}
+
+type DeliveryMethod = DeliveryMethodCreate & DeliveryMethodIDs
+
+type OrderMagentoRecordCreate = {
+  externalId: number
+  externalQuoteId: number
+  state: string
+  status: OrderStatus
+  updatedAt: Date
+}
+
+type OrderMagentoRecordIDs = {
+  orderId?: number
+}
+
+type OrderMagentoRecord = OrderMagentoRecordCreate & OrderMagentoRecordIDs
+
+export type OrderAssociations = {
+  magento?: OrderMagentoRecord // can be undefined if there's no magento record
   customer: Customer
+  addresses: Address[]
+  comments: OrderComment[]
+  deliveryMethod?: DeliveryMethod // optional
+  products: Product[]
   billingAddress: Address
   shippingAddress: Address
-  shippingMethod: string // 'ibflatrate2_ibflatrate2'
-  shippingDescription: string // 'white glove delivery - inside delivery with assembly'
+  // orderAvailabilities?: Association<Order, OrderAvailability>,
+}
+
+export type FullOrder = OrderBase &
+  Pick<
+    OrderAssociations,
+    | 'customer'
+    | 'magento'
+    | 'products'
+    | 'comments'
+    | 'billingAddress'
+    | 'shippingAddress'
+    | 'deliveryMethod'
+  >
+
+type NonDBOrderBase = Omit<
+  OrderBase,
+  'customerId' | 'deliveryMethodId' | 'id' | 'shippingAddressId'
+>
+export type OrderX = {
+  id: number
+  orderNumber: string
+  orderDate: Date
+  paymentMethod: string // 'checkmo' | 'stripe_payments' | 'mageworx_ordereditor_payment_method' | 'paypal_express'
+  billingAddress: Address
+  shippingAddress: Address
   comments: OrderComment[]
   products: Product[]
+  createdAt: Date
+  updatedAt: Date
+  customer?: Customer
+  customerId: number
+  deliveryMethodId: number | null
+  deliveryMethod?: {
+    id: number
+    name: string
+    description: string
+  }
   magento?: {
     externalId: number
     externalQuoteId: number
@@ -162,44 +297,17 @@ export type Order = {
     updatedAt?: Date | string
     orderId?: number
   }
-  deliveryMethodId?: number | null
-  deliveryMethod?: {
-    id: number
-    name: string
-    description: string
-  } | null
-  // paymentInfo: {
-  //   account_status: null
-  //   additional_information: [
-  //     'check / phone order',
-  //     'room service 360°',
-  //     '2031 Byberry Road\r\nPhiladelphia, PA 19116'
-  //   ]
-  //   amount_ordered: 24000
-  //   amount_paid: 24000
-  //   base_amount_ordered: 24000
-  //   base_amount_paid: 24000
-  //   base_shipping_amount: 99
-  //   base_shipping_captured: 99
-  //   cc_exp_year: '0'
-  //   cc_last4: null
-  //   cc_ss_start_month: '0'
-  //   cc_ss_start_year: '0'
-  //   entity_id: 2292
-  //   method: 'checkmo'
-  //   parent_id: 2292
-  //   shipping_amount: 99
-  //   shipping_captured: 99
-  // }
+  shippingCost: number // default 0
+  taxRate: number // default 0
 }
 
 export type ProductSummary = {
   configurationId: number
-  qtyPlanned: number
-  qtyScheduled: number
   qtyConfirmed: number
+  qtyPlanned: number
   qtyPurchased: number
   qtyReceived: number
+  qtyScheduled: number
   qtyShipped: number
 }
 

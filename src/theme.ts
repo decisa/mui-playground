@@ -490,12 +490,14 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
         // fontSize: 16,
         fontSize: '1rem',
         fontWeight: 300,
+        lineHeight: 1.5,
       },
       body2: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
         // fontSize: 14,
         fontSize: '0.875rem',
         fontWeight: 300,
+        lineHeight: 1.5,
       },
       button: {
         FontFamily: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
