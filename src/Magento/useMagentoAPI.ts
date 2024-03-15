@@ -1,5 +1,6 @@
 import { ResultAsync, err, okAsync } from 'neverthrow'
 import { type } from 'os'
+import { useCallback, useMemo } from 'react'
 import { useMagentoNeverthrowContext } from './magentoAPIContext'
 import { toErrorWithMessage } from '../utils/errorHandling'
 import {
@@ -13,6 +14,7 @@ import {
 } from '../Types/magentoTypes'
 import { MagentoError } from './MagentoError'
 import {
+  FullOrderWithTypedOptions,
   combineOrderDetails,
   parseAttributesInfo,
   parseCommentsResponse,
@@ -21,7 +23,7 @@ import {
   parseMainProductsInfo,
   safeParse,
 } from './magentoParsers'
-import { Order, OrderComment } from '../Types/dbtypes'
+import { OrderComment, OrderCommentCreate } from '../Types/dbtypes'
 import { apiPath } from './magentoAuthorize'
 
 // const domain = 'https://stage.roomservice360.com'
@@ -68,7 +70,7 @@ function getProductsByIdUrl(productIds: string): string {
   return encodeURI(`${apiPath}/V1/products?${searchCriteria}`)
 }
 
-function getCommentsByIdUrl(magentoOrderId: number) {
+function getCommentsByOrderIdUrl(magentoOrderId: number) {
   return `${apiPath}/V1/orders/${magentoOrderId}/comments`
 }
 
@@ -114,215 +116,234 @@ export const reportNetworkError = (error: unknown) => {
 export const useMagentoAPI = () => {
   const { getToken, renewToken } = useMagentoNeverthrowContext()
 
-  const withToken = () => {
+  const withToken = useCallback(() => {
     const token = getToken()
     if (token) {
       return okAsync(token)
     }
     return renewToken()
-  }
+  }, [getToken, renewToken])
 
-  const fetchWithToken = <T>({
-    url,
-    method,
-    data,
-    name,
-  }: {
-    url: string
-    method: FetchMethod
-    data?: unknown
-    name?: string
-  }) =>
-    withToken()
-      .andThen((token) => {
-        if (url) {
-          const conditionTypeQty = url.match(/condition_type/g)
-          if (conditionTypeQty && conditionTypeQty.length > 10) {
-            return err(
-              MagentoError.badData(
-                new Error(
-                  'Too many search params. Number of search params should not exceed 10'
-                )
-              )
-            )
-          }
-        }
-        const fetchOptions: RequestInit = {
-          method,
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-        if (data) {
-          fetchOptions.body = JSON.stringify(data)
-          // console.log('fetchOptions.body', fetchOptions.body)
-        }
-        return ResultAsync.fromPromise(
-          fetch(url, fetchOptions),
-          // (error) => toErrorWithMessage(error)
-          reportNetworkError
-        )
-      })
-      .andThen((result) => {
-        if (!result.ok) {
-          let errorText = name ? `${name} ` : ''
-          if (result.statusText) {
-            errorText += `: ${result.statusText}`
-          }
-
-          switch (result.status) {
-            case 400:
-              result.json().then((x) => console.log('x', x))
-              break
-            // return err(MagentoError.badData(new Error(errorText)))
-            case 401:
-              return err(MagentoError.unauthorized(new Error(errorText)))
-            case 404:
-              return err(MagentoError.notFound(new Error(errorText)))
-            default:
-              return err(
-                new Error(
-                  `${name ? `${name}: ` : ''}unknown status code: ${
-                    result.status
-                  }${result.statusText}`
-                )
-              )
-          }
-        }
-        return ResultAsync.fromPromise(result.json() as Promise<T>, (error) =>
-          MagentoError.unknown(toErrorWithMessage(error))
-        )
-      })
-
-  const getAttributeByCode = (attributeCode: string) => {
-    const url = getProductAttributeByCodeUrl(attributeCode)
-    return fetchWithToken<TMagentoAtrribute>({
+  const fetchWithToken = useCallback(
+    <T>({
       url,
-      method: 'GET',
-      name: 'getAttributeByCode',
-    }).andThen(parseMagentoAttribute)
-  }
-
-  const getOrderById = (orderId: string) => {
-    const url = getOrdersByIdUrl(orderId)
-    return fetchWithToken<TResponseGetMagentoOrder>({
-      url,
-      method: 'GET',
-      name: 'getOrderById',
-    }).andThen(parseMagentoOrderResponse)
-  }
-
-  // type CommentObject = {
-  //   comment: string
-  //   notifyCustomer: boolean
-  //   visibleOnFrontend: boolean
-  //   orderStatus: OrderStatus
-  //   orderId: number
-  // }
-
-  const addOrderComment = (
-    newComment: Omit<OrderComment, 'externalParentId'> & {
-      externalParentId: number
-    }
-  ) => {
-    // const { orderId, comment, visibleOnFrontend, notifyCustomer, orderStatus } =
-    //   commentObject
-    const url = getCommentsByIdUrl(newComment.externalParentId)
-    console.log('url', url)
-
-    const data = {
-      statusHistory: {
-        parent_id: newComment.externalParentId,
-        entity_name: newComment.type,
-        comment: newComment.comment,
-        is_customer_notified: newComment.customerNotified ? 1 : 0,
-        is_visible_on_front: newComment.visibleOnFront ? 1 : 0,
-        status: newComment.status,
-      },
-    }
-    return fetchWithToken<boolean>({
-      url,
-      method: 'POST',
-      name: 'addOrderComment',
+      method,
       data,
-    })
-    // .andThen(safeParse((result) => result))
-  }
+      name,
+    }: {
+      url: string
+      method: FetchMethod
+      data?: unknown
+      name?: string
+    }) =>
+      withToken()
+        .andThen((token) => {
+          if (url) {
+            const conditionTypeQty = url.match(/condition_type/g)
+            if (conditionTypeQty && conditionTypeQty.length > 10) {
+              return err(
+                MagentoError.badData(
+                  new Error(
+                    'Too many search params. Number of search params should not exceed 10'
+                  )
+                )
+              )
+            }
+          }
+          const fetchOptions: RequestInit = {
+            method,
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+          if (data) {
+            fetchOptions.body = JSON.stringify(data)
+            // console.log('fetchOptions.body', fetchOptions.body)
+          }
+          return ResultAsync.fromPromise(
+            fetch(url, fetchOptions),
+            // (error) => toErrorWithMessage(error)
+            reportNetworkError
+          )
+        })
+        .andThen((result) => {
+          if (!result.ok) {
+            let errorText = name ? `${name} ` : ''
+            if (result.statusText) {
+              errorText += `: ${result.statusText}`
+            }
 
-  const getOrderComments = (orderId: number) => {
-    // const { orderId, comment, visibleOnFrontend, notifyCustomer, orderStatus } =
-    //   commentObject
-    const url = getCommentsByIdUrl(orderId)
-    // console.log('url', url)
-    return fetchWithToken<{
-      items: TMagentoOrderComment[]
-      total_count: number
-    }>({
-      url,
-      method: 'GET',
-      name: 'getOrderComments',
-    }).andThen(parseCommentsResponse)
-  }
+            switch (result.status) {
+              case 400:
+                result.json().then((x) => console.log('x', x))
+                break
+              // return err(MagentoError.badData(new Error(errorText)))
+              case 401:
+                return err(MagentoError.unauthorized(new Error(errorText)))
+              case 404:
+                return err(MagentoError.notFound(new Error(errorText)))
+              default:
+                return err(
+                  new Error(
+                    `${name ? `${name}: ` : ''}unknown status code: ${
+                      result.status
+                    }${result.statusText}`
+                  )
+                )
+            }
+          }
+          return ResultAsync.fromPromise(result.json() as Promise<T>, (error) =>
+            MagentoError.unknown(toErrorWithMessage(error))
+          )
+        }),
+    [withToken]
+  )
+
+  const getAttributeByCode = useCallback(
+    (attributeCode: string) => {
+      const url = getProductAttributeByCodeUrl(attributeCode)
+      return fetchWithToken<TMagentoAtrribute>({
+        url,
+        method: 'GET',
+        name: 'getAttributeByCode',
+      }).andThen(parseMagentoAttribute)
+    },
+    [fetchWithToken]
+  )
+
+  const getOrderById = useCallback(
+    (orderId: string) => {
+      const url = getOrdersByIdUrl(orderId)
+      return fetchWithToken<TResponseGetMagentoOrder>({
+        url,
+        method: 'GET',
+        name: 'getOrderById',
+      }).andThen(parseMagentoOrderResponse)
+    },
+    [fetchWithToken]
+  )
+
+  const addOrderComment = useCallback(
+    (orderId: number, newComment: OrderCommentCreate) => {
+      const url = getCommentsByOrderIdUrl(orderId)
+      console.log('url', url)
+
+      const data = {
+        statusHistory: {
+          parent_id: newComment.externalParentId,
+          entity_name: newComment.type,
+          comment: newComment.comment,
+          is_customer_notified: newComment.customerNotified ? 1 : 0,
+          is_visible_on_front: newComment.visibleOnFront ? 1 : 0,
+          status: newComment.status,
+        },
+      }
+      return fetchWithToken<boolean>({
+        url,
+        method: 'POST',
+        name: 'addOrderComment',
+        data,
+      })
+      // .andThen(safeParse((result) => result))
+    },
+    [fetchWithToken]
+  )
+
+  const getOrderComments = useCallback(
+    (orderId: number) => {
+      const url = getCommentsByOrderIdUrl(orderId)
+      return fetchWithToken<{
+        items: TMagentoOrderComment[]
+        total_count: number
+      }>({
+        url,
+        method: 'GET',
+        name: 'getOrderComments',
+      }).andThen(parseCommentsResponse)
+    },
+    [fetchWithToken]
+  )
 
   // TODO: add parser at the end
-  const getProductsById = (productIds: string) => {
-    const url = getProductsByIdUrl(productIds)
-    return fetchWithToken<{
-      items: MainProduct[]
-      total_count: number
-    }>({
-      url,
-      method: 'GET',
-      name: 'getProductById',
-    }) // .andThen((parseMagentoOrderResponse))
-  }
+  const getProductsById = useCallback(
+    (productIds: string) => {
+      const url = getProductsByIdUrl(productIds)
+      return fetchWithToken<{
+        items: MainProduct[]
+        total_count: number
+      }>({
+        url,
+        method: 'GET',
+        name: 'getProductById',
+      }) // .andThen((parseMagentoOrderResponse))
+    },
+    [fetchWithToken]
+  )
 
   // TODO: add parser at the end
-  const getAttributesById = (attributeIds: string) => {
-    const url = getAttributesByIdUrl(attributeIds)
-    return fetchWithToken<{
-      items: MagentoAttributeRaw[]
-      total_count: number
-    }>({
-      url,
-      method: 'GET',
-      name: 'getAttributesById',
-    }) // .andThen((parseMagentoOrderResponse))
-  }
+  const getAttributesById = useCallback(
+    (attributeIds: string) => {
+      const url = getAttributesByIdUrl(attributeIds)
+      return fetchWithToken<{
+        items: MagentoAttributeRaw[]
+        total_count: number
+      }>({
+        url,
+        method: 'GET',
+        name: 'getAttributesById',
+      }) // .andThen((parseMagentoOrderResponse))
+    },
+    [fetchWithToken]
+  )
 
-  const getOrderDetails = (order: Order) => {
-    // get all attribute IDs that we need to fetch
-    const allAttributes =
-      order.products.flatMap((x) =>
-        x.configuration.options
-          .filter((z) => z.type === 'attribute')
-          .map((y) => y.externalId)
-      ) || []
+  const getOrderDetails = useCallback(
+    (order: FullOrderWithTypedOptions) => {
+      // get all attribute IDs that we need to fetch
+      const allAttributes =
+        order.products.flatMap((x) =>
+          x.configuration.options
+            .filter((z) => z.type === 'attribute')
+            .map((y) => y.externalId)
+        ) || []
 
-    // add product_brand to the list of fetched attributes:
-    allAttributes.push(141)
+      // add product_brand to the list of fetched attributes:
+      allAttributes.push(141)
 
-    // get all main product IDs that we need to fetch
-    const productIds = order.products
-      .map((prod) => prod.externalId)
-      .filter((x) => x !== undefined) as number[]
+      // get all main product IDs that we need to fetch
+      const productIds = order.products
+        .map((prod) => prod.externalId)
+        .filter((x) => x !== undefined) as number[]
 
-    return ResultAsync.combineWithAllErrors([
-      getProductsById(productIds.join(',')).andThen(parseMainProductsInfo),
-      getAttributesById(allAttributes.join(',')).andThen(parseAttributesInfo),
-      okAsync(order),
-    ]).andThen(combineOrderDetails)
-  }
+      return ResultAsync.combineWithAllErrors([
+        getProductsById(productIds.join(',')).andThen(parseMainProductsInfo),
+        getAttributesById(allAttributes.join(',')).andThen(parseAttributesInfo),
+        okAsync(order),
+      ]).andThen(combineOrderDetails)
+    },
+    [getProductsById, getAttributesById]
+  )
 
-  return {
-    getAttributeByCode,
-    getOrderById,
-    getProductsById,
-    getAttributesById,
-    getOrderDetails,
-    addOrderComment,
-    getOrderComments,
-  }
+  const magentoAPI = useMemo(
+    () => ({
+      getAttributeByCode,
+      getOrderById,
+      getProductsById,
+      getAttributesById,
+      getOrderDetails,
+      addOrderComment,
+      getOrderComments,
+    }),
+    [
+      addOrderComment,
+      getAttributeByCode,
+      getAttributesById,
+      getOrderById,
+      getOrderComments,
+      getOrderDetails,
+      getProductsById,
+    ]
+  )
+  return magentoAPI
 }
