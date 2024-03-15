@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { GridColDef } from '@mui/x-data-grid'
 import { Box, Button, Stack, Typography } from '@mui/material'
-import { set } from 'date-fns'
-import { Order } from '../Types/dbtypes'
+import { FullOrder } from '../Types/dbtypes'
 import { getOrderByNumber } from '../utils/inventoryManagement'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
@@ -15,12 +14,12 @@ import MagentoIcon from '../Components/Common/MagentoIcon'
 import ProductQtys from '../Components/Product/ProductQtys'
 
 // const orderNumber = '100005081'
-const orderNumber = '100008122'
-// const orderNumber = '100008039'
+// const orderNumber = '100008122'
+const orderNumber = '100008039'
 
 export default function TestingPage() {
   // state to store Order
-  const [order, setOrder] = useState<Order>()
+  const [order, setOrder] = useState<FullOrder>()
 
   const [layout, setLayout] = useState<ProductCardVariant>('imageBelow')
 
@@ -76,15 +75,12 @@ export default function TestingPage() {
     if (!order) {
       return []
     }
-    return order.products.map((product) => ({
-      ...product,
-      id: product.configurationId,
-    }))
+    return [...order.products]
   }, [order])
 
   console.log(products)
 
-  const columns: GridColDef<Order['products'][0]>[] = [
+  const columns: GridColDef<FullOrder['products'][0]>[] = [
     {
       field: 'id',
       headerName: 'ID',
@@ -102,7 +98,7 @@ export default function TestingPage() {
           variant="body2"
           // align="center"
         >
-          {params.row.configurationId}
+          {params.row.id}
         </Typography>
       ),
     },

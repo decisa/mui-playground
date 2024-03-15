@@ -9,7 +9,7 @@ import { useTheme } from '@mui/material/styles'
 import { Typography } from '@mui/material'
 import PostAddIcon from '@mui/icons-material/PostAdd'
 import { useCallback, useState } from 'react'
-import { OrderAddressDBRead } from '../../Types/dbtypes'
+import { Address } from '../../Types/dbtypes'
 import OrderAddress from '../Order/Blocks/OrderAddress'
 import AddNewAddressDialog from './AddNewAddressDialog'
 
@@ -19,7 +19,7 @@ type DropdownProps<TForm extends FieldValues> = {
   // name: TForm extends Record<string, number> ? keyof TForm : never
   label: string
   typographyVariant?: Variant
-  options: OrderAddressDBRead[]
+  options: Address[]
 } & SelectProps
 
 export default function AddressPicker<TForm extends FieldValues>({

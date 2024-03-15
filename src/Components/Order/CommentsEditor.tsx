@@ -1,11 +1,10 @@
 import * as React from 'react'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
-import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import AddCommentForm from './AddCommentForm'
 import { OrderStatus } from '../../Types/magentoTypes'
-import { OrderComment } from '../../Types/dbtypes'
+import { OrderCommentCreate } from '../../Types/dbtypes'
 
 const tabNames = ['add comment', 'shipments', 'payments'] as const
 type TabName = (typeof tabNames)[number]
@@ -46,7 +45,7 @@ function TabPanel({
 type CommentsEditorProps = {
   orderStatus: OrderStatus
   orderId: number
-  addNewComment: (comment: OrderComment) => void
+  addNewComment: (comment: OrderCommentCreate) => void
   refreshComments: () => void
 }
 

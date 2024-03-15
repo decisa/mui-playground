@@ -1,13 +1,14 @@
 import { parseISO } from 'date-fns'
 import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import {
-  Address,
-  Customer,
-  Order,
-  OrderComment,
-  Product,
-  ProductConfiguration,
-  ProductOption,
+  AddressCreate,
+  Country,
+  CustomerCreate,
+  FullOrderCreate,
+  OrderCommentCreate,
+  ProductConfigurationCreate,
+  ProductCreate,
+  ProductOptionCreate,
 } from '../Types/dbtypes'
 import { toErrorWithMessage } from '../utils/errorHandling'
 import { isEmptyObject } from '../utils/utils'
@@ -80,7 +81,9 @@ function magentoAttribute<T extends TMagentoAtrribute>(
   }
 }
 
-const parseComment = (orderComment: TMagentoOrderComment): OrderComment => {
+const parseComment = (
+  orderComment: TMagentoOrderComment
+): OrderCommentCreate => {
   const {
     comment,
     created_at: createdAt,
@@ -107,17 +110,10 @@ const parseComment = (orderComment: TMagentoOrderComment): OrderComment => {
   }
 }
 
-const parseComments = (comments: TMagentoOrderComment[]): OrderComment[] => {
-  if (!comments || comments.length === 0) {
-    return []
-  }
-  return comments.map(parseComment)
-}
-
 const parseCommentsResponseUnsafe = (rawResponse: {
   items: TMagentoOrderComment[]
   total_count: number
-}): OrderComment[] => {
+}): OrderCommentCreate[] => {
   const { items } = rawResponse
   if (!items || items.length === 0) {
     return []
@@ -126,45 +122,6 @@ const parseCommentsResponseUnsafe = (rawResponse: {
   // magento returns comments in reverse order, so we need to reverse them back
   return result.reverse()
 }
-
-// type OptionArrayFormat = {
-//   option_id: number
-//   title: string
-//   type: string
-//   values: {
-//     title: string
-//     option_type_id: number
-//   }[]
-// }[]
-
-// type OptionObjectFormat = {
-//   [optionId: number]: {
-//     label: string
-//     optionType: string
-//     values: {
-//       [valueId: number]: string
-//     }
-//   }
-// }
-
-// function attributesArrayToObject(attributes: MagentoAttributeRaw[]) {
-//   const result: OptionObjectFormat = {}
-//   attributes.f((option) => {
-//     const { title, values, type, option_id: optionId } = option
-//     result[optionId] = {
-//       label: title,
-//       optionType: type,
-//       values: {},
-//     }
-//     if (values && values.length) {
-//       values.forEach((value) => {
-//         const { title: optionValue, option_type_id: valueId } = value
-//         result[optionId].values[valueId] = optionValue
-//       })
-//     }
-//   })
-//   return result
-// }
 
 function commonAttributesArrayToObject(
   attributes: {
@@ -334,11 +291,15 @@ type ParsedAttributes = {
   }
 }
 
+type ProductOptionWithType = ProductOptionCreate & {
+  type: 'attribute' | 'option'
+}
+
 export function mapOptionValues(
-  options: ProductOption[],
+  options: ProductOptionWithType[],
   parsedAttributes: ParsedAttributes,
   mainProduct: ParsedMainProduct
-): ProductOption[] {
+): ProductOptionWithType[] {
   const result = options.map((option) => {
     const { externalValue: valueId, externalId: optionId } = option
     const mappedOption = {
@@ -390,24 +351,18 @@ export function mapOptionValues(
   return result
 }
 
-// export const extractOptionsAndAttributes = (
-//   products: MainProduct[]
-// ): unknown => {
-//   const { sku, id, name, options, custom_attributes: commonAttributes } = prod
-
-//   const x = transformOptions(options)
-
-//   console.log('transformed options: ', x)
-//   return x
-// }
-
-// product types that are not in DB yet, and therefore missing IDs:
-type NonDBConfiguration = Omit<ProductConfiguration, 'id'>
-type NonDBProduct = Omit<Product, 'id' | 'mainProductId' | 'configuration'> & {
-  configuration: NonDBConfiguration
+type ConfigurationWithTypedOptions = Omit<
+  ProductConfigurationCreate,
+  'options'
+> & {
+  options: ProductOptionWithType[]
 }
 
-const parseProduct = (prod: TMagentoOrderProduct): NonDBProduct => {
+export type ProductWithTypedOptions = Omit<ProductCreate, 'configuration'> & {
+  configuration: ConfigurationWithTypedOptions
+}
+
+const parseProduct = (prod: TMagentoOrderProduct): ProductWithTypedOptions => {
   const {
     product_type: type,
     name,
@@ -420,8 +375,8 @@ const parseProduct = (prod: TMagentoOrderProduct): NonDBProduct => {
     // assemblyInstructions,
     // volume,
     item_id: externalConfigurationId, // TODO: double check if correct
-    qty_canceled: qtyCanceled,
-    qty_invoiced: qtyInvoiced,
+    // qty_canceled: qtyCanceled,
+    // qty_invoiced: qtyInvoiced,
     qty_ordered: qtyOrdered,
     qty_refunded: qtyRefunded,
     qty_shipped: qtyShippedExternal,
@@ -438,7 +393,7 @@ const parseProduct = (prod: TMagentoOrderProduct): NonDBProduct => {
 
   let displayOrder = 0
 
-  const allAttributes: ProductOption[] =
+  const allAttributes: ProductOptionWithType[] =
     prod.product_option?.extension_attributes?.configurable_item_options?.map(
       ({ option_id: extId, option_value: extValue }) => {
         const result = {
@@ -453,7 +408,7 @@ const parseProduct = (prod: TMagentoOrderProduct): NonDBProduct => {
         return result
       }
     ) || []
-  const allOptions: ProductOption[] =
+  const allOptions: ProductOptionWithType[] =
     prod.product_option?.extension_attributes?.custom_options
       ?.filter(({ option_value: extValue }) => extValue !== '')
       ?.map(({ option_id: extId, option_value: extValue }) => {
@@ -505,12 +460,12 @@ const parseProduct = (prod: TMagentoOrderProduct): NonDBProduct => {
       options,
       volume: null,
     },
-  } satisfies NonDBProduct
+  } satisfies ProductWithTypedOptions
 }
 
 const parseMagentoOrderAddress = (
   magentoOrderAddress: TMagentoAddress
-): Address => {
+): AddressCreate => {
   const {
     address_type: addressType,
     city,
@@ -518,7 +473,7 @@ const parseMagentoOrderAddress = (
     country_id: country,
     customer_address_id: externalCustomerAddressId,
     entity_id: externalId,
-    email,
+    // email,
     parent_id: externalOrderId,
     firstname: firstName,
     lastname: lastName,
@@ -530,11 +485,6 @@ const parseMagentoOrderAddress = (
     telephone: phone,
   } = magentoOrderAddress
 
-  // externalOrderId - magento order ID to which address belongs
-  // externalCustomerAddressId - customer's address ID from which this address was copied
-  // externalId - magento ID of the order address
-
-  // const magento = stripOffUndefined({
   const magento = {
     externalId,
     externalCustomerAddressId,
@@ -542,25 +492,33 @@ const parseMagentoOrderAddress = (
     addressType,
   }
 
-  // const parsedAddress = _stripOffUndefined({
-  // const parsedAddress =
+  const getCountry = (countryCode: string): Country => {
+    switch (countryCode) {
+      case 'US':
+        return 'US'
+      case 'CA':
+        return 'CA'
+      default:
+        return 'unknown'
+    }
+  }
 
   return {
-    // altPhone,
-    // coordinates,
+    altPhone: null,
+    coordinates: null,
     // createdAt,
     // customerId,
     // id,
-    // notes,
+    notes: null,
     // updatedAt,
     firstName,
     lastName,
-    company,
+    company: company || null,
     street,
     city,
     state,
     zipCode,
-    country,
+    country: getCountry(country),
     phone,
     // email,
     magento,
@@ -660,7 +618,13 @@ function getDeliveryMethodId(shippingMethod: string): number | null {
   }
 }
 
-function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
+export type FullOrderWithTypedOptions = Omit<FullOrderCreate, 'products'> & {
+  products: ProductWithTypedOptions[]
+}
+
+function parseOneOrder<T extends TMagentoOrder>(
+  rawOrder: T
+): FullOrderWithTypedOptions {
   const {
     created_at: dateCreated,
     customer_email: email,
@@ -672,7 +636,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     increment_id: orderNumber,
     quote_id: externalQuoteId,
     entity_id: externalId,
-    shipping_description: shippingDescription,
+    // shipping_description: shippingDescription,
     shipping_amount: shippingCost,
     state: orderState,
     status: orderStatus,
@@ -684,7 +648,7 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     status_histories: comments,
     updated_at: updatedAt,
     extension_attributes: {
-      applied_taxes: appliedTaxes,
+      // applied_taxes: appliedTaxes,
       shipping_assignments: shippingAssignments,
     },
   } = rawOrder
@@ -711,18 +675,21 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     Math.round((taxAmount * 100000) / (grandTotal - taxAmount)) / 1000
 
   // console.log('taxRate', taxRate, taxAmount, grandTotal)
-  const collectedTaxes = appliedTaxes
-    .filter((x) => x.code !== 'shipping')
-    .map((x) => x.title)
+  // const collectedTaxes = appliedTaxes
+  //   .filter((x) => x.code !== 'shipping')
+  //   .map((x) => x.title)
 
   const billingAddress = parseMagentoOrderAddress(rawBillingAddress)
   const shippingAddress = parseMagentoOrderAddress(rawShippingAddress)
   // const result =
-  const customer: Customer = {
+  const customer: CustomerCreate = {
     // id,
     firstName: customerFirstName || shippingAddress.firstName,
     lastName: customerLastName || shippingAddress.lastName,
     phone: shippingAddress.phone,
+    company: null,
+    altPhone: null,
+    // defaultShippingId: null,
     // altPhone,
     email,
     // createdAt,
@@ -732,19 +699,19 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
       externalGroupId: customerGroupId,
       isGuest: Boolean(isGuest),
       email,
-      // customerId,
+      externalCustomerId: customerId || null,
     },
   }
 
-  if (customerId && customer.magento) {
-    customer.magento.externalCustomerId = customerId
-  }
+  // if (customerId && customer.magento) {
+  //   customer.magento.externalCustomerId = customerId
+  // }
 
   if (shippingAddress.phone !== billingAddress.phone) {
     customer.altPhone = billingAddress.phone
   }
 
-  const orderMagentoInfo: Order['magento'] = {
+  const orderMagentoInfo: FullOrderCreate['magento'] = {
     externalId,
     externalQuoteId,
     state: orderState,
@@ -759,27 +726,27 @@ function parseOneOrder<T extends TMagentoOrder>(rawOrder: T): Order {
     shippingCost,
     paymentMethod: getPaymentMethod(paymentInfo),
     taxRate,
-    collectedTaxes,
+    // collectedTaxes,
     orderDate: parseISO(`${dateCreated}Z`),
     customer,
     billingAddress,
     shippingAddress,
-    shippingMethod,
-    shippingDescription,
+    // shippingMethod,
+    // shippingDescription,
     comments: comments.map(parseComment),
     products: items
       .filter((prod) => isEmptyObject(prod.parent_item))
       .map(parseProduct),
 
     magento: orderMagentoInfo,
-    deliveryMethod: null,
+    // deliveryMethod: null,
     deliveryMethodId: getDeliveryMethodId(shippingMethod),
-  }
+  } satisfies FullOrderWithTypedOptions
 }
 
 function magentoOrder<T extends TResponseGetMagentoOrder>(
   rawResponse: T
-): Order[] {
+): FullOrderWithTypedOptions[] {
   const { items } = rawResponse
   if (!items || items.length === 0) {
     return []
@@ -793,8 +760,8 @@ function magentoOrder<T extends TResponseGetMagentoOrder>(
 function finalizeOrderDetails([products, attributes, notFullOrder]: [
   ParsedMainProducts,
   ParsedAttributes,
-  Order
-]): Order {
+  FullOrderWithTypedOptions
+]): FullOrderCreate {
   const finalOrderResult = { ...notFullOrder }
   finalOrderResult.products = finalOrderResult.products.map((product) => {
     const {
@@ -814,10 +781,16 @@ function finalizeOrderDetails([products, attributes, notFullOrder]: [
       // volume,
     } = product
 
-    const updatedProduct: Product = {
+    const updatedProduct: ProductWithTypedOptions = {
       name,
       type,
       externalId,
+      assemblyInstructions: null,
+      image: null,
+      productSpecs: null,
+      sku: null,
+      url: null,
+      volume: null,
       configuration: {
         ...configuration,
       },
@@ -836,12 +809,12 @@ function finalizeOrderDetails([products, attributes, notFullOrder]: [
         }
       }
 
-      updatedProduct.url = products[externalId].commonAttributes.url_key | null
+      updatedProduct.url = products[externalId].commonAttributes.url_key || null
       updatedProduct.assemblyInstructions =
-        products[externalId].commonAttributes.assembly_instructions
+        products[externalId].commonAttributes.assembly_instructions || null
       updatedProduct.productSpecs =
-        products[externalId].commonAttributes.product_specs
-      updatedProduct.image = products[externalId].commonAttributes.image
+        products[externalId].commonAttributes.product_specs || null
+      updatedProduct.image = products[externalId].commonAttributes.image || null
 
       // console.log('updatedProduct', updatedProduct)
       updatedProduct.configuration.options = mapOptionValues(

@@ -1,8 +1,8 @@
 import { Link, Typography } from '@mui/material'
-import { Order } from '../../Types/dbtypes'
+import { FullOrder } from '../../Types/dbtypes'
 
 type OrderNumberProps = {
-  order: Order
+  order: Pick<FullOrder, 'orderNumber' | 'magento'>
 }
 
 const admin = process.env.REACT_APP_MAGENTO_ADMIN_ORDER || ''

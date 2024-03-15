@@ -18,9 +18,11 @@ import { GridExpandMoreIcon } from '@mui/x-data-grid'
 import { FieldPath, FieldValues, useForm } from 'react-hook-form'
 import { useCallback } from 'react'
 import { DesignColors, tokens } from '../../theme'
-import { OrderAddressCreate } from '../../Types/dbtypes'
+// import { OrderAddressCreate } from '../../Types/dbtypes'
 import { createOrderAddress } from '../../utils/inventoryManagement'
 import { useSnackBar } from '../GlobalSnackBar'
+import { AddressCreate } from '../../Types/dbtypes'
+import { latLangToCoordinates } from '../../utils/utils'
 
 type CreateAddressFormData = {
   firstName: string
@@ -165,13 +167,18 @@ export default function AddNewAddressDialog({
   const snackbar = useSnackBar()
 
   const onSubmit = (data: CreateAddressFormData) => {
-    const newAddress: OrderAddressCreate = {
+    const street = [data.street1]
+    if (data.street2) {
+      street.push(data.street2)
+    }
+    const coordinates = latLangToCoordinates(data.latitude, data.longitude)
+
+    const newAddress: AddressCreate = {
       orderId,
       firstName: data.firstName,
       lastName: data.lastName,
       company: data.company || null,
-      street1: data.street1,
-      street2: data.street2 || null,
+      street,
       city: data.city,
       state: data.state,
       zipCode: data.zip,
@@ -179,8 +186,7 @@ export default function AddNewAddressDialog({
       phone: data.phone,
       altPhone: data.altPhone || null,
       notes: data.notes || null,
-      latitude: data.latitude ? Number(data.latitude) : null,
-      longitude: data.longitude ? Number(data.longitude) : null,
+      coordinates,
     }
 
     createOrderAddress(newAddress)

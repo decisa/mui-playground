@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-table'
 import { useMemo } from 'react'
 import {
-  Box,
   Table,
   TableBody,
   TableCell,
@@ -17,7 +16,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import { Product } from '../../Types/dbtypes'
+import { ProductCreate } from '../../Types/dbtypes'
 
 import Price from '../Common/Price'
 import Qty from './Qty'
@@ -25,7 +24,7 @@ import { tokens } from '../../theme'
 import ProductCard from '../Product/ProductCard'
 
 type ProductsTableProps = {
-  products: Product[]
+  products: ProductCreate[]
 }
 
 // type Product = {
@@ -38,7 +37,7 @@ type RowProps<T> = {
   row: Row<T>
 }
 
-const RowMui = ({ row }: RowProps<Product>) => (
+const RowMui = ({ row }: RowProps<ProductCreate>) => (
   <TableRow
     sx={{
       maxWidth: 100,
@@ -67,7 +66,7 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
   const theme = useTheme()
   const colors = tokens(theme.palette.mode)
 
-  const columns = useMemo<ColumnDef<Product>[]>(
+  const columns = useMemo<ColumnDef<ProductCreate>[]>(
     () => [
       // {
       //   id: 'image',

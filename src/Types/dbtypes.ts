@@ -1,10 +1,25 @@
 import { CommentType, OrderStatus, ProductType } from './magentoTypes'
 
+type TimeStamps = {
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type ProductSummary = {
+  configurationId: number
+  qtyConfirmed: number
+  qtyPlanned: number
+  qtyPurchased: number
+  qtyReceived: number
+  qtyScheduled: number
+  qtyShipped: number
+}
+
 export const carrierTypes = ['container', 'freight', 'parcel', 'auto'] as const
 
 export type CarrierType = (typeof carrierTypes)[number]
 
-type CarrierCreate = {
+type CarrierSchema = {
   name: string
   type: CarrierType
   contactName: string | null
@@ -18,13 +33,14 @@ type CarrierIDs = {
   id: number
 }
 
-export type Carrier = CarrierCreate & CarrierIDs
+export type CarrierCreate = CarrierSchema
+export type Carrier = CarrierSchema & CarrierIDs
 
-export const countries = ['US', 'CA'] as const
+export const countries = ['US', 'CA', 'unknown'] as const
 
 export type Country = (typeof countries)[number]
 
-type OrderAddressCreate = {
+type OrderAddressSchema = {
   // email?: string
   firstName: string
   lastName: string
@@ -42,59 +58,85 @@ type OrderAddressCreate = {
 
 type OrderAddressIDs = {
   id: number
+  orderId: number
   customerAddressId: number | null // foreign key to keep record which address it was copied from.
 }
 
-type MagentoOrderAddress = {
+export const magentoAddressTypes = ['billing', 'shipping'] as const
+
+export type MagentoAddressType = (typeof magentoAddressTypes)[number]
+
+type MagentoOrderAddressCreate = {
   externalId: number // 4583
   externalCustomerAddressId: number | null // 5972
   externalOrderId: number // 2292
-  addressType: 'billing' | 'shipping'
+  addressType: MagentoAddressType
 }
+
+// there are no IDs for magento record, so Read and Create are the same
+type MagentoOrderAddress = MagentoOrderAddressCreate
 
 type OrderAddressAssociations = {
   magento?: MagentoOrderAddress
 }
 
-export type Address = OrderAddressCreate &
+type OrderAddressCreateAssociations = {
+  magento?: MagentoOrderAddressCreate
+}
+
+export type AddressCreate = OrderAddressSchema &
+  OrderAddressCreateAssociations &
+  Partial<TimeStamps> &
+  Partial<OrderAddressIDs>
+
+export type Address = OrderAddressSchema &
   OrderAddressIDs &
   TimeStamps &
   OrderAddressAssociations
 
-export type CustomerCreate = {
+export type CustomerSchema = {
   firstName: string
   lastName: string
   company: string | null
   phone: string
   altPhone: string | null
   email: string
-  defaultShippingId: number | null
 }
 
 type CustomerIDs = {
   id: number
+  defaultShippingId: number | null
 }
 
 type CustomerMagentoRecordCreate = {
-  externalId: number
+  externalCustomerId: number | null
   externalGroupId: number
   isGuest: boolean
   email: string
 }
+
+// there are no IDs for magento record, so Read and Create are the same
+type CustomerMagentoRecord = CustomerMagentoRecordCreate
 
 type CustomerAssociations = {
   magento?: CustomerMagentoRecord
   defaultShipping?: Address
 }
 
-type CustomerMagentoRecord = CustomerMagentoRecordCreate
+type CustomerCreateAssociations = {
+  magento?: CustomerMagentoRecordCreate
+  defaultShipping?: AddressCreate
+}
 
-export type Customer = CustomerCreate &
+export type CustomerCreate = CustomerSchema &
+  Pick<CustomerCreateAssociations, 'magento'>
+
+export type Customer = CustomerSchema &
   CustomerIDs &
   TimeStamps &
   Pick<CustomerAssociations, 'magento'>
 
-type OrderCommentCreate = {
+type OrderCommentSchema = {
   comment: string | null
   customerNotified: boolean | null
   visibleOnFront: boolean | null
@@ -109,9 +151,12 @@ type OrderCommentIDs = {
   orderId: number
 }
 
-export type OrderComment = OrderCommentCreate & OrderCommentIDs & TimeStamps
+export type OrderCommentCreate = OrderCommentSchema &
+  Partial<TimeStamps> &
+  Partial<OrderCommentIDs>
+export type OrderComment = OrderCommentSchema & OrderCommentIDs & TimeStamps
 
-type ProductOptionCreate = {
+type ProductOptionSchema = {
   label: string
   value: string
   sortOrder: number
@@ -124,9 +169,11 @@ type ProductOptionIDs = {
   id: number
 }
 
-export type ProductOption = ProductOptionCreate & ProductOptionIDs & TimeStamps
+export type ProductOptionCreate = ProductOptionSchema &
+  Partial<ProductOptionIDs>
+export type ProductOption = ProductOptionSchema & ProductOptionIDs & TimeStamps
 
-type ProductConfigurationCreate = {
+type ProductConfigurationSchema = {
   qtyOrdered: number
   qtyRefunded: number
   externalId: number | null // 3994
@@ -144,17 +191,26 @@ type ProductConfigurationIDs = {
   id: number
 }
 
+type ProductConfigurationCreateAssociations = {
+  options: ProductOptionCreate[]
+  summary: ProductSummary
+}
+
 type ProductConfigurationAssociations = {
   options: ProductOption[]
   summary: ProductSummary
 }
 
-export type ProductConfiguration = ProductConfigurationCreate &
+export type ProductConfigurationCreate = ProductConfigurationSchema &
+  Partial<TimeStamps> &
+  Pick<ProductConfigurationCreateAssociations, 'options'>
+
+export type ProductConfiguration = ProductConfigurationSchema &
   ProductConfigurationIDs &
   TimeStamps &
   Pick<ProductConfigurationAssociations, 'options' | 'summary'>
 
-type BrandCreate = {
+type BrandSchema = {
   name: string
   externalId: number | null
 }
@@ -163,11 +219,12 @@ type BrandIDs = {
   id: number
 }
 
-export type Brand = BrandCreate & BrandIDs
+export type BrandCreate = BrandSchema
+export type Brand = BrandSchema & BrandIDs
 
-type ProductCreate = {
+type ProductSchema = {
   name: string
-  configurationId: number
+  // configurationId: number
   type: ProductType
   assemblyInstructions: string | null
   externalId: number | null // 167049
@@ -184,17 +241,27 @@ type ProductIDs = {
   mainProductId: number
 }
 
+type ProductCreateAssociations = {
+  brand?: BrandCreate | null
+  configuration: ProductConfigurationCreate
+}
+
 type ProductAssociations = {
-  brand: Brand
+  brand: Brand | null
   configuration: ProductConfiguration
 }
 
-export type Product = ProductCreate &
+export type ProductCreate = ProductSchema &
+  ProductCreateAssociations &
+  Partial<TimeStamps> &
+  Partial<ProductCreateAssociations>
+
+export type Product = ProductSchema &
   ProductIDs &
   TimeStamps &
   ProductAssociations
 
-export type OrderBaseCreate = {
+export type OrderSchema = {
   orderNumber: string
   orderDate: Date
   shippingCost: number // default 0
@@ -202,7 +269,7 @@ export type OrderBaseCreate = {
   paymentMethod: string | null // 'checkmo' | 'stripe_payments' | 'mageworx_ordereditor_payment_method' | 'paypal_express'
 }
 
-type OrderBaseIDs = {
+type OrderIDs = {
   id: number
   customerId: number
   deliveryMethodId: number | null
@@ -210,14 +277,10 @@ type OrderBaseIDs = {
   billingAddressId: number | null
 }
 
-type TimeStamps = {
-  createdAt: Date
-  updatedAt: Date
-}
+export type OrderBaseCreate = OrderSchema
+export type OrderBase = OrderSchema & OrderIDs & TimeStamps
 
-export type OrderBase = OrderBaseCreate & OrderBaseIDs & TimeStamps
-
-type DeliveryMethodCreate = {
+type DeliveryMethodSchema = {
   name: string
   description: string
 }
@@ -226,9 +289,11 @@ type DeliveryMethodIDs = {
   id: number
 }
 
-type DeliveryMethod = DeliveryMethodCreate & DeliveryMethodIDs
+// when creating on order with delivery method, magento ID is mapped to id in DB via function
+export type DeliveryMethodCreate = DeliveryMethodSchema
+export type DeliveryMethod = DeliveryMethodSchema & DeliveryMethodIDs
 
-type OrderMagentoRecordCreate = {
+type OrderMagentoRecordSchema = {
   externalId: number
   externalQuoteId: number
   state: string
@@ -240,9 +305,23 @@ type OrderMagentoRecordIDs = {
   orderId?: number
 }
 
-type OrderMagentoRecord = OrderMagentoRecordCreate & OrderMagentoRecordIDs
+export type OrderMagentoRecordCreate = OrderMagentoRecordSchema
+export type OrderMagentoRecord = OrderMagentoRecordSchema &
+  OrderMagentoRecordIDs
 
-export type OrderAssociations = {
+type OrderCreateAssociations = {
+  magento?: OrderMagentoRecordCreate // can be undefined if there's no magento record
+  customer: CustomerCreate
+  addresses: AddressCreate[]
+  comments: OrderCommentCreate[]
+  deliveryMethod?: DeliveryMethodCreate // optional
+  products: ProductCreate[]
+  billingAddress: AddressCreate
+  shippingAddress: AddressCreate
+  // orderAvailabilities?: Association<Order, OrderAvailability>,
+}
+
+type OrderAssociations = {
   magento?: OrderMagentoRecord // can be undefined if there's no magento record
   customer: Customer
   addresses: Address[]
@@ -253,6 +332,21 @@ export type OrderAssociations = {
   shippingAddress: Address
   // orderAvailabilities?: Association<Order, OrderAvailability>,
 }
+
+export type FullOrderCreate = OrderBaseCreate &
+  Pick<
+    OrderCreateAssociations,
+    | 'customer'
+    | 'magento'
+    | 'products'
+    | 'comments'
+    | 'billingAddress'
+    | 'shippingAddress'
+    // | 'deliveryMethod'
+  > &
+  Partial<Pick<OrderCreateAssociations, 'deliveryMethod'>> &
+  // when creating on order with delivery method, magento ID is mapped to id in DB via function
+  Pick<OrderIDs, 'deliveryMethodId'>
 
 export type FullOrder = OrderBase &
   Pick<
@@ -266,83 +360,22 @@ export type FullOrder = OrderBase &
     | 'deliveryMethod'
   >
 
-type NonDBOrderBase = Omit<
-  OrderBase,
-  'customerId' | 'deliveryMethodId' | 'id' | 'shippingAddressId'
+type ShortConfiguration = Pick<
+  ProductConfiguration,
+  'qtyOrdered' | 'qtyShippedExternal' | 'qtyRefunded' | 'summary'
 >
-export type OrderX = {
-  id: number
-  orderNumber: string
-  orderDate: Date
-  paymentMethod: string // 'checkmo' | 'stripe_payments' | 'mageworx_ordereditor_payment_method' | 'paypal_express'
-  billingAddress: Address
-  shippingAddress: Address
-  comments: OrderComment[]
-  products: Product[]
-  createdAt: Date
-  updatedAt: Date
-  customer?: Customer
-  customerId: number
-  deliveryMethodId: number | null
-  deliveryMethod?: {
-    id: number
-    name: string
-    description: string
-  }
-  magento?: {
-    externalId: number
-    externalQuoteId: number
-    state: string
-    status: OrderStatus
-    updatedAt?: Date | string
-    orderId?: number
-  }
-  shippingCost: number // default 0
-  taxRate: number // default 0
+
+export type ShortProduct = Pick<Product, 'name' | 'brand'> & {
+  configuration: ShortConfiguration
 }
 
-export type ProductSummary = {
-  configurationId: number
-  qtyConfirmed: number
-  qtyPlanned: number
-  qtyPurchased: number
-  qtyReceived: number
-  qtyScheduled: number
-  qtyShipped: number
-}
+type ShortCustomer = Pick<Customer, 'firstName' | 'lastName' | 'email'>
+type ShortAddress = Pick<Address, 'id' | 'firstName' | 'lastName'>
 
-export type ShortProduct = {
-  name: string
-  brand?: {
-    name: string
-    id: number
-  }
-  configuration: {
-    qtyOrdered: number
-    qtyShippedExternal: number
-    qtyRefunded: number
-    summary?: ProductSummary
-  }
-}
-
-export type ShortOrder = {
-  id: number
-  orderNumber: string
-  customer: {
-    firstName: string
-    lastName: string
-    email: string
-  }
-  shippingAddress: {
-    id: number
-    firstName: string
-    lastName: string
-  }
-  billingAddress: {
-    id: number
-    firstName: string
-    lastName: string
-  }
+export type ShortOrder = Pick<FullOrder, 'orderNumber' | 'id'> & {
+  customer: ShortCustomer
+  shippingAddress: ShortAddress
+  billingAddress: ShortAddress
   products: ShortProduct[]
 }
 
@@ -420,7 +453,7 @@ export type PurchaseOrderFullData = {
   status: POStatus
   createdAt: Date | string
   updatedAt: Date | string
-  brand: BrandRead
+  brand: Brand
   items: POItem[]
   order: {
     id: number
@@ -557,60 +590,4 @@ export type DeliveryCreational = {
   title?: string
   createdAt?: Date
   updatedAt?: Date
-}
-
-export const magentoAddressTypes = ['billing', 'shipping'] as const
-export type MagentoAddressType = (typeof magentoAddressTypes)[number]
-
-export type OrderAddressDBRead = {
-  altPhone: string | null
-  city: string
-  company: string | null
-  coordinates: [number, number] | null
-  country: 'US' | 'CA' | string
-  customerAddressId: number | null
-  firstName: string
-  id: number
-  lastName: string
-  notes: string | null
-  orderId: number
-  phone: string
-  state: string
-  street: string[]
-  zipCode: string
-  createdAt: Date
-  updatedAt: Date
-  magento?: {
-    externalId: number
-    externalCustomerAddressId: number | null
-    externalOrderId: number
-    addressType: MagentoAddressType
-  }
-}
-
-export type OrderAddressCreate = {
-  orderId: number
-  firstName: string
-  lastName: string
-  company: string | null
-  street?: string[]
-  street1?: string
-  street2?: string | null
-  city: string
-  state: string
-  zipCode: string
-  country: 'US' | 'CA' | string
-  phone: string
-  altPhone?: string | null
-  coordinates?: [number, number] | null
-  latitude?: number | null
-  longitude?: number | null
-  notes?: string | null
-  customerAddressId?: number | null
-  magento?: {
-    externalId: number
-    externalCustomerAddressId?: number | null
-    externalOrderId: number
-    addressType: MagentoAddressType
-  }
 }

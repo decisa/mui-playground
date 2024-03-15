@@ -1,9 +1,9 @@
 import { Box, Link, SxProps, Typography } from '@mui/material'
-import { Product } from '../../../Types/dbtypes'
+import { ProductCreate } from '../../../Types/dbtypes'
 import { domain } from '../../../Magento/magentoAuthorize'
 
 type ProductNameProps = {
-  product: Pick<Product, 'name' | 'brand' | 'url'>
+  product: Pick<ProductCreate, 'name' | 'brand' | 'url'>
   sx?: SxProps
 }
 

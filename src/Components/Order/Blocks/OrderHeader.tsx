@@ -7,11 +7,14 @@ import { useTheme } from '@mui/material'
 import { format, parseISO } from 'date-fns'
 import OrderNumber from '../OrderNumber'
 import { tokens } from '../../../theme'
-import { Order } from '../../../Types/dbtypes'
+import { FullOrderCreate } from '../../../Types/dbtypes'
 import { getStatusIconInfo } from '../../../utils/magentoHelpers'
 
 type OrderHeaderProps = {
-  order: Order
+  order: Pick<
+    FullOrderCreate,
+    'orderNumber' | 'customer' | 'orderDate' | 'magento'
+  >
 }
 
 export default function OrderHeader({ order }: OrderHeaderProps) {

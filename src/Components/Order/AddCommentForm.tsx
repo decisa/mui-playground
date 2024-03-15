@@ -16,7 +16,7 @@ import {
 import { getPossibleOrderStatuses } from '../../utils/magentoHelpers'
 
 import { useMagentoAPI } from '../../Magento/useMagentoAPI'
-import { OrderComment } from '../../Types/dbtypes'
+import { OrderCommentCreate } from '../../Types/dbtypes'
 import Fieldset from '../Form/Fieldset'
 import { useSnackBar } from '../GlobalSnackBar'
 
@@ -39,7 +39,7 @@ type TFormData = yup.InferType<typeof formSchema>
 type AddCommentFormProps = {
   orderStatus: OrderStatus
   orderId: number
-  addNewComment: (comment: OrderComment) => void
+  addNewComment: (comment: OrderCommentCreate) => void
   refreshComments: () => void
 }
 
@@ -64,7 +64,6 @@ export default function AddCommentForm({
   const {
     handleSubmit,
     formState: { errors },
-    getValues,
     setValue,
     register,
     control,
@@ -96,11 +95,11 @@ export default function AddCommentForm({
       status: formData.orderStatus,
       createdAt: new Date(),
       updatedAt: new Date(),
-      externalId: undefined, // not created yet
+      externalId: null, // not created yet
       externalParentId: formData.orderId, // external order id
     }
 
-    addOrderComment(newComment)
+    addOrderComment(formData.orderId, newComment)
       .map((success) => {
         if (success) {
           snack.success('comment successfully added')
@@ -187,17 +186,6 @@ export default function AddCommentForm({
           <Button type="submit" variant="contained">
             {busy ? 'submitting ...' : 'submit comment'}
           </Button>
-          {/* <Button
-            variant="outlined"
-            type="button"
-            onClick={() => {
-              console.log('form values:', getValues())
-              snack.info(JSON.stringify(getValues()))
-              refreshComments()
-            }}
-          >
-            log
-          </Button> */}
         </Stack>
       </Fieldset>
     </Box>

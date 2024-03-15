@@ -1,11 +1,11 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
-import { Order } from '../../../Types/dbtypes'
+import { FullOrderCreate } from '../../../Types/dbtypes'
 import Price from '../../Common/Price'
 
 type OrderTotalsFooterProps = {
-  order: Order
+  order: Pick<FullOrderCreate, 'products' | 'shippingCost' | 'taxRate'>
 }
 
 export default function OrderTotalsFooter({ order }: OrderTotalsFooterProps) {

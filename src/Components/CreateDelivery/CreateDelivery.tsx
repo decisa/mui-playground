@@ -1,37 +1,14 @@
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import * as yup from 'yup'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { Box, Stack } from '@mui/system'
-import { Card, FormGroup, Paper, TextField, Typography } from '@mui/material'
+import { Paper } from '@mui/material'
 
-import { format } from 'date-fns'
+import { Address, FullOrder, ShortOrder } from '../../Types/dbtypes'
 import {
-  Carrier,
-  DeliveryItemCreational,
-  DeliveryStatus,
-  Order,
-  OrderAddressDBRead,
-  Period,
-  ShortOrder,
-} from '../../Types/dbtypes'
-import {
-  createShipment,
-  getAllCarriers,
   getOrderAddresses,
   getOrderByNumber,
-  getPurchaseOrder,
 } from '../../utils/inventoryManagement'
-import Fieldset from '../Form/Fieldset'
-import Dropdown from '../Form/Dropdown'
-import DatePicker from '../Form/DatePicker'
-import POItems from '../PurchaseOrder/POItems'
 
 import { isEmptyObject } from '../../utils/utils'
 import {
@@ -41,7 +18,6 @@ import {
 import { useSnackBar } from '../GlobalSnackBar'
 import OrderConfirmation from '../Order/OrderConfirmation'
 import OrderHeader from '../Order/Blocks/OrderHeader'
-import OrderInfo from '../Order/Blocks/OrderInfo'
 import Hr from '../Common/Hr'
 import OrderTotalsFooter from '../Order/Blocks/OrderTotalsFooter'
 import AddressPicker from '../Form/AddressPicker'
@@ -92,19 +68,10 @@ const deliveryFormSchema: yup.ObjectSchema<CreateDeliveryFormData> = yup
   })
 
 const CreateDeliveryForm: RowActionComponent<ShortOrder> = forwardRef(
-  (
-    {
-      rowParams: orderRowParams,
-      apiRef,
-      onSuccess,
-    }: RowActionComponentProps<ShortOrder>,
-    ref
-  ) => {
+  ({ rowParams: orderRowParams }: RowActionComponentProps<ShortOrder>, ref) => {
     const snack = useSnackBar()
-    const [orderData, setOrderData] = useState<Order>()
-    const [orderAddresses, setOrderAddresses] = useState<OrderAddressDBRead[]>(
-      []
-    )
+    const [orderData, setOrderData] = useState<FullOrder>()
+    const [orderAddresses, setOrderAddresses] = useState<Address[]>([])
 
     // if poData changes, reset the form
     // useEffect(() => {
@@ -120,7 +87,7 @@ const CreateDeliveryForm: RowActionComponent<ShortOrder> = forwardRef(
       })
     }, [orderRowParams.row])
 
-    const [busy, setBusy] = useState(false)
+    // const [busy, setBusy] = useState(false)
 
     const shippingFirstName = orderData?.shippingAddress.firstName || ''
     const shippingLastName = orderData?.shippingAddress.lastName || ''
@@ -134,15 +101,7 @@ const CreateDeliveryForm: RowActionComponent<ShortOrder> = forwardRef(
       title,
     }
 
-    const {
-      handleSubmit,
-      formState: { errors },
-      register,
-      control,
-      setValue,
-      // getValues
-      // reset,
-    } = useForm<CreateDeliveryFormData>({
+    const { handleSubmit, control } = useForm<CreateDeliveryFormData>({
       resolver: yupResolver(deliveryFormSchema),
       defaultValues: defaultFormValues,
     })
@@ -157,14 +116,6 @@ const CreateDeliveryForm: RowActionComponent<ShortOrder> = forwardRef(
           return addresses
         })
         .mapErr((err) => {
-          // let errorMessage = 'Cannot fetch order addresses: '
-          // if (err instanceof Error) {
-          //   errorMessage += err.message
-          // } else {
-          //   errorMessage += 'unknown error'
-          // }
-          // console.error('error encountered: ', err)
-          // snack.error(errorMessage)
           snack.error(err)
           return err
         })
@@ -201,78 +152,6 @@ const CreateDeliveryForm: RowActionComponent<ShortOrder> = forwardRef(
 
         <OrderTotalsFooter order={orderData} />
         <OrderConfirmation order={orderData} />
-        {/* <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Stack direction="row" gap={2} sx={{ mb: 2 }} width="100%">
-            <Card sx={{ border: 'none', boxShadow: 'none' }}>
-              <Typography variant="body1">{`${orderData.brand.name}`}</Typography>
-              <Typography
-                variant="body2"
-                sx={{ whiteSpace: 'pre-wrap' }}
-                color="textSecondary"
-              >{`po.${orderData.poNumber}`}</Typography>
-              <Typography
-                variant="body2"
-                sx={{ whiteSpace: 'pre-wrap' }}
-                color="textSecondary"
-              >{`ordered date: ${format(
-                orderData.dateSubmitted,
-                'dd MMM yyyy'
-              )}`}</Typography>
-            </Card>
-            <Card sx={{ border: 'none', boxShadow: 'none' }}>
-              <Typography variant="body1">{`order #${orderData.order.orderNumber}`}</Typography>
-              <Typography
-                variant="body2"
-                color="textSecondary"
-              >{`${orderData.order.customer.firstName} ${orderData.order.customer.lastName}`}</Typography>
-              <Typography
-                variant="body2"
-                color="textSecondary"
-              >{`phone: ${orderData.order.customer.phone}`}</Typography>
-              <Typography
-                variant="body2"
-                color="textSecondary"
-              >{`email: ${orderData.order.customer.email}`}</Typography>
-            </Card>
-          </Stack>
-          <Fieldset aria-busy={busy} disabled={busy}>
-            <FormGroup row sx={{ gap: 2, my: 2 }}>
-              <Dropdown
-                name="carrierId"
-                control={control}
-                label="Carrier"
-                typographyVariant="body1"
-                options={carrierOptions}
-                size="small"
-              />
-              <TextField
-                // fullWidth
-                variant="outlined"
-                size="small"
-                placeholder="tracking number"
-                label={errors.trackingNumber?.message || 'tracking number'}
-                error={!!errors.trackingNumber}
-                {...register('trackingNumber')}
-              />
-              <DatePicker
-                label="ship date"
-                slotProps={{ textField: { size: 'small' } }}
-                name="shipDate"
-                control={control}
-                error={errors.shipDate}
-              />
-
-              <DatePicker
-                label="eta"
-                slotProps={{ textField: { size: 'small' } }}
-                name="eta"
-                control={control}
-                error={errors.eta}
-              />
-            </FormGroup>
-            <POItems items={orderData.items} control={control} name="items" />
-          </Fieldset>
-        </Box> */}
       </Paper>
     )
   }

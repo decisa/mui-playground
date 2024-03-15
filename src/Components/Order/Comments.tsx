@@ -15,17 +15,16 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined'
 import MarkEmailReadOutlinedIcon from '@mui/icons-material/MarkEmailReadOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
-
 import { format, parseISO } from 'date-fns'
 import { Box, Chip, Typography, useTheme } from '@mui/material'
-import { Order } from '../../Types/dbtypes'
 import { ChipColor } from '../../Types/muiTypes'
 import { getStatusIconInfo } from '../../utils/magentoHelpers'
 import { tokens } from '../../theme'
 import type { ColorPalette } from '../../theme'
+import { FullOrderCreate } from '../../Types/dbtypes'
 
 type CommentsProps = {
-  comments: Order['comments']
+  comments: FullOrderCreate['comments']
 }
 
 const wordsToHighlight = [
@@ -141,8 +140,8 @@ function highlightWords(
 }
 
 function getCommentVisibilityInfo(comment: {
-  visibleOnFront: boolean
-  customerNotified: boolean
+  visibleOnFront: boolean | null
+  customerNotified: boolean | null
   status: string
 }) {
   let notifiedIcon
@@ -157,14 +156,15 @@ function getCommentVisibilityInfo(comment: {
       />
     )
   } else {
-    notifiedIcon = (
-      <CloseOutlinedIcon
-        color="error"
-        fontSize="small"
-        sx={{ ml: 1 }}
-        titleAccess="customer not notified"
-      />
-    )
+    notifiedIcon =
+      comment.customerNotified === null ? null : (
+        <CloseOutlinedIcon
+          color="error"
+          fontSize="small"
+          sx={{ ml: 1 }}
+          titleAccess="customer not notified"
+        />
+      )
   }
   if (comment.visibleOnFront) {
     visibleIcon = (
@@ -176,14 +176,15 @@ function getCommentVisibilityInfo(comment: {
       />
     )
   } else {
-    visibleIcon = (
-      <VisibilityOffOutlinedIcon
-        color="error"
-        fontSize="small"
-        sx={{ ml: 1 }}
-        titleAccess="not visible on front end"
-      />
-    )
+    visibleIcon =
+      comment.visibleOnFront === null ? null : (
+        <VisibilityOffOutlinedIcon
+          color="error"
+          fontSize="small"
+          sx={{ ml: 1 }}
+          titleAccess="not visible on front end"
+        />
+      )
   }
   return (
     <Box
@@ -250,8 +251,8 @@ export default function Comments({ comments }: CommentsProps) {
     comment: React.ReactNode
     createdAt: string
     type: string
-    visibleOnFront: boolean
-    customerNotified: boolean
+    visibleOnFront: boolean | null
+    customerNotified: boolean | null
     status: string
     highlighted: boolean
   }

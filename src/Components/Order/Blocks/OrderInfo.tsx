@@ -2,10 +2,13 @@ import Card from '@mui/material/Card'
 import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
 import OrderAddress from './OrderAddress'
-import { Order } from '../../../Types/dbtypes'
+import { FullOrderCreate } from '../../../Types/dbtypes'
 
 type OrderInfoProps = {
-  order: Order
+  order: Pick<
+    FullOrderCreate,
+    'billingAddress' | 'shippingAddress' | 'paymentMethod' | 'deliveryMethod'
+  >
 }
 
 export default function OrderInfo({ order }: OrderInfoProps) {
@@ -38,7 +41,7 @@ export default function OrderInfo({ order }: OrderInfoProps) {
             <Typography variant="body2">
               {order.deliveryMethod
                 ? `${order.deliveryMethod.name} - ${order.deliveryMethod.description}`
-                : order.shippingMethod}
+                : 'unknown delivery method'}
             </Typography>
           </Grid>
         </Grid>

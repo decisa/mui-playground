@@ -1,9 +1,9 @@
 import { Box, SxProps } from '@mui/material'
-import { Product } from '../../../Types/dbtypes'
+import { ProductCreate } from '../../../Types/dbtypes'
 import { cacheFolder, domain } from '../../../Magento/magentoAuthorize'
 
 type ThumbnailProps = {
-  product: Product
+  product: Pick<ProductCreate, 'image' | 'name'>
   sx?: SxProps
 }
 

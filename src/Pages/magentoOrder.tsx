@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react'
 import { Result, ResultAsync } from 'neverthrow'
 import { useLoaderData, useNavigate, useParams } from 'react-router'
-import { Box, Button, Paper, TextField, Typography } from '@mui/material'
+import { Box, Button, Paper, TextField } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
-import { Order, OrderComment } from '../Types/dbtypes'
+import { FullOrderCreate, OrderCommentCreate } from '../Types/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import Comments from '../Components/Order/Comments'
 import CommentsEditor from '../Components/Order/CommentsEditor'
@@ -27,10 +27,11 @@ export default function MagentoPage() {
 
   const { orderId } = useParams()
   // console.log('location', orderId)
-  const [order, setOrder] = React.useState<Order | undefined>()
+  const [order, setOrder] = React.useState<FullOrderCreate | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState(orderId)
 
-  const { getOrderById, getOrderDetails, getOrderComments } = useMagentoAPI()
+  // const { getOrderById, getOrderDetails, getOrderComments } = useMagentoAPI()
+  const magentoAPI = useMagentoAPI()
 
   const snack = useSnackBar()
   const navigate = useNavigate()
@@ -42,7 +43,7 @@ export default function MagentoPage() {
     }
   }
 
-  const addNewComment = (comment: OrderComment) => {
+  const addNewComment = (comment: OrderCommentCreate) => {
     setOrder((prevOrder) => {
       if (!prevOrder) {
         return prevOrder
@@ -58,30 +59,33 @@ export default function MagentoPage() {
   }
 
   const refetchComments = () => {
-    getOrderComments(order?.magento?.externalId || 0).map((comments) => {
-      // console.log('received comments:', comments)
-      snack.info(`comments re-sync'ed`)
-      setOrder((prevOrder) => {
-        if (!prevOrder) {
-          return prevOrder
-        }
-        const newOrder = { ...prevOrder }
-        if (prevOrder.magento && comments.length > 0) {
-          newOrder.magento = { ...prevOrder.magento }
-          newOrder.magento.status = comments[0].status
-        }
-        newOrder.comments = [...comments]
-        return newOrder
+    magentoAPI
+      .getOrderComments(order?.magento?.externalId || 0)
+      .map((comments) => {
+        // console.log('received comments:', comments)
+        snack.info(`comments re-sync'ed`)
+        setOrder((prevOrder) => {
+          if (!prevOrder) {
+            return prevOrder
+          }
+          const newOrder = { ...prevOrder }
+          if (prevOrder.magento && comments.length > 0) {
+            newOrder.magento = { ...prevOrder.magento }
+            newOrder.magento.status = comments[0].status
+          }
+          newOrder.comments = [...comments]
+          return newOrder
+        })
+        return comments
       })
-      return comments
-    })
   }
 
   useEffect(() => {
     if (!orderId) {
       return
     }
-    getOrderById(orderId) // order with error 100002077 5081 eric
+    magentoAPI
+      .getOrderById(orderId) // order with error 100002077 5081 eric
       .map((orderResult) => {
         // console.log('received orders:', orderResult)
         if (orderResult && orderResult.length > 0) {
@@ -101,7 +105,8 @@ export default function MagentoPage() {
           return []
         }
         if (orders && orders.length > 0) {
-          getOrderDetails(orders[0])
+          magentoAPI
+            .getOrderDetails(orders[0])
             .map((orderResult) => {
               setOrder(orderResult)
               // console.log('final order:', orderResult)
@@ -125,7 +130,7 @@ export default function MagentoPage() {
         console.log('ERRRRROR', error)
         return error
       })
-  }, [orderId])
+  }, [orderId, deliveryMethods, snack, magentoAPI])
 
   return (
     <Box sx={{ m: 2 }} className="printable-paper">
@@ -198,7 +203,7 @@ export default function MagentoPage() {
                 })
             }}
           >
-            Import
+            Import 1
           </Button>
         ) : null}
       </Stack>

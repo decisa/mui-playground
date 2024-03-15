@@ -1,10 +1,10 @@
 import { Result, ResultAsync, errAsync, okAsync } from 'neverthrow'
-import { isValid, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 import {
+  Address,
+  AddressCreate,
   Carrier,
-  Order,
-  OrderAddressCreate,
-  OrderAddressDBRead,
+  FullOrder,
   POShipmentParsed,
   POShipmentResponseRaw,
   ProductSummary,
@@ -102,7 +102,6 @@ type SearchResponse = {
   results: ShortOrder[]
 }
 
-const x = safeJsonFetch<void>('text')
 export const searchShortOrders = (search: string) =>
   safeJsonFetch<SearchResponse>(`${dbHost}/order?search=${search}`, {
     method: 'GET',
@@ -149,7 +148,7 @@ const createPurchaseOrder = (po: PurchaseOrderRequest) =>
   }).andThen((res) => okAsync(res))
 
 export const getOrderByNumber = (orderNumber: string) =>
-  safeJsonFetch<Order>(`${dbHost}/order/number/${orderNumber}`, {
+  safeJsonFetch<FullOrder>(`${dbHost}/order/number/${orderNumber}`, {
     method: 'GET',
     mode: 'cors',
   }).andThen((order) =>
@@ -158,7 +157,7 @@ export const getOrderByNumber = (orderNumber: string) =>
   )
 
 export const getOrderAddresses = (id: number) =>
-  safeJsonFetch<OrderAddressDBRead[]>(`${dbHost}/order/${id}/address/all`, {
+  safeJsonFetch<Address[]>(`${dbHost}/order/${id}/address/all`, {
     method: 'GET',
     mode: 'cors',
   }).andThen((order) =>
@@ -166,18 +165,15 @@ export const getOrderAddresses = (id: number) =>
     okAsync(order)
   )
 
-export const createOrderAddress = (order: OrderAddressCreate) =>
-  safeJsonFetch<OrderAddressDBRead>(
-    `${dbHost}/order/${String(order.orderId)}/address`,
-    {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(order),
-    }
-  ).andThen((newOrderAddress) =>
+export const createOrderAddress = (order: AddressCreate) =>
+  safeJsonFetch<Address>(`${dbHost}/order/${String(order.orderId)}/address`, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(order),
+  }).andThen((newOrderAddress) =>
     // console.log('newOrderAddress = ', newOrderAddress)
     okAsync(newOrderAddress)
   )

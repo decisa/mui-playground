@@ -1,6 +1,6 @@
 import { Box, SxProps } from '@mui/material'
 
-import { Product } from '../../Types/dbtypes'
+import { ProductCreate } from '../../Types/dbtypes'
 import ProductName from './Blocks/ProductName'
 import ProductOptions from './Blocks/ProductOptions'
 import ProductThumbnail from './Blocks/ProductThumbnail'
@@ -12,7 +12,7 @@ const defaultSize: ProductCardSize = 'responsive'
 const defaultVariant: ProductCardVariant = 'imageBelow'
 
 type ProductCardProps = {
-  product: Product
+  product: ProductCreate
   image?: boolean
   sx?: SxProps
   size?: ProductCardSize
@@ -224,7 +224,7 @@ const ProductCardImageSide = ({
 }
 
 function getImageBelowStyles({
-  image,
+  // image,
   sx,
   size = defaultSize,
 }: Omit<ProductCardProps, 'product'>) {

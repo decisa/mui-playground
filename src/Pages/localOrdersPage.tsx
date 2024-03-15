@@ -36,7 +36,7 @@ import {
 
 import { Stack } from '@mui/system'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
-import { Order, ShortOrder, ShortProduct } from '../Types/dbtypes'
+import { FullOrder, ShortOrder, ShortProduct } from '../Types/dbtypes'
 import Comments from '../Components/Order/Comments'
 import { ChipColor } from '../Types/muiTypes'
 import { tokens } from '../theme'
@@ -110,7 +110,7 @@ type SearchResponse = {
 
 const getOrderByNumber = (
   orderNumber: string,
-  callback: (orderData: Order | null) => void
+  callback: (orderData: FullOrder | null) => void
 ) => {
   fetch(`${dbHost}/order/number/${orderNumber}`, {
     method: 'GET',
@@ -123,7 +123,7 @@ const getOrderByNumber = (
       if (!res.ok) throw new Error('Network response was not ok')
       return res.json()
     })
-    .then((res: Order) => {
+    .then((res: FullOrder) => {
       callback(res)
     })
     .catch((err) => {
@@ -160,6 +160,9 @@ const getProductStatus = (
   // If an item is fully refunded
   if (qty <= 0) {
     return 'refunded'
+  }
+  if (qtyShippedExternal === null) {
+    return 'undetermined'
   }
   // If an item is ordered but not shipped or refunded
   if (qtyShippedExternal === 0) {
@@ -271,7 +274,7 @@ const renderProducts = ({ row }: CellContext<ExtendedShortOrder, unknown>) => {
   )
 }
 
-type OrderCallback = (order: Order | null) => void
+type OrderCallback = (order: FullOrder | null) => void
 
 type RowRendererFactory = (
   callback: OrderCallback
@@ -301,7 +304,7 @@ export default function OrderPage() {
   const colors = tokens(theme.palette.mode)
 
   const [showOrder, setShowOrder] = React.useState(false)
-  const [order, setOrder] = React.useState<Order | null>(null)
+  const [order, setOrder] = React.useState<FullOrder | null>(null)
   const [data, setData] = React.useState<ExtendedShortOrder[]>([])
   const [search, setSearch] = React.useState('')
 
@@ -313,7 +316,7 @@ export default function OrderPage() {
       {
         accessorKey: 'orderNumber',
         header: renderOrderNumberHeader,
-        cell: renderOrderNumber((orderData: Order | null) => {
+        cell: renderOrderNumber((orderData: FullOrder | null) => {
           setOrder(orderData)
           if (orderData) {
             // save the scroll position of the table:

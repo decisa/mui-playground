@@ -1,11 +1,11 @@
 import React from 'react'
-import { Result, ResultAsync } from 'neverthrow'
-import { useLoaderData, useNavigate } from 'react-router'
-import { Box, Button, Paper, TextField, Typography } from '@mui/material'
+import { ResultAsync } from 'neverthrow'
+import { useNavigate } from 'react-router'
+import { Box, Button, Paper, TextField } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
-import { Order, OrderComment } from '../Types/dbtypes'
+import { FullOrderCreate, OrderCommentCreate } from '../Types/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import Comments from '../Components/Order/Comments'
 import CommentsEditor from '../Components/Order/CommentsEditor'
@@ -15,24 +15,25 @@ const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
 export default function MagentoPage() {
   const navigate = useNavigate()
-
-  const deliveryMethods = (
-    useLoaderData() as Result<DeliveryMethodsAsObject, Error>
-  )
-    .mapErr((e) => {
-      console.log('there was error in chain')
-      console.dir(e)
-      return 'error'
-    })
-    .unwrapOr({} as DeliveryMethodsAsObject)
+  // const deliveryMethods = (
+  //   useLoaderData() as Result<DeliveryMethodsAsObject, Error>
+  // )
+  //   .mapErr((e) => {
+  //     console.log('there was error in chain')
+  //     console.dir(e)
+  //     return 'error'
+  //   })
+  //   .unwrapOr({} as DeliveryMethodsAsObject)
   // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
-  const [order, setOrder] = React.useState<Order | undefined>()
+
+  const [order, setOrder] = React.useState<FullOrderCreate | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState('')
 
   const snack = useSnackBar()
 
-  const { getOrderById, getOrderDetails, getOrderComments } = useMagentoAPI()
-  const addNewComment = (comment: OrderComment) => {
+  // const { getOrderById, getOrderDetails, getOrderComments } = useMagentoAPI()
+  const magentoAPI = useMagentoAPI()
+  const addNewComment = (comment: OrderCommentCreate) => {
     setOrder((prevOrder) => {
       if (!prevOrder) {
         return prevOrder
@@ -48,23 +49,25 @@ export default function MagentoPage() {
   }
 
   const refetchComments = () => {
-    getOrderComments(order?.magento?.externalId || 0).map((comments) => {
-      // console.log('received comments:', comments)
-      snack.info('comments refreshed')
-      setOrder((prevOrder) => {
-        if (!prevOrder) {
-          return prevOrder
-        }
-        const newOrder = { ...prevOrder }
-        if (prevOrder.magento && comments.length > 0) {
-          newOrder.magento = { ...prevOrder.magento }
-          newOrder.magento.status = comments[0].status
-        }
-        newOrder.comments = [...comments]
-        return newOrder
+    magentoAPI
+      .getOrderComments(order?.magento?.externalId || 0)
+      .map((comments) => {
+        // console.log('received comments:', comments)
+        snack.info('comments refreshed')
+        setOrder((prevOrder) => {
+          if (!prevOrder) {
+            return prevOrder
+          }
+          const newOrder = { ...prevOrder }
+          if (prevOrder.magento && comments.length > 0) {
+            newOrder.magento = { ...prevOrder.magento }
+            newOrder.magento.status = comments[0].status
+          }
+          newOrder.comments = [...comments]
+          return newOrder
+        })
+        return comments
       })
-      return comments
-    })
   }
 
   const handleKeyboard: React.KeyboardEventHandler<HTMLDivElement> = (e) => {

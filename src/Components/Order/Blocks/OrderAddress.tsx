@@ -1,11 +1,9 @@
-import { Card, SvgIcon, SxProps, Typography, useTheme } from '@mui/material'
-import { Order } from '../../../Types/dbtypes'
+import { Card, SxProps, Typography, useTheme } from '@mui/material'
+import { AddressCreate } from '../../../Types/dbtypes'
 import MagentoIcon from '../../Common/MagentoIcon'
 
-type Address = Order['billingAddress']
-
 type OrderAddressProps = {
-  address?: Address
+  address?: AddressCreate
   sx?: SxProps
 }
 
