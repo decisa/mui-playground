@@ -629,7 +629,7 @@ function parseOneOrder<T extends TMagentoOrder>(
     created_at: dateCreated,
     customer_email: email,
     customer_firstname: customerFirstName,
-    customer_group_id: customerGroupId,
+    customer_group_id: customerGroupId = 0,
     customer_id: customerId,
     customer_is_guest: isGuest,
     customer_lastname: customerLastName,
