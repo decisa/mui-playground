@@ -140,23 +140,10 @@ export default function TestingPage() {
         image={image}
         size={size}
       />
-      <Box sx={{ display: 'flex' }}>
-        <ProductCard
-          product={order.products[4]}
-          variant="imageBelow"
-          image={image}
-          size={size}
-        />
-        <ProductCard
-          product={order.products[4]}
-          variant="imageSide"
-          image={image}
-          size={size}
-        />
-      </Box>
-      <Button onClick={toggleLayout}>Toggle Layout</Button>
-      <Button onClick={toggleImage}>Toggle Image</Button>
-      <Button onClick={cycleSize}>CycleSize</Button>
+
+      <Button onClick={toggleLayout}>Layout = {layout}</Button>
+      <Button onClick={toggleImage}>Image = {String(image)}</Button>
+      <Button onClick={cycleSize}>{size}</Button>
       <StripedDataGrid
         columns={columns}
         rows={products}
