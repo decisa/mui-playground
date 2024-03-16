@@ -140,7 +140,6 @@ export default function TestingPage() {
         image={image}
         size={size}
       />
-
       <Button onClick={toggleLayout}>Layout = {layout}</Button>
       <Button onClick={toggleImage}>Image = {String(image)}</Button>
       <Button onClick={cycleSize}>{size}</Button>
