@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { GridColDef } from '@mui/x-data-grid'
 import { Box, Button, Stack, Typography } from '@mui/material'
+import { useForm } from 'react-hook-form'
 import { FullOrder } from '../Types/dbtypes'
 import { getOrderByNumber } from '../utils/inventoryManagement'
 import { useSnackBar } from '../Components/GlobalSnackBar'
@@ -17,30 +18,50 @@ import ProductQtys from '../Components/Product/ProductQtys'
 // const orderNumber = '100008122'
 const orderNumber = '100008039'
 
+type CreateShipmentFormData = {
+  items: {
+    configurationId: number
+    qtyToShip: number
+  }[]
+}
 export default function TestingPage() {
   // state to store Order
   const [order, setOrder] = useState<FullOrder>()
-
   const [layout, setLayout] = useState<ProductCardVariant>('imageBelow')
-
   const [size, setSize] = useState<'compact' | 'full' | 'responsive'>(
     'responsive'
   )
 
-  // const cycleSize = () => {
-  //   setSize((oldSize) => {
-  //     switch (oldSize) {
-  //       case 'compact':
-  //         return 'full'
+  const defaultFormValues: CreateShipmentFormData = {
+    items: [],
+  }
 
-  //       case 'full':
-  //         return 'responsive'
+  const {
+    handleSubmit,
+    control,
+    setValue,
+    // reset,
+  } = useForm<CreateShipmentFormData>({
+    // resolver: yupResolver(shipmentFormSchema),
+    defaultValues: defaultFormValues,
+  })
 
-  //       default:
-  //         return 'compact'
-  //     }
-  //   })
-  // }
+  useEffect(() => {
+    if (!order?.products?.length) return
+    if (order.products.length > 0) {
+      setValue(
+        'items',
+        order.products.map((product) => {
+          const { id, configuration } = product
+          const { qtyOrdered, summary } = configuration
+          return {
+            configurationId: id,
+            qtyToShip: qtyOrdered,
+          }
+        })
+      )
+    }
+  }, [order?.products, setValue])
 
   const cycleSize = () => {
     setSize((oldSize) => (oldSize === 'compact' ? 'full' : 'compact'))
