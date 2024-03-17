@@ -17,12 +17,13 @@ import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
 import { GridExpandMoreIcon } from '@mui/x-data-grid'
 import { FieldPath, FieldValues, useForm } from 'react-hook-form'
 import { useCallback } from 'react'
+import { parse } from 'path'
 import { DesignColors, tokens } from '../../theme'
 // import { OrderAddressCreate } from '../../Types/dbtypes'
 import { createOrderAddress } from '../../utils/inventoryManagement'
 import { useSnackBar } from '../GlobalSnackBar'
-import { AddressCreate } from '../../Types/dbtypes'
-import { latLangToCoordinates } from '../../utils/utils'
+import { Address, AddressCreate } from '../../Types/dbtypes'
+import { latLangToCoordinates, parsePhoneNumbers } from '../../utils/utils'
 
 type CreateAddressFormData = {
   firstName: string
@@ -127,11 +128,13 @@ type AddNewAddressDialogProps = {
   open: boolean
   handleClose: () => void
   orderId: number
+  onSuccess?: (newAddress: Address) => void
 }
 export default function AddNewAddressDialog({
   open,
   handleClose,
   orderId,
+  onSuccess,
 }: AddNewAddressDialogProps) {
   const theme = useTheme()
   const colors = tokens(theme.palette.mode)
@@ -157,7 +160,7 @@ export default function AddNewAddressDialog({
     register,
     getValues,
     // control,
-    // setValue,
+    setValue,
     // reset,
   } = useForm<CreateAddressFormData>({
     resolver: yupResolver(addressFormSchema),
@@ -302,6 +305,18 @@ export default function AddNewAddressDialog({
               <TextField
                 {...registerTextField({ name: 'phone' })}
                 label="Phone number"
+                onBlur={(e) => {
+                  const phone = e.target.value
+                  if (phone) {
+                    const parsedPhone = parsePhoneNumbers(phone)
+                    if (parsedPhone !== phone) {
+                      e.target.value = parsedPhone
+                      setValue('phone', parsedPhone)
+                    }
+                    // console.log('parsed phone: ', parsePhoneNumbers(phone))
+                    // e.target.value = parsePhoneNumbers(phone)
+                  }
+                }}
                 required
               />
             </Grid>

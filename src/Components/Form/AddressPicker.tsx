@@ -5,7 +5,7 @@ import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import Select, { SelectProps } from '@mui/material/Select'
 import type { Variant } from '@mui/material/styles/createTypography'
-import { useTheme } from '@mui/material/styles'
+import { SxProps, useTheme } from '@mui/material/styles'
 import { Typography } from '@mui/material'
 import PostAddIcon from '@mui/icons-material/PostAdd'
 import { useCallback, useState } from 'react'
@@ -28,6 +28,7 @@ export default function AddressPicker<TForm extends FieldValues>({
   label,
   typographyVariant,
   options,
+  sx,
   ...rest
 }: DropdownProps<TForm>) {
   const theme = useTheme()
@@ -65,7 +66,7 @@ export default function AddressPicker<TForm extends FieldValues>({
   const { orderId } = options[0]
 
   return (
-    <Box sx={{ minWidth: 200 }}>
+    <Box sx={{ minWidth: 200, ...sx }}>
       <FormControl
         fullWidth
         variant="outlined"
