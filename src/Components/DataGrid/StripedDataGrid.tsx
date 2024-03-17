@@ -7,6 +7,9 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
   '& .MuiDataGrid-columnHeaders': {
     backgroundColor: theme.palette.primary.lightest,
   },
+  '& .dimmed': {
+    opacity: 0.4,
+  },
   '& .MuiDataGrid-row--editing': {
     // backgroundColor: theme.palette.secondary.light,
     '&:hover': {
