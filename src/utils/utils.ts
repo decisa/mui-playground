@@ -84,3 +84,44 @@ export const latLangToCoordinates = (
   }
   return null
 }
+
+function replacerFunction(
+  match: string,
+  p1: string,
+  p2: string,
+  p3: string,
+  p4: string
+): string {
+  // Remove any non-digit characters from the phone number
+  const phoneNumber =
+    p2.replace(/\D/g, '') + p3.replace(/\D/g, '') + p4.replace(/\D/g, '')
+
+  // Convert the phone number to the format XXX.XXX.XXXX
+  const formattedPhoneNumber = phoneNumber.replace(
+    /(\d{3})(\d{3})(\d{4})/,
+    '$1.$2.$3'
+  )
+  // Return the formatted phone number with the optional country code
+  return (p1 ? `${p1}.` : '') + formattedPhoneNumber
+}
+
+/**
+ * function that converts phone numbers to the format XXX.XXX.XXXX
+ * @param {string}phoneStr  - the string to parse
+ * @returns {string} - the formatted phone number
+ * @example
+ * parsePhoneNumbers('1234567890') // 123.456.7890
+ * parsePhoneNumbers('123-456-7890') // 123.456.7890
+ * parsePhoneNumbers('123.456.7890') // 123.456.7890
+ * parsePhoneNumbers('123 456 7890 x104') // 123.456.7890 x104
+ * parsePhoneNumbers('123456789012345') // 12345.678.901.2345
+ * parsePhoneNumbers('+1.215.4567890') // +1.215.456.7890
+ * parsePhoneNumbers('1 215 456 7890') // 1.215.456.7890
+ * parsePhoneNumbers('+1(215)456-7890 John') // +1.215.456.7890 John
+ */
+export function parsePhoneNumbers(phoneStr: string): string {
+  // Regular expression to match phone numbers
+  const regex = /(\+?\d*\s?)?\(?(\d{3})\)?[-\s.]?(\d{3})[-\s.]?(\d{4})/g
+
+  return phoneStr.replace(regex, replacerFunction)
+}
