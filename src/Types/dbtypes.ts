@@ -572,6 +572,15 @@ export type DeliveryItemCreational = {
 export const deliveryStatuses = ['pending', 'scheduled', 'confirmed'] as const
 export type DeliveryStatus = (typeof deliveryStatuses)[number]
 
+export type DaysAvailability = [
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean
+]
 export type DeliveryCreational = {
   // id: number
   orderId: number
@@ -580,7 +589,7 @@ export type DeliveryCreational = {
   coiRequired?: boolean // has default value (false)
   coiReceived?: boolean // has default value (false)
   coiNotes?: string | null
-  days?: [boolean, boolean, boolean, boolean, boolean, boolean, boolean] // virtual Sunday-Saturday
+  days?: DaysAvailability // virtual Sunday-Saturday
   deliveryStopId?: number | null
   estimatedDuration?: [number, number] | null
   items: DeliveryItemCreational[]

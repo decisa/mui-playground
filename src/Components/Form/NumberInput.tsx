@@ -25,6 +25,7 @@ export default function NumberInput<FormData extends FieldValues>({
   max,
   step = 1,
   size = 'small',
+  sx,
   ...textFieldProps
 }: NumberInputProps<FormData>) {
   const {
@@ -45,7 +46,15 @@ export default function NumberInput<FormData extends FieldValues>({
     onChange({ target: { value: (Number(value) || 0) - step } })
 
   return (
-    <Box display="flex" flexWrap="wrap" alignItems="center">
+    <Box
+      alignItems="center"
+      sx={{
+        display: 'flex',
+        flexWrap: 'nowrap',
+        minWidth: size === 'medium' ? 120 : 110,
+        ...sx,
+      }}
+    >
       <IconButton
         size={size === 'medium' ? 'large' : size}
         onClick={handleDecrement}
@@ -72,6 +81,7 @@ export default function NumberInput<FormData extends FieldValues>({
             MozAppearance: 'textfield',
           },
           width: size === 'medium' ? 60 : 50,
+          minWidth: size === 'medium' ? 60 : 50,
           '& .MuiInputBase-input': {
             textAlign: 'center',
           },
