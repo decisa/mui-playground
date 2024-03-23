@@ -186,27 +186,28 @@ type DeliveryMethodsAsObject = {
   [deliveryTypeId: number]: DeliveryMethod
 }
 
-const getDeliveryMethods = async (): Promise<DeliveryMethodsAsObject> => {
-  const result = await fetch(`${dbHost}/deliverymethod/all`)
-  if (!result.ok) {
-    throw new Error(`Failed throw to get delivery methods`)
+const getDeliveryMethodsAsObject =
+  async (): Promise<DeliveryMethodsAsObject> => {
+    const result = await fetch(`${dbHost}/deliverymethod/all`)
+    if (!result.ok) {
+      throw new Error(`Failed throw to get delivery methods`)
+    }
+
+    const methods = (await result.json()) as DeliveryMethod[]
+
+    // convert array of methods to an object with deliveryType ids as keys
+    const methodsAsObject = methods.reduce((acc, method) => {
+      acc[method.id] = method
+      return acc
+    }, {} as DeliveryMethodsAsObject)
+    console.log('!!! result = ', methods)
+    console.log('!!! result as object = ', methodsAsObject)
+    return methodsAsObject
   }
-
-  const methods = (await result.json()) as DeliveryMethod[]
-
-  // convert array of methods to an object with deliveryType ids as keys
-  const methodsAsObject = methods.reduce((acc, method) => {
-    acc[method.id] = method
-    return acc
-  }, {} as DeliveryMethodsAsObject)
-  console.log('!!! result = ', methods)
-  console.log('!!! result as object = ', methodsAsObject)
-  return methodsAsObject
-}
 
 const safeGetCustomerById = async () =>
   ResultAsync.fromPromise(
-    getDeliveryMethods(),
+    getDeliveryMethodsAsObject(),
     () => new Error('database error neverthrow')
   )
 
