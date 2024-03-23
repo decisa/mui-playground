@@ -45,6 +45,12 @@ export default function NumberInput<FormData extends FieldValues>({
   const handleDecrement = () =>
     onChange({ target: { value: (Number(value) || 0) - step } })
 
+  // allow to set value to zero on right click like in photoshop
+  const handleSetToZero = (e: React.MouseEvent) => {
+    e.preventDefault()
+    onChange({ target: { value: 0 } })
+  }
+
   return (
     <Box
       alignItems="center"
@@ -58,6 +64,7 @@ export default function NumberInput<FormData extends FieldValues>({
       <IconButton
         size={size === 'medium' ? 'large' : size}
         onClick={handleDecrement}
+        onContextMenu={handleSetToZero}
         disabled={value <= (min ?? 0)}
       >
         <RemoveIcon />{' '}
