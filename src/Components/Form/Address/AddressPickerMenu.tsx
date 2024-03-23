@@ -1,20 +1,12 @@
 import { Control, FieldValues, FieldPath, useController } from 'react-hook-form'
 import Box from '@mui/material/Box'
-import InputLabel from '@mui/material/InputLabel'
+
 import MenuItem from '@mui/material/MenuItem'
-import FormControl from '@mui/material/FormControl'
-import Select, { SelectProps } from '@mui/material/Select'
+
 import EditIcon from '@mui/icons-material/Edit'
 import type { Variant } from '@mui/material/styles/createTypography'
-import { SxProps, useTheme } from '@mui/material/styles'
-import {
-  Avatar,
-  Divider,
-  IconButton,
-  Menu,
-  MenuProps,
-  Typography,
-} from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { Divider, IconButton, Menu, MenuProps, Typography } from '@mui/material'
 import PostAddIcon from '@mui/icons-material/PostAdd'
 import { useCallback, useState } from 'react'
 import { Address } from '../../../Types/dbtypes'
@@ -28,6 +20,7 @@ type AddressMenuProps<TForm extends FieldValues> = {
   label: string
   options: Address[]
   typographyVariant?: Variant
+  onNewAddress?: (newAddress: Address) => void
 } & Partial<MenuProps>
 
 export default function AddressPickerMenu<TForm extends FieldValues>({
@@ -37,7 +30,8 @@ export default function AddressPickerMenu<TForm extends FieldValues>({
   options,
   typographyVariant = 'body2',
   sx,
-  ...rest
+  onNewAddress,
+  ...restMenuProps
 }: AddressMenuProps<TForm>) {
   const theme = useTheme()
   const [openAddressDialog, setOpenAddressDialog] = useState(false)
@@ -106,6 +100,7 @@ export default function AddressPickerMenu<TForm extends FieldValues>({
         // renderValue={renderValue}
         transformOrigin={{ horizontal: 'center', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        {...restMenuProps}
         // {...rest}
       >
         {options.map((address) => (
@@ -140,6 +135,7 @@ export default function AddressPickerMenu<TForm extends FieldValues>({
         open={openAddressDialog}
         handleClose={closeDialog}
         orderId={orderId}
+        onSuccess={onNewAddress}
       />
     </Box>
   )

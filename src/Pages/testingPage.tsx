@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Box } from '@mui/material'
 import { Result, ResultAsync } from 'neverthrow'
 import { useLoaderData } from 'react-router'
@@ -34,6 +34,10 @@ export default function TestingPage() {
   // state to store Order
   const [order, setOrder] = useState<FullOrder>()
   const [orderAddresses, setOrderAddresses] = useState<Address[]>([])
+
+  const onNewAddress = useCallback((address: Address) => {
+    setOrderAddresses((prev) => [...prev, address])
+  }, [])
 
   // get order by number
   useEffect(() => {
@@ -134,6 +138,7 @@ export default function TestingPage() {
         initValues={initValues}
         addresses={orderAddresses}
         deliveryMethods={deliveryMethods}
+        onNewAddress={onNewAddress}
       />
     </Box>
   )

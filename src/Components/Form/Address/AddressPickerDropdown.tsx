@@ -5,7 +5,7 @@ import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import Select, { SelectProps } from '@mui/material/Select'
 import type { Variant } from '@mui/material/styles/createTypography'
-import { SxProps, useTheme } from '@mui/material/styles'
+import { useTheme } from '@mui/material/styles'
 import { Typography } from '@mui/material'
 import PostAddIcon from '@mui/icons-material/PostAdd'
 import { useCallback, useState } from 'react'
@@ -20,6 +20,7 @@ type DropdownProps<TForm extends FieldValues> = {
   label: string
   typographyVariant?: Variant
   options: Address[]
+  onNewAddress?: (newAddress: Address) => void
 } & SelectProps
 
 export default function AddressPickerDropdown<TForm extends FieldValues>({
@@ -29,6 +30,7 @@ export default function AddressPickerDropdown<TForm extends FieldValues>({
   typographyVariant,
   options,
   sx,
+  onNewAddress,
   ...rest
 }: DropdownProps<TForm>) {
   const theme = useTheme()
@@ -119,6 +121,7 @@ export default function AddressPickerDropdown<TForm extends FieldValues>({
         open={open}
         handleClose={closeDialog}
         orderId={orderId}
+        onSuccess={onNewAddress}
       />
     </Box>
   )

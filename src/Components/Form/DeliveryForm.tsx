@@ -33,6 +33,7 @@ type DeliveryFormProps = {
   initValues: DeliveryFormValues
   deliveryMethods: DeliveryMethod[]
   onSubmit?: (data: DeliveryFormValues) => void
+  onNewAddress?: (newAddress: Address) => void
 }
 
 export type DeliveryFormValues = {
@@ -86,6 +87,7 @@ export default function DeliveryForm({
   onSubmit,
   addresses,
   deliveryMethods,
+  onNewAddress,
 }: DeliveryFormProps) {
   const {
     handleSubmit,
@@ -260,6 +262,7 @@ export default function DeliveryForm({
             name="shippingAddressId"
             control={control}
             label="shipping address"
+            onNewAddress={onNewAddress}
             options={addresses}
             sx={{
               maxWidth: 250,
