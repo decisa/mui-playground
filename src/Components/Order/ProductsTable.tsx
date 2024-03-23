@@ -41,6 +41,7 @@ const RowMui = ({ row }: RowProps<ProductCreate>) => (
   <TableRow
     sx={{
       maxWidth: 100,
+      breakInside: 'avoid',
     }}
   >
     {row.getVisibleCells().map((cell) => (
@@ -151,7 +152,12 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
     >
       <TableHead>
         {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
+          <TableRow
+            key={headerGroup.id}
+            sx={{
+              breakInside: 'avoid',
+            }}
+          >
             {headerGroup.headers.map((header) => (
               <TableCell
                 key={header.id}
