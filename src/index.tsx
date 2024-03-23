@@ -23,7 +23,9 @@ import MagentoOrder, {
 import ContainersPage from './Pages/containersPage'
 import PurchaseOrdersPage from './Pages/purchaseOrdersPage'
 import OrdersPage from './Pages/ordersPage'
-import TestingPage from './Pages/testingPage'
+import TestingPage, {
+  loader as getAllDeliveryMethods,
+} from './Pages/testingPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -71,7 +73,11 @@ const router = createBrowserRouter(
           loader={getDeliveryMethodsMagentoOrder}
         />
       </Route>
-      <Route path="testing" element={<TestingPage />} />
+      <Route
+        path="testing"
+        element={<TestingPage />}
+        loader={getAllDeliveryMethods}
+      />
     </Route>
   )
 )
