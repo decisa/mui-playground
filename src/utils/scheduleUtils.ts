@@ -1,4 +1,4 @@
-import { FullOrder } from '../Types/dbtypes'
+import { DeliveryMethod, FullOrder } from '../Types/dbtypes'
 
 export type DaysAvailability = [
   boolean,
@@ -42,4 +42,16 @@ export function getDeliveryName(orderData?: FullOrder | null): string {
 export function isCoiRequired(order?: FullOrder | null): boolean {
   if (!order) return false
   return order.shippingAddress.street.length > 1
+}
+
+export function getDeliveryLabel(
+  deliveryMethods: DeliveryMethod[],
+  id: number
+): string {
+  let result =
+    deliveryMethods.find((method) => method.id === id)?.name || 'unknown'
+  if (id <= 4) {
+    result += ' delivery'
+  }
+  return result
 }
