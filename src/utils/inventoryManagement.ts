@@ -4,6 +4,7 @@ import {
   Address,
   AddressCreate,
   Carrier,
+  DeliveryMethod,
   FullOrder,
   POShipmentParsed,
   POShipmentResponseRaw,
@@ -515,4 +516,18 @@ export const deletePO = (id: number) => {
     // console.log('deleted po:', deletedPO)
     okAsync(deletedPO)
   )
+}
+
+export const getDeliveryMethods = () => {
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<DeliveryMethod[]>(
+    `${dbHost}/deliverymethod/all`,
+    request
+  ).andThen((deliveryMethods) => okAsync(deliveryMethods))
 }
