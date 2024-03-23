@@ -316,6 +316,9 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             secondary: `${colors.grey[900]}bb`,
             disabled: `${colors.grey[700]}77`,
           },
+          info: {
+            main: colors.blueAccent[500],
+          },
         }
       : {
           // primary: {
@@ -347,6 +350,9 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             primary: `${colors.grey[800]}ff`,
             secondary: `${colors.grey[800]}aa`,
             disabled: `${colors.grey[700]}55`,
+          },
+          info: {
+            main: colors.blueAccent[500],
           },
         }),
   }
@@ -389,6 +395,22 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
       MuiButtonBase: {
         defaultProps: {
           LinkComponent: LinkBehavior,
+        },
+      },
+      MuiToggleButton: {
+        styleOverrides: {
+          root: ({ ownerState, theme }) => ({
+            ...(ownerState.color === 'primary' && {
+              '&.Mui-selected': {
+                // color: colors.redAccent[500],
+                backgroundColor: colors.blueAccent[200],
+                color: theme.palette.text.primary,
+                '&:hover': {
+                  backgroundColor: colors.blueAccent[300],
+                },
+              },
+            }),
+          }),
         },
       },
 
