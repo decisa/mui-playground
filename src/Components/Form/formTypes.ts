@@ -40,6 +40,5 @@ export function registerTextField<TForm extends FieldValues>({
     required,
     variant,
     fullWidth,
-   
   } satisfies TextFieldProps
 }
