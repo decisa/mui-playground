@@ -3,7 +3,7 @@ import { Box, Button, Chip, Paper, TextField, Typography } from '@mui/material'
 
 import { GridColDef } from '@mui/x-data-grid'
 import { useEffect, useMemo } from 'react'
-import { Stack, getValue } from '@mui/system'
+import { Stack } from '@mui/system'
 import {
   Address,
   DaysAvailability,
@@ -26,6 +26,7 @@ import Checkbox from '../Components/FormComponents/CheckBox'
 import TimeFrameSlider from '../Components/FormComponents/TImeFrameSlider'
 import AddressPickerMenu from '../Components/FormComponents/Address/AddressPickerMenu'
 import Comments from '../Components/Order/Comments'
+import DeliveryMethodMenu from '../Components/FormComponents/DeliveryMethodMenu'
 
 type DeliveryFormProps = {
   order: FullOrder
@@ -69,18 +70,6 @@ const delivery = {
   updatedAt: '2024-02-08T22:40:19.000Z',
 }
 
-function getDeliveryName(
-  deliveryMethods: DeliveryMethod[],
-  id: number
-): string {
-  let result =
-    deliveryMethods.find((method) => method.id === id)?.name || 'unknown'
-  if (id <= 4) {
-    result += ' delivery'
-  }
-  return result
-}
-
 export default function DeliveryForm({
   order,
   initValues,
@@ -104,7 +93,6 @@ export default function DeliveryForm({
   })
   const items = watch('items')
   const coiRequired = watch('coiRequired')
-  const deliveryMethodId = watch('deliveryMethodId')
 
   const submitData = (data: DeliveryFormValues) => {
     console.log('submitData', data)
@@ -258,25 +246,23 @@ export default function DeliveryForm({
             }}
           />
           <Hr />
-          <AddressPickerMenu
-            name="shippingAddressId"
-            control={control}
-            label="shipping address"
-            onNewAddress={onNewAddress}
-            options={addresses}
-            sx={{
-              maxWidth: 250,
-            }}
-          />
-          <Chip
-            label={getDeliveryName(deliveryMethods, deliveryMethodId)}
-            size="medium"
-            color="warning"
-            variant="outlined"
-          />
-          <Button type="button" size="small" color="warning" variant="outlined">
-            {getDeliveryName(deliveryMethods, deliveryMethodId)}
-          </Button>
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <AddressPickerMenu
+              name="shippingAddressId"
+              control={control}
+              label="shipping address"
+              onNewAddress={onNewAddress}
+              options={addresses}
+              sx={{
+                maxWidth: 250,
+              }}
+            />
+            <DeliveryMethodMenu
+              control={control}
+              name="deliveryMethodId"
+              options={deliveryMethods}
+            />
+          </Box>
           <Hr my={2} mx={-2} />
           <TimeFrameSlider control={control} name="estimatedDuration" />
           <Hr my={2} mx={-2} />
