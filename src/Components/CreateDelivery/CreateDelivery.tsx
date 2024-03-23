@@ -20,7 +20,7 @@ import OrderConfirmation from '../Order/OrderConfirmation'
 import OrderHeader from '../Order/Blocks/OrderHeader'
 import Hr from '../Common/Hr'
 import OrderTotalsFooter from '../Order/Blocks/OrderTotalsFooter'
-import AddressPicker from '../Form/AddressPicker'
+import AddressPickerDropdown from '../Form/Address/AddressPickerDropdown'
 
 type CreateDeliveryFormData = {
   // orderId: number
@@ -143,7 +143,7 @@ const CreateDeliveryForm: RowActionComponent<ShortOrder> = forwardRef(
       >
         <OrderHeader order={orderData} />
         <Hr />
-        <AddressPicker
+        <AddressPickerDropdown
           name="shippingAddressId"
           control={control}
           label="Shipping Address"

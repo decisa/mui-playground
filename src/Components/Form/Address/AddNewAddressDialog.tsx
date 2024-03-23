@@ -18,12 +18,12 @@ import { GridExpandMoreIcon } from '@mui/x-data-grid'
 import { FieldPath, FieldValues, useForm } from 'react-hook-form'
 import { useCallback } from 'react'
 import { parse } from 'path'
-import { DesignColors, tokens } from '../../theme'
+import { DesignColors, tokens } from '../../../theme'
 // import { OrderAddressCreate } from '../../Types/dbtypes'
-import { createOrderAddress } from '../../utils/inventoryManagement'
-import { useSnackBar } from '../GlobalSnackBar'
-import { Address, AddressCreate } from '../../Types/dbtypes'
-import { latLangToCoordinates, parsePhoneNumbers } from '../../utils/utils'
+import { createOrderAddress } from '../../../utils/inventoryManagement'
+import { useSnackBar } from '../../GlobalSnackBar'
+import { Address, AddressCreate } from '../../../Types/dbtypes'
+import { latLangToCoordinates, parsePhoneNumbers } from '../../../utils/utils'
 
 type CreateAddressFormData = {
   firstName: string
@@ -241,6 +241,12 @@ export default function AddNewAddressDialog({
       open={open}
       onClose={handleClose}
       aria-labelledby="create-new-address-form"
+      slotProps={{
+        backdrop: {
+          // prevent background scrolling when dialog is open on iOS:
+          onTouchMove: (e) => e.preventDefault(),
+        },
+      }}
     >
       <DialogTitle id="create-new-address-form">Add New Address</DialogTitle>
       <DialogContent>
