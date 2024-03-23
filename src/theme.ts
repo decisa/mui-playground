@@ -8,6 +8,7 @@ import { PaletteMode } from '@mui/material'
 import { createContext, useMemo, useState } from 'react'
 import type {} from '@mui/x-data-grid/themeAugmentation'
 import { LinkProps } from '@mui/material/Link'
+import { purple, teal, yellow } from '@mui/material/colors'
 import LinkBehavior from './Components/LinkBehavior'
 
 export type ColorPalette = ReturnType<typeof tokens>
@@ -52,6 +53,7 @@ export type DesignColors = {
   greenAccent: ColorShades
   redAccent: ColorShades
   blueAccent: ColorShades
+  yellowAccent: ColorShades
 }
 // color design tokens
 export const tokens = (mode: string): DesignColors => ({
@@ -147,6 +149,18 @@ export const tokens = (mode: string): DesignColors => ({
           700: '#abc0e2',
           800: '#ccd8ec',
           900: '#e1e8f3',
+        },
+        yellowAccent: {
+          50: yellow[50],
+          100: yellow[100],
+          200: yellow[200],
+          300: yellow[300],
+          400: yellow[400],
+          500: yellow[500],
+          600: yellow[600],
+          700: yellow[700],
+          800: yellow[800],
+          900: yellow[900],
         },
         // blueAccent: {
         //   100: '#e2e8f2',
@@ -252,6 +266,18 @@ export const tokens = (mode: string): DesignColors => ({
           800: '#2a374c',
           900: '#1e2735',
         },
+        yellowAccent: {
+          50: yellow[50],
+          100: yellow[100],
+          200: yellow[200],
+          300: yellow[300],
+          400: yellow[400],
+          500: yellow[500],
+          600: yellow[600],
+          700: yellow[700],
+          800: yellow[800],
+          900: yellow[900],
+        },
         // blueAccent: {
         //   100: '#161c26',
         //   200: '#ccd8ec',
@@ -297,10 +323,10 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             dark: colors.blueAccent[700],
             contrastText: colors.grey[900],
           },
-          secondary: {
-            light: colors.greenAccent[400],
-            main: colors.greenAccent[300],
-          },
+          // secondary: {
+          //   light: colors.greenAccent[400],
+          //   main: colors.greenAccent[300],
+          // },
           neutral: {
             dark: colors.primary[300],
             main: colors.primary[500],
@@ -319,6 +345,20 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
           info: {
             main: colors.blueAccent[500],
           },
+          warning: {
+            main: colors.yellowAccent[100],
+            contrastText: colors.grey[900],
+            light: colors.yellowAccent[200],
+            dark: colors.yellowAccent[500],
+            lightest: colors.yellowAccent[100],
+          },
+          success: {
+            main: teal[300],
+            contrastText: colors.grey[900],
+            light: teal[200],
+            dark: teal[500],
+            lightest: teal[100],
+          },
         }
       : {
           // primary: {
@@ -332,9 +372,9 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
             dark: colors.blueAccent[600],
             contrastText: colors.grey[100],
           },
-          secondary: {
-            main: colors.greenAccent[500],
-          },
+          // secondary: {
+          //   main: colors.greenAccent[500],
+          // },
           neutral: {
             dark: colors.grey[700],
             main: colors.grey[500],
@@ -354,8 +394,30 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
           info: {
             main: colors.blueAccent[500],
           },
+          warning: {
+            main: colors.yellowAccent[200],
+            contrastText: colors.grey[900],
+            light: colors.yellowAccent[100],
+            dark: colors.yellowAccent[400],
+            lightest: colors.yellowAccent[50],
+          },
+          success: {
+            main: teal[200],
+            contrastText: colors.grey[900],
+            light: teal[100],
+            dark: teal[400],
+            lightest: teal[50],
+          },
+          secondary: {
+            main: purple[200],
+            contrastText: colors.grey[900],
+            light: purple[100],
+            dark: purple[300],
+            lightest: purple[50],
+          },
         }),
-  }
+  } as const
+
   const options: ThemeOptions = {
     components: {
       // MuiButton: {
@@ -397,6 +459,28 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
           LinkComponent: LinkBehavior,
         },
       },
+      MuiButton: {
+        styleOverrides: {
+          outlinedWarning:
+            mode === 'dark'
+              ? {
+                  borderColor: colors.yellowAccent[500],
+                  color: colors.yellowAccent[600],
+                  ':hover': {
+                    borderColor: colors.yellowAccent[400],
+                    color: colors.yellowAccent[500],
+                  },
+                }
+              : {
+                  borderColor: colors.yellowAccent[700],
+                  color: colors.yellowAccent[800],
+                  ':hover': {
+                    borderColor: colors.yellowAccent[800],
+                    color: colors.yellowAccent[900],
+                  },
+                },
+        },
+      },
       MuiToggleButton: {
         styleOverrides: {
           root: ({ ownerState, theme }) => ({
@@ -418,10 +502,20 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
         styleOverrides: {
           root: {
             fontSize: 12,
-            lineHeight: '20px',
+            lineHeight: '21px',
             height: '20px',
             borderRadius: '4px',
           },
+          colorWarning:
+            mode === 'dark'
+              ? {
+                  borderColor: alpha(colors.yellowAccent[500], 0.7),
+                  color: alpha(colors.yellowAccent[500], 0.9),
+                }
+              : {
+                  borderColor: colors.yellowAccent[600],
+                  color: colors.yellowAccent[900],
+                },
         },
       },
 
