@@ -7,7 +7,7 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
   '& .MuiDataGrid-columnHeaders': {
     backgroundColor: theme.palette.primary.lightest,
   },
-  '& .dimmed': {
+  '& .dimmed > *:not(.keep-visible)': {
     opacity: 0.4,
   },
   '& .MuiDataGrid-row': {
@@ -40,7 +40,11 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
         backgroundColor: theme.palette.neutral.light,
       },
     },
+    '&:focus, &:focus-within': {
+      outline: 'none',
+    },
   },
+
   '@media print': {
     '& .MuiDataGrid-main': {
       overflow: 'visible',
