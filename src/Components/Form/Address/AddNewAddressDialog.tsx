@@ -17,7 +17,6 @@ import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
 import { GridExpandMoreIcon } from '@mui/x-data-grid'
 import { FieldPath, FieldValues, useForm } from 'react-hook-form'
 import { useCallback } from 'react'
-import { parse } from 'path'
 import { DesignColors, tokens } from '../../../theme'
 // import { OrderAddressCreate } from '../../Types/dbtypes'
 import { createOrderAddress } from '../../../utils/inventoryManagement'
@@ -161,7 +160,7 @@ export default function AddNewAddressDialog({
     getValues,
     // control,
     setValue,
-    // reset,
+    reset,
   } = useForm<CreateAddressFormData>({
     resolver: yupResolver(addressFormSchema),
     defaultValues: defaultFormValues,
@@ -195,6 +194,11 @@ export default function AddNewAddressDialog({
     createOrderAddress(newAddress)
       .map((address) => {
         console.log('new address created:', address)
+        snackbar.success('new address added ✅')
+        reset(defaultFormValues)
+        if (onSuccess) {
+          onSuccess(address)
+        }
         handleClose()
         return address
       })
@@ -214,6 +218,7 @@ export default function AddNewAddressDialog({
     variant?: 'outlined' | 'standard' | 'filled'
     autoComplete?: string
     fullWidth?: boolean
+    trim?: boolean
   }
   const registerTextField = useCallback(
     ({
@@ -223,8 +228,17 @@ export default function AddNewAddressDialog({
       variant = 'outlined',
       autoComplete,
       fullWidth = true,
+      trim = true,
     }: RegisterTextFieldProps<CreateAddressFormData>) => ({
-      ...register(name),
+      ...register(name, {
+        setValueAs: (value) => {
+          if (value && typeof value === 'string') {
+            return trim ? value.trim() : value
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return value
+        },
+      }),
       error: !!errors[name],
       autoComplete: autoComplete || name,
       helperText: errors[name]?.message,
