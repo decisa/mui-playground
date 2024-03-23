@@ -5,6 +5,7 @@ import Box from '@mui/material/Box'
 import AddCommentForm from './AddCommentForm'
 import { OrderStatus } from '../../Types/magentoTypes'
 import { OrderCommentCreate } from '../../Types/dbtypes'
+import PaymentCommentForm from '../Form/PaymentCommentForm'
 
 const tabNames = ['add comment', 'shipments', 'payments'] as const
 type TabName = (typeof tabNames)[number]
@@ -87,7 +88,12 @@ export default function CommentsEditor({
         Item Two
       </TabPanel>
       <TabPanel value={selectedTab} name={tabNames[2]} index={2}>
-        Item Three
+        <PaymentCommentForm
+          orderStatus={orderStatus}
+          orderId={orderId}
+          addNewComment={addNewComment}
+          refreshComments={refreshComments}
+        />
       </TabPanel>
     </Box>
   )
