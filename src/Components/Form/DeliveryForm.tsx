@@ -1,33 +1,83 @@
 import { useFieldArray, useForm } from 'react-hook-form'
-import { Box, Button, Paper, Typography } from '@mui/material'
-import { da } from 'date-fns/locale'
+import { Box, Button, Chip, Paper, TextField, Typography } from '@mui/material'
+
 import { GridColDef } from '@mui/x-data-grid'
 import { useEffect, useMemo } from 'react'
-import { Address, FullOrder } from '../../Types/dbtypes'
-import OrderHeader from '../Order/Blocks/OrderHeader'
+import { Stack, getValue } from '@mui/system'
+import {
+  Address,
+  DaysAvailability,
+  DeliveryMethod,
+  FullOrder,
+} from '../../Types/dbtypes'
+
 import Hr from '../Common/Hr'
-import AddressPicker from './AddressPicker'
-import OrderTotalsFooter from '../Order/Blocks/OrderTotalsFooter'
+
 import StripedDataGrid from '../DataGrid/StripedDataGrid'
 import ProductCard from '../Product/ProductCard'
 import ProductQtys from '../Product/ProductQtys'
 import GridArrayQty from './GridArrayQty'
 import { useSnackBar } from '../GlobalSnackBar'
 import DaysSelector from './DaysSelector'
+import TimeRangePicker from './TimeRangePicker'
+import { MinutesInterval } from '../../utils/scheduleUtils'
+import { registerTextField } from './formTypes'
+import Checkbox from './CheckBox'
+import TimeFrameSlider from './TImeFrameSlider'
+import AddressPickerMenu from './Address/AddressPickerMenu'
+import Comments from '../Order/Comments'
 
 type DeliveryFormProps = {
   order: FullOrder
   addresses: Address[]
   initValues: DeliveryFormValues
+  deliveryMethods: DeliveryMethod[]
   onSubmit?: (data: DeliveryFormValues) => void
 }
 
 export type DeliveryFormValues = {
+  title: string
+  notes: string | null
+  amountDue: string | null
+  coiNotes: string | null
+  coiRequired: boolean
+  coiReceived: boolean
+  orderId: number
   shippingAddressId: number
+  estimatedDuration: MinutesInterval
+  deliveryMethodId: number
+  days: DaysAvailability
+  timePeriod: MinutesInterval
   items: {
     configurationId: number
     qtyToShip: number
   }[]
+}
+// todo: Shipping Method
+
+const delivery = {
+  estimatedDuration: null,
+  id: 13,
+  status: 'pending',
+
+  coiRequired: false,
+  coiReceived: false,
+  coiNotes: null,
+  amountDue: null,
+  createdAt: '2024-02-08T22:40:19.000Z',
+  updatedAt: '2024-02-08T22:40:19.000Z',
+}
+
+function getDeliveryName(
+  deliveryMethods: DeliveryMethod[],
+  id: number
+): string {
+  let result =
+    deliveryMethods.find((method) => method.id === id)?.name || 'unknown'
+  if (id <= 4) {
+    result += ' delivery'
+  }
+  return result
 }
 
 export default function DeliveryForm({
@@ -35,27 +85,33 @@ export default function DeliveryForm({
   initValues,
   onSubmit,
   addresses,
+  deliveryMethods,
 }: DeliveryFormProps) {
   const {
     handleSubmit,
     control,
-    setValue,
+    // setValue,
     reset,
     watch,
-    getValues,
+    register,
+    // getValues,
     // reset,
   } = useForm<DeliveryFormValues>({
     // resolver: yupResolver(shipmentFormSchema),
     defaultValues: initValues,
   })
   const items = watch('items')
+  const coiRequired = watch('coiRequired')
+  const deliveryMethodId = watch('deliveryMethodId')
 
   const submitData = (data: DeliveryFormValues) => {
+    console.log('submitData', data)
     const result = {
       ...data,
       items: data.items.filter((item) => item.qtyToShip > 0),
     }
-    console.log('submitData', result)
+    // todo: make sure that COI received is false if COI is not required
+    // console.log('submitData', result)
     if (onSubmit) {
       onSubmit(result)
     }
@@ -131,6 +187,7 @@ export default function DeliveryForm({
       width: 130,
       align: 'center',
       headerAlign: 'center',
+      cellClassName: 'keep-visible',
       renderCell: (params) => {
         // console.log('params', params)
         const {
@@ -157,40 +214,141 @@ export default function DeliveryForm({
     },
   ]
 
-  return (
-    <Box component="form" onSubmit={handleSubmit(submitData)}>
-      <Paper sx={{ maxWidth: 1100, p: 2 }} className="printable-paper">
-        <OrderHeader order={order} />
-        <Hr />
-        <AddressPicker
-          name="shippingAddressId"
-          control={control}
-          label="Shipping Address"
-          options={addresses}
-          sx={{
-            maxWidth: 250,
-          }}
-        />
+  // console.log('rerender Form!')
 
-        <OrderTotalsFooter order={order} />
-        <DaysSelector value={[true, false, true, true, false, false, false]} />
-      </Paper>
-      <StripedDataGrid
-        columns={columns}
-        rows={products}
-        getRowHeight={() => 'auto'}
-        initialState={{
-          columns: {
-            columnVisibilityModel: {
-              id: false,
-            },
-          },
+  return (
+    <Box
+      component="form"
+      onSubmit={handleSubmit(submitData)}
+      // sx={{ maxWidth: 500 }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: 2,
+          flexWrap: 'wrap',
+
+          alignItems: 'flex-start',
+          justifyContent: 'flex-start',
+          // maxWidth: 500,
+          // margin: 'auto',
+          // padding: 2,
         }}
-        getRowClassName={(params) =>
-          Number(items[params.row.fieldIndex]?.qtyToShip) > 0 ? '' : 'dimmed'
-        }
-      />
-      <Button type="submit">Submit</Button>
+      >
+        <Paper
+          sx={{ maxWidth: 400, p: 2, flexGrow: 1 }}
+          className="printable-paper"
+        >
+          <TextField
+            {...registerTextField({
+              name: 'title',
+              register,
+              variant: 'standard',
+            })}
+            label="delivery name"
+            sx={{
+              '& .MuiInput-input': {
+                fontSize: 20,
+                fontWeight: 500,
+                color: (theme) => theme.palette.primary.main,
+              },
+            }}
+          />
+          <Hr />
+          <AddressPickerMenu
+            name="shippingAddressId"
+            control={control}
+            label="shipping address"
+            options={addresses}
+            sx={{
+              maxWidth: 250,
+            }}
+          />
+          <Chip
+            label={getDeliveryName(deliveryMethods, deliveryMethodId)}
+            size="medium"
+            color="warning"
+            variant="outlined"
+          />
+          <Button type="button" size="small" color="warning" variant="outlined">
+            {getDeliveryName(deliveryMethods, deliveryMethodId)}
+          </Button>
+          <Hr my={2} mx={-2} />
+          <TimeFrameSlider control={control} name="estimatedDuration" />
+          <Hr my={2} mx={-2} />
+          <Stack direction="column" gap={1} sx={{ mb: 2 }}>
+            <Typography variant="body2">receiving days and time:</Typography>
+            <DaysSelector name="days" control={control} />
+            <TimeRangePicker name="timePeriod" control={control} />
+          </Stack>
+          <Hr my={2} mx={-2} />
+
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, mb: 1 }}>
+            <Checkbox
+              name="coiRequired"
+              control={control}
+              label="COI required"
+            />
+            {coiRequired && (
+              <Checkbox
+                name="coiReceived"
+                control={control}
+                label="COI received ?"
+              />
+            )}
+          </Box>
+
+          <TextField
+            {...registerTextField({
+              name: 'coiNotes',
+              register,
+            })}
+            label="COI notes"
+          />
+          <Hr my={4} mx={-2} />
+          <Stack direction="column" gap={2}>
+            <TextField
+              {...registerTextField({
+                name: 'amountDue',
+                register,
+              })}
+              label="balance due"
+            />
+
+            <TextField
+              {...registerTextField({
+                name: 'notes',
+                register,
+              })}
+              label="delivery notes"
+            />
+          </Stack>
+          <Button type="submit" variant="contained" sx={{ mt: 3 }}>
+            Submit
+          </Button>
+        </Paper>
+
+        <StripedDataGrid
+          columns={columns}
+          rows={products}
+          getRowHeight={() => 'auto'}
+          initialState={{
+            columns: {
+              columnVisibilityModel: {
+                id: false,
+              },
+            },
+          }}
+          sx={{ maxWidth: 700, minWidth: 360 }}
+          getRowClassName={(params) =>
+            Number(items[params.row.fieldIndex]?.qtyToShip) > 0 ? '' : 'dimmed'
+          }
+        />
+        <Paper sx={{ maxWidth: 700, p: 2 }}>
+          <Comments comments={order.comments} />
+        </Paper>
+      </Box>
     </Box>
   )
 }
