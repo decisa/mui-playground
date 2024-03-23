@@ -1,8 +1,8 @@
 import { Button, darken } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import type { DefaultValues } from 'react-hook-form'
-import FormCheckBoxDataTable from '../Components/Form/FormCheckBoxDataTable'
-import type { THead } from '../Components/Form/FormCheckBoxDataTable'
+import FormCheckBoxDataTable from '../Components/FormComponents/FormCheckBoxDataTable'
+import type { THead } from '../Components/FormComponents/FormCheckBoxDataTable'
 
 type TTableData = {
   calories: number

@@ -9,23 +9,23 @@ import {
   DaysAvailability,
   DeliveryMethod,
   FullOrder,
-} from '../../Types/dbtypes'
+} from '../Types/dbtypes'
 
-import Hr from '../Common/Hr'
+import Hr from '../Components/Common/Hr'
 
-import StripedDataGrid from '../DataGrid/StripedDataGrid'
-import ProductCard from '../Product/ProductCard'
-import ProductQtys from '../Product/ProductQtys'
-import GridArrayQty from './GridArrayQty'
-import { useSnackBar } from '../GlobalSnackBar'
-import DaysSelector from './DaysSelector'
-import TimeRangePicker from './TimeRangePicker'
-import { MinutesInterval } from '../../utils/scheduleUtils'
-import { registerTextField } from './formTypes'
-import Checkbox from './CheckBox'
-import TimeFrameSlider from './TImeFrameSlider'
-import AddressPickerMenu from './Address/AddressPickerMenu'
-import Comments from '../Order/Comments'
+import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
+import ProductCard from '../Components/Product/ProductCard'
+import ProductQtys from '../Components/Product/ProductQtys'
+import GridArrayQty from '../Components/FormComponents/GridArrayQty'
+import { useSnackBar } from '../Components/GlobalSnackBar'
+import DaysSelector from '../Components/FormComponents/DaysSelector'
+import TimeRangePicker from '../Components/FormComponents/TimeRangePicker'
+import { MinutesInterval } from '../utils/scheduleUtils'
+import { registerTextField } from '../Components/FormComponents/formTypes'
+import Checkbox from '../Components/FormComponents/CheckBox'
+import TimeFrameSlider from '../Components/FormComponents/TImeFrameSlider'
+import AddressPickerMenu from '../Components/FormComponents/Address/AddressPickerMenu'
+import Comments from '../Components/Order/Comments'
 
 type DeliveryFormProps = {
   order: FullOrder

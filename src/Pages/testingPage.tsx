@@ -9,9 +9,7 @@ import {
   getOrderByNumber,
 } from '../utils/inventoryManagement'
 import { useSnackBar } from '../Components/GlobalSnackBar'
-import DeliveryForm, {
-  DeliveryFormValues,
-} from '../Components/Form/DeliveryForm'
+import DeliveryForm, { DeliveryFormValues } from '../Forms/DeliveryForm'
 import { getDeliveryName, isCoiRequired } from '../utils/scheduleUtils'
 
 let orderNumber = '100005081'

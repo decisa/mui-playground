@@ -10,7 +10,7 @@ import { Box } from '@mui/material'
 import { useMemo } from 'react'
 import { POItem } from '../../Types/dbtypes'
 import StripedDataGrid from '../DataGrid/StripedDataGrid'
-import NumberInput from '../Form/NumberInput'
+import NumberInput from '../FormComponents/NumberInput'
 
 type POItemsProps<FormData extends FieldValues> = {
   items: POItem[]

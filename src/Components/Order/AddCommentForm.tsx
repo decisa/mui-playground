@@ -6,8 +6,8 @@ import * as yup from 'yup'
 import Button from '@mui/material/Button'
 import { useEffect, useRef, useState } from 'react'
 import FormGroup from '@mui/material/FormGroup'
-import Checkbox from '../Form/CheckBox'
-import Dropdown from '../Form/Dropdown'
+import Checkbox from '../FormComponents/CheckBox'
+import Dropdown from '../FormComponents/Dropdown'
 import {
   CommentType,
   OrderStatus,
@@ -17,7 +17,7 @@ import { getPossibleOrderStatuses } from '../../utils/magentoHelpers'
 
 import { useMagentoAPI } from '../../Magento/useMagentoAPI'
 import { OrderCommentCreate } from '../../Types/dbtypes'
-import Fieldset from '../Form/Fieldset'
+import Fieldset from '../FormComponents/Fieldset'
 import { useSnackBar } from '../GlobalSnackBar'
 
 const formSchema = yup.object().shape({

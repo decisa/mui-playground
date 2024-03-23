@@ -8,19 +8,19 @@ import FormGroup from '@mui/material/FormGroup'
 
 import { format } from 'date-fns'
 import { ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
-import { CommentType, OrderStatus } from '../../Types/magentoTypes'
-import { getPossibleOrderStatuses } from '../../utils/magentoHelpers'
+import { CommentType, OrderStatus } from '../Types/magentoTypes'
+import { getPossibleOrderStatuses } from '../utils/magentoHelpers'
 
-import { useMagentoAPI } from '../../Magento/useMagentoAPI'
-import { OrderCommentCreate } from '../../Types/dbtypes'
+import { useMagentoAPI } from '../Magento/useMagentoAPI'
+import { OrderCommentCreate } from '../Types/dbtypes'
 
-import { useSnackBar } from '../GlobalSnackBar'
-import Dropdown from './Dropdown'
-import Checkbox from './CheckBox'
-import Fieldset from './Fieldset'
+import { useSnackBar } from '../Components/GlobalSnackBar'
+import Dropdown from '../Components/FormComponents/Dropdown'
+import Checkbox from '../Components/FormComponents/CheckBox'
+import Fieldset from '../Components/FormComponents/Fieldset'
 
-import { registerTextField } from './formTypes'
-import Hr from '../Common/Hr'
+import { registerTextField } from '../Components/FormComponents/formTypes'
+import Hr from '../Components/Common/Hr'
 
 // const formSchema = yup.object().shape({
 //   comment: yup.string().required('comment is required'),

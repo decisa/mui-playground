@@ -20,7 +20,7 @@ import OrderConfirmation from '../Order/OrderConfirmation'
 import OrderHeader from '../Order/Blocks/OrderHeader'
 import Hr from '../Common/Hr'
 import OrderTotalsFooter from '../Order/Blocks/OrderTotalsFooter'
-import AddressPickerDropdown from '../Form/Address/AddressPickerDropdown'
+import AddressPickerDropdown from '../FormComponents/Address/AddressPickerDropdown'
 
 type CreateDeliveryFormData = {
   // orderId: number

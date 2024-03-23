@@ -17,12 +17,12 @@ import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
 import { GridExpandMoreIcon } from '@mui/x-data-grid'
 import { FieldPath, FieldValues, useForm } from 'react-hook-form'
 import { useCallback } from 'react'
-import { DesignColors, tokens } from '../../../theme'
+import { DesignColors, tokens } from '../theme'
 // import { OrderAddressCreate } from '../../Types/dbtypes'
-import { createOrderAddress } from '../../../utils/inventoryManagement'
-import { useSnackBar } from '../../GlobalSnackBar'
-import { Address, AddressCreate } from '../../../Types/dbtypes'
-import { latLangToCoordinates, parsePhoneNumbers } from '../../../utils/utils'
+import { createOrderAddress } from '../utils/inventoryManagement'
+import { useSnackBar } from '../Components/GlobalSnackBar'
+import { Address, AddressCreate } from '../Types/dbtypes'
+import { latLangToCoordinates, parsePhoneNumbers } from '../utils/utils'
 
 type CreateAddressFormData = {
   firstName: string

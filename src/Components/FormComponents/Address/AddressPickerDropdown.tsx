@@ -11,7 +11,7 @@ import PostAddIcon from '@mui/icons-material/PostAdd'
 import { useCallback, useState } from 'react'
 import { Address } from '../../../Types/dbtypes'
 import OrderAddress from '../../Order/Blocks/OrderAddress'
-import AddNewAddressDialog from './AddNewAddressDialog'
+import AddNewAddressDialog from '../../../Forms/AddNewAddressDialog'
 
 type DropdownProps<TForm extends FieldValues> = {
   control: Control<TForm>

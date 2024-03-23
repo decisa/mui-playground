@@ -15,8 +15,8 @@ import {
   getPurchaseOrder,
   receiveItems,
 } from '../../utils/inventoryManagement'
-import Fieldset from '../Form/Fieldset'
-import DatePicker from '../Form/DatePicker'
+import Fieldset from '../FormComponents/Fieldset'
+import DatePicker from '../FormComponents/DatePicker'
 
 import { isEmptyObject } from '../../utils/utils'
 import {

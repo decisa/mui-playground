@@ -18,9 +18,9 @@ import {
   getAllCarriers,
   getPurchaseOrder,
 } from '../../utils/inventoryManagement'
-import Fieldset from '../Form/Fieldset'
-import Dropdown from '../Form/Dropdown'
-import DatePicker from '../Form/DatePicker'
+import Fieldset from '../FormComponents/Fieldset'
+import Dropdown from '../FormComponents/Dropdown'
+import DatePicker from '../FormComponents/DatePicker'
 import POItems from '../PurchaseOrder/POItems'
 
 import { isEmptyObject } from '../../utils/utils'

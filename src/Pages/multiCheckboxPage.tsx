@@ -3,8 +3,13 @@ import { Button } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
-import CheckBoxTree, { TNestedCheckbox } from '../Components/Form/CheckBoxTree'
-import { reduceToLabels, sampleData } from '../Components/Form/sampleData'
+import CheckBoxTree, {
+  TNestedCheckbox,
+} from '../Components/FormComponents/CheckBoxTree'
+import {
+  reduceToLabels,
+  sampleData,
+} from '../Components/FormComponents/sampleData'
 
 const treeNode: yup.ObjectSchema<TNestedCheckbox> = yup.object().shape({
   id: yup.string().required(),

@@ -11,7 +11,7 @@ import { useMemo } from 'react'
 import { format } from 'date-fns'
 
 import StripedDataGrid from '../DataGrid/StripedDataGrid'
-import NumberInput from '../Form/NumberInput'
+import NumberInput from '../FormComponents/NumberInput'
 import { POShipmentIndexed } from './ReceiveShipments'
 
 type ShipmentsGridProps<FormData extends FieldValues> = {
