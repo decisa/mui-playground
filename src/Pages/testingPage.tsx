@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Box } from '@mui/material'
-import { Address, FullOrder } from '../Types/dbtypes'
+import { Result, ResultAsync } from 'neverthrow'
+import { useLoaderData } from 'react-router'
+import { Address, DeliveryMethod, FullOrder } from '../Types/dbtypes'
 import {
+  getDeliveryMethods,
   getOrderAddresses,
   getOrderByNumber,
 } from '../utils/inventoryManagement'
@@ -9,13 +12,25 @@ import { useSnackBar } from '../Components/GlobalSnackBar'
 import DeliveryForm, {
   DeliveryFormValues,
 } from '../Components/Form/DeliveryForm'
+import { getDeliveryName, isCoiRequired } from '../utils/scheduleUtils'
 
-const orderNumber = '100005081'
-// const orderNumber = '100008122'
-// const orderNumber = '100008039'
+let orderNumber = '100005081'
+orderNumber = '100008122'
+orderNumber = '100008039'
+orderNumber = '100007450' // mila kushnir
+orderNumber = '100008298'
 
 export default function TestingPage() {
   const snack = useSnackBar()
+  const deliveryMethods = (useLoaderData() as Result<DeliveryMethod[], string>)
+    .mapErr((e) => {
+      snack.error(`Delivery Methods Error: ${e}`)
+      return e
+    })
+    .unwrapOr([])
+
+  console.log('deliveryMethods', deliveryMethods)
+
   // state to store Order
   const [order, setOrder] = useState<FullOrder>()
   const [orderAddresses, setOrderAddresses] = useState<Address[]>([])
@@ -80,16 +95,37 @@ export default function TestingPage() {
       }) || []
 
     return {
+      orderId: order?.id || 0,
+      coiRequired: isCoiRequired(order),
+      coiReceived: false,
+      coiNotes: 'waiting for COI sample form from customer',
+      notes: 'please call 30 min in advance',
+      title: getDeliveryName(order),
+      days: [false, true, true, true, true, true, false],
+      estimatedDuration: {
+        start: 30,
+        end: 60,
+      },
+      amountDue: '$3,454.00',
       shippingAddressId,
+      deliveryMethodId: order?.deliveryMethodId || 0,
       items,
-    }
+      timePeriod: {
+        start: 420,
+        end: 1200,
+      },
+    } satisfies DeliveryFormValues
   }, [order, orderAddresses])
 
   if (!order) {
     return <div>Loading...</div>
   }
+  console.log('order', order)
   return (
-    <Box p={2} maxWidth={1100}>
+    <Box
+      p={2}
+      // maxWidth={1100}
+    >
       {/* <Button onClick={toggleLayout}>Layout = {layout}</Button>
       <Button onClick={toggleImage}>Image = {String(image)}</Button>
       <Button onClick={cycleSize}>{size}</Button> */}
@@ -97,7 +133,12 @@ export default function TestingPage() {
         order={order}
         initValues={initValues}
         addresses={orderAddresses}
+        deliveryMethods={deliveryMethods}
       />
     </Box>
   )
+}
+
+export async function loader(): Promise<ResultAsync<DeliveryMethod[], string>> {
+  return getDeliveryMethods()
 }
