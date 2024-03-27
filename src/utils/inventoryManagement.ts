@@ -4,6 +4,7 @@ import {
   Address,
   AddressCreate,
   Carrier,
+  Delivery,
   DeliveryMethod,
   FullOrder,
   POShipmentParsed,
@@ -14,7 +15,12 @@ import {
   PurchaseOrderRequest,
   ShortOrder,
 } from '../Types/dbtypes'
-import { isErrorWithMessage, isValidationError } from './errorHandling'
+import {
+  isErrorWithMessage,
+  isObjectWithMessage,
+  isValidationError,
+} from './errorHandling'
+import { DeliveryFormValues } from '../Forms/DeliveryForm'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -37,7 +43,7 @@ const safeJsonFetch = <T>(
 ) =>
   ResultAsync.fromPromise(
     fetch(input, init).then((response) => {
-      console.log('safeJsonFetch got response', response)
+      // console.log('safeJsonFetch got response', response)
       if (!response.ok) {
         return response
           .json()
@@ -52,8 +58,9 @@ const safeJsonFetch = <T>(
               errorMessage = err.message
             } else if (isServerError(err)) {
               errorMessage = err.error
+            } else if (isObjectWithMessage(err)) {
+              errorMessage = err.message
             }
-
             throw new Error(errorMessage)
           })
           .catch((err) => {
@@ -530,4 +537,94 @@ export const getDeliveryMethods = () => {
     `${dbHost}/deliverymethod/all`,
     request
   ).andThen((deliveryMethods) => okAsync(deliveryMethods))
+}
+
+export type DeliverySearchResult = {
+  items: Delivery[]
+  count: number
+  limit: number
+}
+
+export const getAllDeliveries = (limit = 1000) => {
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<DeliverySearchResult>(
+    `${dbHost}/delivery/all?limit=${limit}`,
+    request
+  ).andThen((searchResult) => okAsync(searchResult))
+}
+
+export const getDeliveryById = (id: number) => {
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<Delivery>(`${dbHost}/delivery/${id}`, request).andThen(
+    (searchResult) => okAsync(searchResult)
+  )
+}
+
+export const updateDelivery = (
+  deliveryId: number,
+  delivery: DeliveryFormValues
+) => {
+  const request = {
+    method: 'PATCH',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(delivery),
+  }
+  return safeJsonFetch<Delivery>(
+    `${dbHost}/delivery/${deliveryId}`,
+    request
+  ).andThen((searchResult) => okAsync(searchResult))
+}
+
+export const createDelivery = (delivery: DeliveryFormValues) => {
+  const createData = {
+    ...delivery,
+  }
+
+  const request = {
+    method: 'POST',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(createData),
+  }
+  return safeJsonFetch<Delivery>(`${dbHost}/delivery`, request).andThen(
+    (newDelivery) => okAsync(newDelivery)
+  )
+}
+
+export type DeliveryEditFormData = {
+  order: FullOrder
+  delivery: Delivery
+  addresses: Address[]
+  deliveryMethods: DeliveryMethod[]
+}
+
+export const getDeliveryEditFormData = (id: number) => {
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<DeliveryEditFormData>(
+    `${dbHost}/delivery/${id}/edit`,
+    request
+  ).andThen((searchResult) => okAsync(searchResult))
 }
