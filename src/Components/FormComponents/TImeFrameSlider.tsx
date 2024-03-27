@@ -3,9 +3,9 @@ import { Slider, Typography } from '@mui/material'
 import { Box } from '@mui/system'
 import { useEffect, useRef, useState } from 'react'
 
-import Time from '../Common/Time'
 import { KeyTypeConstraint } from './formTypes'
 import { MinutesInterval } from '../../utils/scheduleUtils'
+import TimeInterval from '../Common/TimeInterval'
 
 const minDistance = 30
 const maxValue = 12 * 60 // in minutes
@@ -97,11 +97,7 @@ export default function TimeFrameSlider<TForm extends FieldValues>({
   return (
     <Box>
       <Typography id="range-slider" gutterBottom variant="body2">
-        estimated time to complete:{' '}
-        <Box>
-          <Time minutes={slidersPosition[0]} variant="body1" /> -{' '}
-          <Time minutes={slidersPosition[1]} variant="body1" />
-        </Box>
+        estimated time to complete: <TimeInterval minutes={slidersPosition} />
         {/* {valueToLabel(slidersPosition[0])} -{' '}
         {valueToLabel(slidersPosition[1])} */}
       </Typography>
@@ -113,7 +109,6 @@ export default function TimeFrameSlider<TForm extends FieldValues>({
         onChange={handleChange2}
         valueLabelDisplay="off"
         getAriaValueText={valueToLabel}
-        // valueLabelFormat={valueToLabel}
         disableSwap
         max={maxValue}
         marks={marks}
