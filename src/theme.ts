@@ -514,7 +514,7 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
                 }
               : {
                   borderColor: colors.yellowAccent[600],
-                  color: colors.yellowAccent[900],
+                  color: colors.grey[900],
                 },
         },
       },
