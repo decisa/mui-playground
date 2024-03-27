@@ -1,26 +1,29 @@
 import { useFieldArray, useForm } from 'react-hook-form'
-import { Box, Button, Chip, Paper, TextField, Typography } from '@mui/material'
-
+import { Box, Button, Paper, TextField, Typography } from '@mui/material'
 import { GridColDef } from '@mui/x-data-grid'
 import { useEffect, useMemo } from 'react'
 import { Stack } from '@mui/system'
 import {
   Address,
   DaysAvailability,
+  Delivery,
   DeliveryMethod,
   FullOrder,
+  Product,
 } from '../Types/dbtypes'
 
 import Hr from '../Components/Common/Hr'
-
 import StripedDataGrid from '../Components/DataGrid/StripedDataGrid'
 import ProductCard from '../Components/Product/ProductCard'
 import ProductQtys from '../Components/Product/ProductQtys'
 import GridArrayQty from '../Components/FormComponents/GridArrayQty'
-import { useSnackBar } from '../Components/GlobalSnackBar'
 import DaysSelector from '../Components/FormComponents/DaysSelector'
 import TimeRangePicker from '../Components/FormComponents/TimeRangePicker'
-import { MinutesInterval } from '../utils/scheduleUtils'
+import {
+  MinutesInterval,
+  getDeliveryName,
+  isCoiRequired,
+} from '../utils/scheduleUtils'
 import { registerTextField } from '../Components/FormComponents/formTypes'
 import Checkbox from '../Components/FormComponents/CheckBox'
 import TimeFrameSlider from '../Components/FormComponents/TImeFrameSlider'
@@ -29,12 +32,14 @@ import Comments from '../Components/Order/Comments'
 import DeliveryMethodMenu from '../Components/FormComponents/DeliveryMethodMenu'
 
 type DeliveryFormProps = {
-  order: FullOrder
+  comments?: FullOrder['comments']
+  products: Product[]
   addresses: Address[]
   initValues: DeliveryFormValues
   deliveryMethods: DeliveryMethod[]
   onSubmit?: (data: DeliveryFormValues) => void
   onNewAddress?: (newAddress: Address) => void
+  submitLabel?: string
 }
 
 export type DeliveryFormValues = {
@@ -52,31 +57,20 @@ export type DeliveryFormValues = {
   timePeriod: MinutesInterval
   items: {
     configurationId: number
-    qtyToShip: number
+    qty: number
   }[]
-}
-// todo: Shipping Method
-
-const delivery = {
-  estimatedDuration: null,
-  id: 13,
-  status: 'pending',
-
-  coiRequired: false,
-  coiReceived: false,
-  coiNotes: null,
-  amountDue: null,
-  createdAt: '2024-02-08T22:40:19.000Z',
-  updatedAt: '2024-02-08T22:40:19.000Z',
 }
 
 export default function DeliveryForm({
-  order,
+  // order,
+  comments,
+  products,
   initValues,
   onSubmit,
   addresses,
   deliveryMethods,
   onNewAddress,
+  submitLabel = 'submit',
 }: DeliveryFormProps) {
   const {
     handleSubmit,
@@ -91,6 +85,7 @@ export default function DeliveryForm({
     // resolver: yupResolver(shipmentFormSchema),
     defaultValues: initValues,
   })
+  console.log('addresses', addresses)
   const items = watch('items')
   const coiRequired = watch('coiRequired')
 
@@ -98,32 +93,33 @@ export default function DeliveryForm({
     console.log('submitData', data)
     const result = {
       ...data,
-      items: data.items.filter((item) => item.qtyToShip > 0),
+      items: data.items.filter((item) => item.qty > 0),
+      // if coi is not required, set coiReceived to false
+      coiReceived: coiRequired ? data.coiReceived : false,
     }
-    // todo: make sure that COI received is false if COI is not required
     // console.log('submitData', result)
     if (onSubmit) {
       onSubmit(result)
     }
   }
 
-  const snack = useSnackBar()
-
   useEffect(() => {
+    // console.log('use EFFECT initValues', initValues)
+    // update form values if the change is coming from outside
     reset(initValues)
   }, [initValues, reset])
 
   type ProductWithIndex = FullOrder['products'][0] & { fieldIndex: number }
 
-  const products: ProductWithIndex[] = useMemo(() => {
-    if (!order) {
+  const productsWithIndex: ProductWithIndex[] = useMemo(() => {
+    if (!products) {
       return []
     }
-    return order.products.map((product, index) => ({
+    return products.map((product, index) => ({
       ...product,
       fieldIndex: index,
     }))
-  }, [order])
+  }, [products])
 
   const { fields } = useFieldArray({
     control,
@@ -161,7 +157,7 @@ export default function DeliveryForm({
       ),
     },
     {
-      field: 'qty',
+      field: 'qtyInfo',
       headerName: 'Qty',
       align: 'left',
       headerAlign: 'left',
@@ -170,7 +166,7 @@ export default function DeliveryForm({
       renderCell: (params) => <ProductQtys product={params.row} />,
     },
     {
-      field: 'qtyToShip',
+      field: 'qty',
       headerName: 'To Ship',
       disableColumnMenu: true,
       sortable: false,
@@ -196,7 +192,7 @@ export default function DeliveryForm({
             name="items"
             index={index}
             key={fields[index]?.id}
-            fieldName="qtyToShip"
+            fieldName="qty"
             max={ready}
           />
         )
@@ -314,13 +310,13 @@ export default function DeliveryForm({
             />
           </Stack>
           <Button type="submit" variant="contained" sx={{ mt: 3 }}>
-            Submit
+            {submitLabel}
           </Button>
         </Paper>
 
         <StripedDataGrid
           columns={columns}
-          rows={products}
+          rows={productsWithIndex}
           getRowHeight={() => 'auto'}
           initialState={{
             columns: {
@@ -331,13 +327,196 @@ export default function DeliveryForm({
           }}
           sx={{ maxWidth: 700, minWidth: 360 }}
           getRowClassName={(params) =>
-            Number(items[params.row.fieldIndex]?.qtyToShip) > 0 ? '' : 'dimmed'
+            Number(items[params.row.fieldIndex]?.qty) > 0 ? '' : 'dimmed'
           }
         />
-        <Paper sx={{ maxWidth: 700, p: 2 }}>
-          <Comments comments={order.comments} />
-        </Paper>
+        {comments && comments.length && (
+          <Paper sx={{ maxWidth: 700, p: 2 }}>
+            <Comments comments={comments} />
+          </Paper>
+        )}
       </Box>
     </Box>
   )
+}
+
+function defaultValueOrFallback<T>(
+  defaultValue: T | undefined,
+  fallback: T
+): T {
+  return defaultValue !== undefined ? defaultValue : fallback
+}
+
+function getDefaultTimePeriod(order?: FullOrder) {
+  const likelyToHaveRestrictions =
+    order && order.shippingAddress.street.length > 1
+  return likelyToHaveRestrictions
+    ? { start: 8 * 60, end: 16.5 * 60 }
+    : { start: 7 * 60, end: 20 * 60 }
+}
+
+function getDefaultDays(order?: FullOrder): DaysAvailability {
+  const likelyToHaveRestrictions =
+    order && order.shippingAddress.street.length > 1
+  return likelyToHaveRestrictions
+    ? [false, true, true, true, true, true, false]
+    : [true, true, true, true, true, true, true]
+}
+// function valueOrDefault<T>(value: T | undefined, defaultValue: T): T {
+//   return value !== undefined ? value : defaultValue
+// }
+
+type GetDefaultFormValuesProps = {
+  order?: FullOrder
+  delivery?: Delivery
+  addresses?: Address[]
+  deliveryMethods?: DeliveryMethod[]
+  defaultValues?: Omit<
+    Partial<DeliveryFormValues>,
+    'orderId' | 'shippingAddressId' | 'items'
+  >
+}
+
+export function prepareDeliveryFormData({
+  order,
+  delivery: existingDelivery,
+  addresses,
+  deliveryMethods,
+  defaultValues,
+}: GetDefaultFormValuesProps): {
+  initValues: DeliveryFormValues
+  addresses: Address[]
+  products: Product[]
+  deliveryMethods: DeliveryMethod[]
+  comments: FullOrder['comments']
+} {
+  let result: DeliveryFormValues
+  let products = order?.products || []
+  // 1. generate values based on existing delivery if it exists
+  if (existingDelivery) {
+    const { availability, ...remainingDeliveryFields } = existingDelivery
+    result = {
+      ...remainingDeliveryFields,
+      days: availability.days,
+      timePeriod: availability.timePeriod,
+      estimatedDuration: {
+        start: existingDelivery?.estimatedDuration?.start || 0,
+        end: existingDelivery?.estimatedDuration?.end || 0,
+      },
+    }
+    // 2. if values were generated from delivery, add missing product items from the order, since existing delivery may not have all the products. try to preserve the order of products as in the order and then followed by any unique items that are on delivery but not in the order
+
+    const resultItems =
+      order?.products.map((product) => ({
+        configurationId: product.id,
+        qty: 0,
+      })) || []
+
+    for (const item of existingDelivery.items) {
+      const found = resultItems.find(
+        (orderItem) => orderItem.configurationId === item.configurationId
+      )
+      if (found) {
+        found.qty = item.qty
+      } else {
+        resultItems.push(item)
+      }
+    }
+    result.items = resultItems
+
+    // check if delivery record has more products that in the order
+    // if so, add them to the end of the list
+
+    const missingProducts = existingDelivery.items
+      .filter(
+        (item) =>
+          !order?.products.find(
+            (product) => product.id === item.configurationId
+          )
+      )
+      .map((item) => item.product)
+
+    if (missingProducts.length > 0) {
+      products = [...products, ...missingProducts]
+    }
+  } else {
+    // 3. if delivery does not exist, generate values based on order
+    // 4. if generated based on order, add default values to fields that are null or undefined
+    const shippingAddressId = order?.shippingAddress?.id || 0
+    const orderId = order?.id || 0
+    const items =
+      order?.products.map((product) => {
+        const { id, configuration } = product
+        const {
+          // qtyOrdered,
+          summary,
+        } = configuration
+        const {
+          qtyConfirmed = 0, // delivery confirmed by customer
+          qtyReceived = 0, // at the warehouse
+          // qtyPlanned = 0, // delivery created
+          // qtyPurchased = 0, // from vendor
+          qtyScheduled = 0, // delivery added to a schedule
+          // qtyShipped = 0, // from vendor
+        } = summary
+        const ready = qtyReceived - qtyConfirmed - qtyScheduled
+        return {
+          configurationId: id,
+          qty: ready,
+        }
+      }) || []
+
+    result = {
+      orderId, // orderId is ignored in defaultValues
+      coiRequired: defaultValueOrFallback(
+        defaultValues?.coiRequired,
+        isCoiRequired(order)
+      ),
+
+      coiReceived: defaultValueOrFallback(defaultValues?.coiReceived, false),
+      coiNotes: defaultValueOrFallback(defaultValues?.coiNotes, ''),
+      notes: defaultValueOrFallback(defaultValues?.notes, ''),
+      title: defaultValueOrFallback(
+        defaultValues?.title,
+        getDeliveryName(order)
+      ),
+      days: defaultValueOrFallback(defaultValues?.days, getDefaultDays(order)),
+      estimatedDuration: defaultValueOrFallback(
+        defaultValues?.estimatedDuration,
+        {
+          start: 30,
+          end: 60,
+        }
+      ),
+      amountDue: defaultValueOrFallback(defaultValues?.amountDue, ''),
+      shippingAddressId, // shippingAddressId is ignored in defaultValues
+      deliveryMethodId: defaultValueOrFallback(
+        defaultValues?.deliveryMethodId,
+        order?.deliveryMethodId || 0
+      ),
+      items, // items are ignored in defaultValues
+      timePeriod: defaultValueOrFallback(
+        defaultValues?.timePeriod,
+        getDefaultTimePeriod(order)
+      ),
+    } satisfies DeliveryFormValues
+  }
+
+  // check if selected address is in the list of addresses
+  if (addresses && addresses?.length > 0) {
+    if (!addresses.find((address) => address.id === result.shippingAddressId)) {
+      // if selected address is not in the list, select the first address in the list
+      result.shippingAddressId = addresses[0]?.id || 0
+    }
+  }
+
+  // 5. return the result
+
+  return {
+    initValues: result,
+    addresses: addresses || [],
+    products,
+    deliveryMethods: deliveryMethods || [],
+    comments: order?.comments || [],
+  }
 }
