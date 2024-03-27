@@ -8,13 +8,18 @@ type TimeStamps = {
 
 export type ProductSummary = {
   configurationId: number
-  qtyConfirmed: number
-  qtyPlanned: number
-  qtyPurchased: number
-  qtyReceived: number
-  qtyScheduled: number
-  qtyShipped: number
+  qtyConfirmed: number // delivery confirmed by customer
+  qtyPlanned: number // delivery created
+  qtyPurchased: number // from vendor
+  qtyReceived: number // at the warehouse
+  qtyScheduled: number // delivery added to a schedule
+  qtyShipped: number // from vendor
 }
+// qtyOrdered = qtyPurchased + processing
+// qtyPurchased = qtyShipped + in production
+// qtyShipped = qtyReceived + in transit
+// qtyReceived = qtyPlanned + ready
+// qtyPlanned = qtyScheduled + qtyConfirmed + require scheduling
 
 export const carrierTypes = ['container', 'freight', 'parcel', 'auto'] as const
 
