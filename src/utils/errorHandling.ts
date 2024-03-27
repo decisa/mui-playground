@@ -21,6 +21,25 @@ export function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   )
 }
 
+type ObjectWithMessage = {
+  message: string
+}
+
+export function isObjectWithMessage(obj: unknown): obj is ObjectWithMessage {
+  console.log(
+    'checking if errror has message',
+    obj,
+    typeof obj,
+    obj instanceof Error
+  )
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'message' in obj &&
+    typeof obj.message === 'string'
+  )
+}
+
 export function isValidationError(
   unknownError: unknown
 ): unknownError is ValidationErrorWithMessages {
