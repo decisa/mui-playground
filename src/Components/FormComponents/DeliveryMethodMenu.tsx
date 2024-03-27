@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { DeliveryMethod } from '../../Types/dbtypes'
 import { getDeliveryLabel } from '../../utils/scheduleUtils'
 
-function getColor(selectedDeliveryMethodId: number) {
+export function getDeliveryColor(selectedDeliveryMethodId: number) {
   switch (selectedDeliveryMethodId) {
     case 1: // standard
     case 8: // standard international
@@ -75,7 +75,7 @@ export default function DeliveryMethodMenu<TForm extends FieldValues>({
           variant={theme.palette.mode === 'dark' ? 'outlined' : 'contained'}
           type="button"
           onClick={openMenu}
-          color={getColor(selectedDeliveryMethodId as number)}
+          color={getDeliveryColor(Number(selectedDeliveryMethodId))}
           size="small"
           sx={{ width: 160 }}
           aria-controls={anchorEl ? 'account-menu' : undefined}
