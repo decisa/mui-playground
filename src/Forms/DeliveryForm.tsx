@@ -58,6 +58,7 @@ export type DeliveryFormValues = {
   items: {
     configurationId: number
     qty: number
+    maxQty?: number
   }[]
 }
 
@@ -176,15 +177,6 @@ export default function DeliveryForm({
       cellClassName: 'keep-visible',
       renderCell: (params) => {
         // console.log('params', params)
-        const {
-          qtyConfirmed = 0, // delivery confirmed by customer
-          qtyReceived = 0, // at the warehouse
-          // qtyPlanned = 0, // delivery created
-          // qtyPurchased = 0, // from vendor
-          qtyScheduled = 0, // delivery added to a schedule
-          // qtyShipped = 0, // from vendor
-        } = params?.row?.configuration?.summary || {}
-        const ready = qtyReceived - qtyConfirmed - qtyScheduled
         const index = params.row.fieldIndex
         return (
           <GridArrayQty
@@ -193,7 +185,7 @@ export default function DeliveryForm({
             index={index}
             key={fields[index]?.id}
             fieldName="qty"
-            max={ready}
+            max={fields[index]?.maxQty}
           />
         )
       },
@@ -406,23 +398,36 @@ export function prepareDeliveryFormData({
     }
     // 2. if values were generated from delivery, add missing product items from the order, since existing delivery may not have all the products. try to preserve the order of products as in the order and then followed by any unique items that are on delivery but not in the order
 
-    const resultItems =
-      order?.products.map((product) => ({
-        configurationId: product.id,
-        qty: 0,
-      })) || []
+    const allProducts =
+      order?.products.map((product) => {
+        const { qtyReceived, qtyPlanned } = product.configuration.summary || {}
+        const ready = qtyReceived - qtyPlanned
+        return {
+          configurationId: product.id,
+          qty: 0,
+          maxQty: ready,
+        }
+      }) || []
 
-    for (const item of existingDelivery.items) {
-      const found = resultItems.find(
-        (orderItem) => orderItem.configurationId === item.configurationId
+    for (const deliveryItem of existingDelivery.items) {
+      const found = allProducts.find(
+        (orderItem) =>
+          orderItem.configurationId === deliveryItem.configurationId
       )
       if (found) {
-        found.qty = item.qty
+        found.qty = deliveryItem.qty
+        // max qty is based on qtyReceived - qtyPlanned
+        // since we are editing an existing delivery, we can assume that
+        // qtyPlanned already accounts for the qty in current delivery so we need to add it to get max allowed qty
+        found.maxQty += deliveryItem.qty
       } else {
-        resultItems.push(item)
+        allProducts.push({
+          ...deliveryItem,
+          maxQty: deliveryItem.qty,
+        })
       }
     }
-    result.items = resultItems
+    result.items = allProducts
 
     // check if delivery record has more products that in the order
     // if so, add them to the end of the list
@@ -447,22 +452,21 @@ export function prepareDeliveryFormData({
     const items =
       order?.products.map((product) => {
         const { id, configuration } = product
+        const { qtyOrdered, summary } = configuration
         const {
-          // qtyOrdered,
-          summary,
-        } = configuration
-        const {
-          qtyConfirmed = 0, // delivery confirmed by customer
+          // qtyConfirmed = 0, // delivery confirmed by customer
           qtyReceived = 0, // at the warehouse
-          // qtyPlanned = 0, // delivery created
+          qtyPlanned = 0, // delivery created
           // qtyPurchased = 0, // from vendor
-          qtyScheduled = 0, // delivery added to a schedule
+          // qtyScheduled = 0, // delivery added to a schedule
           // qtyShipped = 0, // from vendor
         } = summary
-        const ready = qtyReceived - qtyConfirmed - qtyScheduled
+        // const ready = qtyReceived - qtyConfirmed - qtyScheduled
+        const ready = Math.min(qtyOrdered, qtyReceived - qtyPlanned)
         return {
           configurationId: id,
           qty: ready,
+          maxQty: ready,
         }
       }) || []
 
