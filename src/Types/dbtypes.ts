@@ -1,3 +1,4 @@
+import { MinutesInterval } from '../utils/scheduleUtils'
 import { CommentType, OrderStatus, ProductType } from './magentoTypes'
 
 type TimeStamps = {
@@ -563,11 +564,27 @@ export type Period = {
   end: number
 }
 
-export type DeliveryItemCreational = {
-  // deliveryId?: number
-  configurationId: number
+type DeliveryItemSchema = {
   qty: number
 }
+
+type DeliveryItemIDs = {
+  id: number
+  deliveryId: number
+  configurationId: number
+}
+
+type DeliveryItemAssociations = {
+  product: Product
+}
+
+export type DeliveryItemCreate = DeliveryItemSchema &
+  Pick<DeliveryItemIDs, 'configurationId'>
+
+export type DeliveryItem = DeliveryItemSchema &
+  DeliveryItemIDs &
+  TimeStamps &
+  DeliveryItemAssociations
 
 export const deliveryStatuses = ['pending', 'scheduled', 'confirmed'] as const
 export type DeliveryStatus = (typeof deliveryStatuses)[number]
@@ -581,22 +598,45 @@ export type DaysAvailability = [
   boolean,
   boolean
 ]
-export type DeliveryCreational = {
-  // id: number
+
+export type DeliveryCreational = Omit<DeliverySchema, 'availability'> & {
+  days: DaysAvailability
+  timePeriod: MinutesInterval
+  items: DeliveryItemCreate[]
+} & Partial<TimeStamps>
+
+type DeliverySchema = {
+  title: string
+  estimatedDuration: MinutesInterval | null
+  status: DeliveryStatus
+  notes: string | null
+  coiRequired: boolean
+  coiReceived: boolean
+  coiNotes: string | null
+  amountDue: string | null
+  availability: {
+    days: DaysAvailability
+    timePeriod: MinutesInterval
+  }
+}
+
+type DeliveryIDs = {
+  id: number
   orderId: number
   shippingAddressId: number
-  amountDue?: string | null
-  coiRequired?: boolean // has default value (false)
-  coiReceived?: boolean // has default value (false)
-  coiNotes?: string | null
-  days?: DaysAvailability // virtual Sunday-Saturday
-  deliveryStopId?: number | null
-  estimatedDuration?: [number, number] | null
-  items: DeliveryItemCreational[]
-  timePeriod?: Period // virtual
-  notes?: string | null
-  status?: DeliveryStatus
-  title?: string
-  createdAt?: Date
-  updatedAt?: Date
+  deliveryMethodId: 1
 }
+
+// type DeliveryItem
+
+type DeliveryAssociations = {
+  items: DeliveryItem[]
+  order: OrderBase
+  shippingAddress: Address
+  deliveryMethod: DeliveryMethod
+}
+
+export type Delivery = DeliverySchema &
+  DeliveryIDs &
+  TimeStamps &
+  DeliveryAssociations
