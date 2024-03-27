@@ -54,6 +54,12 @@ export const mainNavbarItems = [
     path: 'testing',
     icon: <BugReportIcon />,
   },
+  {
+    id: 8,
+    label: 'Planning',
+    path: '/deliveries/planning',
+    icon: <BugReportIcon />,
+  },
   // {
   //   id: 10,
   //   label: 'Authentication',
