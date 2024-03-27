@@ -295,58 +295,61 @@ export default function Comments({ comments }: CommentsProps) {
   )
   // console.log(highlightedComments)
   return (
-    <Timeline
-      sx={{
-        [`& .${timelineOppositeContentClasses.root}`]: {
-          maxWidth: 120,
-          minWidth: 120,
-          width: 120,
-          textAlign: 'left',
-          pl: 0,
-        },
-        [`& .${timelineContentClasses.root}`]: {
-          pr: 0,
-        },
-        maxWidth: 840,
-        px: 0,
-      }}
-    >
-      {highlightedComments.map((comment, index) => (
-        <TimelineItem
-          key={comment.id}
-          sx={{
-            px: 2,
-            backgroundColor: comment.highlighted
-              ? colors.background[50]
-              : undefined,
-          }}
-        >
-          <TimelineOppositeContent color="textSecondary" variant="h6">
-            {comment.createdAt}
-            <Chip
-              size="small"
-              variant="outlined"
-              sx={{ userSelect: 'none' }}
-              {...getCommentTypeIconInfo(comment)}
-            />
-          </TimelineOppositeContent>
-          <TimelineSeparator>
-            <TimelineDot color={getCommentTypeIconInfo(comment).color} />
-            {index !== comments.length - 1 && (
-              <TimelineConnector
-                color={getCommentTypeIconInfo(comment).color}
-              />
-            )}
-          </TimelineSeparator>
-          <TimelineContent
-            variant="body2"
-            sx={{ textAlign: 'justify', whiteSpace: 'pre-wrap' }}
+    <Box>
+      <Typography variant="h5">order comments</Typography>
+      <Timeline
+        sx={{
+          [`& .${timelineOppositeContentClasses.root}`]: {
+            maxWidth: 120,
+            minWidth: 120,
+            width: 120,
+            textAlign: 'left',
+            pl: 0,
+          },
+          [`& .${timelineContentClasses.root}`]: {
+            pr: 0,
+          },
+          maxWidth: 840,
+          px: 0,
+        }}
+      >
+        {highlightedComments.map((comment, index) => (
+          <TimelineItem
+            key={comment.id}
+            sx={{
+              px: 2,
+              backgroundColor: comment.highlighted
+                ? colors.background[50]
+                : undefined,
+            }}
           >
-            {getCommentVisibilityInfo(comment)}
-            {comment.comment}
-          </TimelineContent>
-        </TimelineItem>
-      ))}
-    </Timeline>
+            <TimelineOppositeContent color="textSecondary" variant="h6">
+              {comment.createdAt}
+              <Chip
+                size="small"
+                variant="outlined"
+                sx={{ userSelect: 'none' }}
+                {...getCommentTypeIconInfo(comment)}
+              />
+            </TimelineOppositeContent>
+            <TimelineSeparator>
+              <TimelineDot color={getCommentTypeIconInfo(comment).color} />
+              {index !== comments.length - 1 && (
+                <TimelineConnector
+                  color={getCommentTypeIconInfo(comment).color}
+                />
+              )}
+            </TimelineSeparator>
+            <TimelineContent
+              variant="body2"
+              sx={{ textAlign: 'justify', whiteSpace: 'pre-wrap' }}
+            >
+              {getCommentVisibilityInfo(comment)}
+              {comment.comment}
+            </TimelineContent>
+          </TimelineItem>
+        ))}
+      </Timeline>
+    </Box>
   )
 }
