@@ -54,6 +54,7 @@ export default function ProductQtys({ product }: ProductQtyProps) {
       {inProduction && (
         <Typography variant="body2">In production: {inProduction}</Typography>
       )}
+      <Typography variant="body2">planned: {qtyPlanned}</Typography>
     </Stack>
   )
 }
