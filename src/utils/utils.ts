@@ -1,3 +1,5 @@
+import { useLocation, useNavigate } from 'react-router'
+
 type EmptyObject = null | undefined | 0 | '' | never[] | Record<string, never>
 
 /**
@@ -124,4 +126,26 @@ export function parsePhoneNumbers(phoneStr: string): string {
   const regex = /(\+?\d*\s?)?\(?(\d{3})\)?[-\s.]?(\d{3})[-\s.]?(\d{4})/g
 
   return phoneStr.replace(regex, replacerFunction)
+}
+
+type GoBackProps = {
+  fallback?: string
+}
+
+export const useGoBack = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const thereIsAPrevPage = location.key !== 'default'
+  // if (thereIsAPrevPage) {
+  //   return (_arg: { fallback?: string }) => navigate(-1)
+  // }
+  function goBack(args?: GoBackProps) {
+    const { fallback = '/' } = args || {}
+    if (thereIsAPrevPage) {
+      navigate(-1)
+    } else {
+      navigate(fallback)
+    }
+  }
+  return goBack
 }
