@@ -94,7 +94,7 @@ export default function DeliveryForm({
     console.log('submitData', data)
     const result = {
       ...data,
-      items: data.items.filter((item) => item.qty > 0),
+      // items: data.items.filter((item) => item.qty > 0),
       // if coi is not required, set coiReceived to false
       coiReceived: coiRequired ? data.coiReceived : false,
     }
@@ -369,6 +369,12 @@ type GetDefaultFormValuesProps = {
   >
 }
 
+function getReadyQty(product: Product) {
+  const { qtyOrdered } = product.configuration
+  const { qtyReceived, qtyPlanned } = product.configuration.summary || {}
+  return Math.min(qtyReceived, qtyOrdered) - qtyPlanned
+}
+
 export function prepareDeliveryFormData({
   order,
   delivery: existingDelivery,
@@ -399,15 +405,11 @@ export function prepareDeliveryFormData({
     // 2. if values were generated from delivery, add missing product items from the order, since existing delivery may not have all the products. try to preserve the order of products as in the order and then followed by any unique items that are on delivery but not in the order
 
     const allProducts =
-      order?.products.map((product) => {
-        const { qtyReceived, qtyPlanned } = product.configuration.summary || {}
-        const ready = qtyReceived - qtyPlanned
-        return {
-          configurationId: product.id,
-          qty: 0,
-          maxQty: ready,
-        }
-      }) || []
+      order?.products.map((product) => ({
+        configurationId: product.id,
+        qty: 0,
+        maxQty: getReadyQty(product),
+      })) || []
 
     for (const deliveryItem of existingDelivery.items) {
       const found = allProducts.find(
@@ -451,20 +453,9 @@ export function prepareDeliveryFormData({
     const orderId = order?.id || 0
     const items =
       order?.products.map((product) => {
-        const { id, configuration } = product
-        const { qtyOrdered, summary } = configuration
-        const {
-          // qtyConfirmed = 0, // delivery confirmed by customer
-          qtyReceived = 0, // at the warehouse
-          qtyPlanned = 0, // delivery created
-          // qtyPurchased = 0, // from vendor
-          // qtyScheduled = 0, // delivery added to a schedule
-          // qtyShipped = 0, // from vendor
-        } = summary
-        // const ready = qtyReceived - qtyConfirmed - qtyScheduled
-        const ready = Math.min(qtyOrdered, qtyReceived - qtyPlanned)
+        const ready = getReadyQty(product)
         return {
-          configurationId: id,
+          configurationId: product.id,
           qty: ready,
           maxQty: ready,
         }
