@@ -1,7 +1,7 @@
 import { Result, ResultAsync } from 'neverthrow'
 import { useLoaderData } from 'react-router'
-import { GridColDef, useGridApiRef } from '@mui/x-data-grid'
-import { useMemo } from 'react'
+import { GridColDef, GridToolbar, useGridApiRef } from '@mui/x-data-grid'
+import { useEffect, useMemo } from 'react'
 import { List, ListItem, Typography } from '@mui/material'
 import { Box } from '@mui/system'
 import { Link } from 'react-router-dom'
@@ -17,7 +17,12 @@ import { useRowActionDialog } from '../../Components/DataGrid/RowActionDialog'
 import DeliveryMethodChip from '../../Components/Order/DeliveryMethodChip'
 import TimeInterval from '../../Components/Common/TimeInterval'
 
+const pageTitle = 'Delivery Planning'
+
 export default function PlanningPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
   const snack = useSnackBar()
   const deliveryResults: DeliverySearchResult = (
     useLoaderData() as Result<DeliverySearchResult, string>
@@ -76,6 +81,14 @@ export default function PlanningPage() {
       renderCell: (params) => (
         <OrderAddress address={params.row.shippingAddress} />
       ),
+      valueGetter: (params) => {
+        const { shippingAddress } = params.row
+        const { firstName, lastName, city, state, street, phone, altPhone } =
+          shippingAddress
+        return [firstName, lastName, city, state, street, phone, altPhone]
+          .filter(Boolean)
+          .join(', ')
+      },
     },
     {
       field: 'order',
@@ -120,6 +133,15 @@ export default function PlanningPage() {
         <DeliveryItemsList items={params.row.items} />
       ),
       flex: 2,
+      valueGetter: (params) => {
+        const { items } = params.row
+        return items
+          .map(({ product }) => {
+            const { name, brand } = product
+            return `${name} - ${brand?.name || ''}`
+          })
+          .join(', ')
+      },
     },
 
     {
@@ -151,12 +173,25 @@ export default function PlanningPage() {
   )
 
   return (
-    <Box>
+    <Box sx={{ p: 2, maxWidth: 1100 }}>
       <StripedDataGrid
         apiRef={apiRef}
         rows={deliveries}
         columns={columns}
         getRowHeight={() => 'auto'}
+        checkboxSelection
+        slots={{ toolbar: GridToolbar }}
+        slotProps={{
+          toolbar: {
+            showQuickFilter: true,
+            quickFilterProps: {
+              placeholder: 'Search deliveries',
+            },
+            sx: {
+              flexDirection: 'row-reverse',
+            },
+          },
+        }}
       />
     </Box>
   )
