@@ -15,7 +15,7 @@ import { ChipColor } from '../../Types/muiTypes'
 import { StatusGetter } from '../DataGrid/useStatusFilter'
 import { GridRowEditControls } from '../PurchaseOrder/gridPOActions'
 import { useSnackBar } from '../GlobalSnackBar'
-import CreateDeliveryForm from '../CreateDelivery/CreateDelivery'
+// import CreateDeliveryForm from '../CreateDelivery/CreateDelivery'
 import { OpenActionDialogProps } from '../DataGrid/RowActionDialog'
 
 export const orderStatuses = [
@@ -229,28 +229,6 @@ export const getOrderGridActions: GridActionsGetter<ShortOrder> = ({
       showInMenu
     />
   )
-
-  if (openActionDialog) {
-    if (orderStatus.has('ready')) {
-      actions.push(
-        <GridActionsCellItem
-          icon={<OutputIcon titleAccess="console.log" />}
-          label="Create delivery"
-          color="primary"
-          onClick={() => {
-            openActionDialog({
-              rowParams: params,
-              rowAction: CreateDeliveryForm,
-              actionTitle: 'Create Shipment for Purchase Order',
-              actionCallToAction: 'Create Shipment',
-            })
-            // console.log('params', params)
-          }}
-          showInMenu
-        />
-      )
-    }
-  }
 
   return actions
 }
