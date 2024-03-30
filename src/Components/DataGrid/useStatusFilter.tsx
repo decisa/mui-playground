@@ -1,4 +1,4 @@
-import { Chip, Stack } from '@mui/material'
+import { Chip, Link, Stack } from '@mui/material'
 import {
   GridColDef,
   GridFilterInputValueProps,
@@ -9,6 +9,7 @@ import {
   GridValueGetterParams,
 } from '@mui/x-data-grid'
 import { useCallback, useEffect, useState } from 'react'
+
 import { setsIntersectOrMissing } from '../../utils/utils'
 import { ChipColor } from '../../Types/muiTypes'
 
@@ -173,21 +174,40 @@ export default function useStatusFilter<
   }
 }
 
+// fixme: this is a temporary test to include links. needs to be rewritten as it ignores types
 const renderStatus = <TableData extends GridValidRowModel, StatusValues>(
-  { value }: GridRenderCellParams<TableData, Set<StatusValues>>,
+  { value, row }: GridRenderCellParams<TableData, Set<StatusValues>>,
   getStatusColor: (status: StatusValues) => ChipColor
 ) => {
+  // console.log('row!!!!!!!!!!!', row)
   const statuses = value || []
-  const badges = [...statuses].map((status, ind) => (
-    <Chip
-      size="small"
-      variant="outlined"
-      color={getStatusColor(status)}
-      label={String(status)}
-      // title={title}
-      key={ind}
-    />
-  ))
+  const badges = [...statuses].map((status, ind) => {
+    if (status === 'ready') {
+      return (
+        <Link href={`/orders/${Number(row.id)}/deliverycreate/`}>
+          <Chip
+            size="small"
+            variant="outlined"
+            color={getStatusColor(status)}
+            label={String(status)}
+            key={ind}
+            sx={{ cursor: 'pointer' }}
+          />
+        </Link>
+      )
+    }
+
+    return (
+      <Chip
+        size="small"
+        variant="outlined"
+        color={getStatusColor(status)}
+        label={String(status)}
+        // title={title}
+        key={ind}
+      />
+    )
+  })
 
   return <Stack direction="column">{badges}</Stack>
 }
