@@ -18,12 +18,12 @@ export const mainNavbarItems = [
     path: 'magento',
     icon: <SearchIcon />,
   },
-  {
-    id: 2,
-    label: 'Orders Table',
-    path: 'order',
-    icon: <SavedSearchIcon />,
-  },
+  // {
+  //   id: 2,
+  //   label: 'Orders Table',
+  //   path: 'orders/table',
+  //   icon: <SavedSearchIcon />,
+  // },
   {
     id: 6,
     label: 'Orders Grid',
