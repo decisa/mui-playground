@@ -615,7 +615,31 @@ export type DeliveryEditFormData = {
   deliveryMethods: DeliveryMethod[]
 }
 
-export const getDeliveryEditFormData = (id: number) => {
+export function getDeliveryEditFormData(props: {
+  action: 'edit'
+  orderId?: never
+  deliveryId: number
+}): ResultAsync<DeliveryEditFormData, string>
+export function getDeliveryEditFormData(props: {
+  action: 'create'
+  orderId: number
+  deliveryId?: never
+}): ResultAsync<DeliveryEditFormData, string>
+
+export function getDeliveryEditFormData(props: {
+  action: 'edit' | 'create'
+  orderId?: number
+  deliveryId?: number
+}): ResultAsync<DeliveryEditFormData, string> {
+  const { action, orderId, deliveryId } = props
+  let url = ''
+  if (action === 'edit') {
+    url = `${dbHost}/delivery/${deliveryId || 0}/edit`
+  } else if (action === 'create') {
+    url = `${dbHost}/order/${orderId || 0}/deliverycreate`
+  } else {
+    throw new Error('Invalid action')
+  }
   const request = {
     method: 'GET',
     mode: 'cors' as RequestMode,
@@ -623,8 +647,7 @@ export const getDeliveryEditFormData = (id: number) => {
       'Content-Type': 'application/json',
     },
   }
-  return safeJsonFetch<DeliveryEditFormData>(
-    `${dbHost}/delivery/${id}/edit`,
-    request
-  ).andThen((searchResult) => okAsync(searchResult))
+  return safeJsonFetch<DeliveryEditFormData>(url, request).andThen(
+    (searchResult) => okAsync(searchResult)
+  )
 }
