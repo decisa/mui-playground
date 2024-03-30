@@ -14,6 +14,7 @@ import { useSnackBar } from '../Components/GlobalSnackBar'
 import DeliveryForm, { prepareDeliveryFormData } from '../Forms/DeliveryForm'
 import { getDeliveryName, isCoiRequired } from '../utils/scheduleUtils'
 
+const pageTitle = 'Testing Page'
 let orderNumber = '100005081'
 orderNumber = '100008122'
 orderNumber = '100008039'
@@ -21,6 +22,9 @@ orderNumber = '100007450' // mila kushnir
 orderNumber = '100008184'
 
 export default function TestingPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
   const snack = useSnackBar()
   const deliveryMethods = (useLoaderData() as Result<DeliveryMethod[], string>)
     .mapErr((e) => {

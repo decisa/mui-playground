@@ -1,6 +1,6 @@
 import { Button, TextField } from '@mui/material'
 import { errAsync, Result, ResultAsync } from 'neverthrow'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
@@ -9,6 +9,7 @@ import {
 import { Form } from 'react-router-dom'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
+const pageTitle = 'Customers'
 
 type CustomerMagentoRecord = {
   groupId: number
@@ -30,6 +31,9 @@ interface Customer {
 }
 
 export default function CustomerPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
   // const error = useRef('')
   let error = ''
   // error.current = ''

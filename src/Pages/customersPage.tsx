@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { useLoaderData } from 'react-router'
 import { Link, json } from 'react-router-dom'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
+const pageTitle = 'All Customers'
 interface Customer {
   id: number
   firstName: string
@@ -36,6 +38,9 @@ export async function loader() {
 }
 
 export default function CustomersPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
   const allCustomers = (useLoaderData() as Customer[]) || []
   // console.dir(allCustomers)
 

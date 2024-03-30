@@ -17,8 +17,10 @@ import { Box, Stack } from '@mui/system'
 import SyncIcon from '@mui/icons-material/Sync'
 import SearchIcon from '@mui/icons-material/Search'
 import ClearIcon from '@mui/icons-material/Clear'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import useLocalStorageState from '../utils/localStorage'
+
+const pageTitle = 'Containers'
 
 const trackUrl = (trackingNumber: string): string =>
   `https://wsapi.alpiusa.com/api/tracker/list?MasterBillNumber=&ContainerNumber=${trackingNumber}&HouseBillNumber=&CustomerRefNumber=&Skip=0&SortDirection=2&SortColumn=0&ConsigneeName=&ShipmentCode=&OrganizationCode=&SearchFrom=Web`
@@ -94,6 +96,10 @@ type SerializedContainer = {
 }
 
 export default function ContainersPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
+
   const [containers, setContainers] = useLocalStorageState<Container[]>(
     [],
     'containers',

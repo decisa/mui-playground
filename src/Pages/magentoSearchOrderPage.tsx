@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { ResultAsync } from 'neverthrow'
 import { useNavigate } from 'react-router'
 import { Box, Button, Paper, TextField } from '@mui/material'
@@ -12,8 +12,12 @@ import CommentsEditor from '../Components/Order/CommentsEditor'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
+const pageTitle = 'Search Magento Order'
 
 export default function MagentoPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
   const navigate = useNavigate()
   // const deliveryMethods = (
   //   useLoaderData() as Result<DeliveryMethodsAsObject, Error>

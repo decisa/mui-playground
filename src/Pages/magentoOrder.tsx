@@ -4,6 +4,7 @@ import { useLoaderData, useNavigate, useParams } from 'react-router'
 import { Box, Button, Paper, TextField } from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
+
 import { useMagentoAPI } from '../Magento/useMagentoAPI'
 import { FullOrderCreate, OrderCommentCreate } from '../Types/dbtypes'
 import OrderConfirmation from '../Components/Order/OrderConfirmation'
@@ -12,6 +13,8 @@ import CommentsEditor from '../Components/Order/CommentsEditor'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
+
+const pageTitle = 'Magento Order'
 
 export default function MagentoPage() {
   const deliveryMethods = (
@@ -26,9 +29,21 @@ export default function MagentoPage() {
   // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
 
   const { orderId } = useParams()
+  useEffect(() => {
+    document.title = pageTitle + (orderId ? `: ${orderId}` : '')
+  }, [orderId])
   // console.log('location', orderId)
   const [order, setOrder] = React.useState<FullOrderCreate | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState(orderId)
+
+  useEffect(() => {
+    if (!order) {
+      return
+    }
+    const { orderNumber } = order
+    document.title =
+      pageTitle + (orderNumber ? `: ${orderNumber}` : `: ${String(orderId)}`)
+  }, [order, orderId])
 
   // const { getOrderById, getOrderDetails, getOrderComments } = useMagentoAPI()
   const magentoAPI = useMagentoAPI()

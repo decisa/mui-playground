@@ -39,9 +39,14 @@ import { useRowActionDialog } from '../Components/DataGrid/RowActionDialog'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 import useStatusFilter from '../Components/DataGrid/useStatusFilter'
 
+const pageTitle = 'Purchase Orders'
+
 // note: currently using gridAPI to control edit mode of rows. this means that the state is handled inside the grid component under the hood. because of this whenever the grid's internal state is updated through API like apiRef.current.updateRows([...]) there is no re-render triggered on the Page and Dialogs do not trigger rerender with updated data. Need to either switch to full controlled mode or find a way to trigger re-render on page when grid's internal state is updated.
 
 export default function PurchaseOrdersPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
   const apiRef = useGridApiRef()
   const snack = useSnackBar()
 
@@ -319,7 +324,7 @@ export default function PurchaseOrdersPage() {
               return Promise.resolve(updatedRow)
             },
             (error) => {
-              throw error
+              throw new Error(error)
             }
           )
         }

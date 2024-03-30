@@ -298,7 +298,12 @@ const renderOrderNumber: RowRendererFactory =
     )
   }
 
+const pageTitle = 'Orders Table'
+
 export default function OrderPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
   // use theme
   const theme = useTheme()
   const colors = tokens(theme.palette.mode)
