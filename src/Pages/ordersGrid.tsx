@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { GridColDef, GridToolbar, useGridApiRef } from '@mui/x-data-grid'
 import { okAsync } from 'neverthrow'
-import { Box } from '@mui/material'
+import { Box, Button, Link } from '@mui/material'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 import { ShortOrder } from '../Types/dbtypes'
 import { getAllOrders } from '../utils/inventoryManagement'
@@ -17,7 +17,12 @@ import {
   orderStatuses,
 } from '../Components/Order/gridOrderActions'
 
-export default function OrdersPage() {
+const pageTitle = 'Orders Grid'
+
+export default function OrdersGridPage() {
+  useEffect(() => {
+    document.title = pageTitle
+  }, [])
   const snack = useSnackBar()
   const apiRef = useGridApiRef()
   const { RowActionDialog, openActionDialog } = useRowActionDialog<ShortOrder>(
@@ -143,6 +148,11 @@ export default function OrdersPage() {
         },
       }}
     >
+      <Button type="button" variant="contained">
+        <Link href="/orders/table" color="#fff">
+          Orders Table
+        </Link>
+      </Button>
       <StripedDataGrid
         apiRef={apiRef}
         // editMode="row"

@@ -22,7 +22,7 @@ import MagentoOrder, {
 } from './Pages/magentoOrder'
 import ContainersPage from './Pages/containersPage'
 import PurchaseOrdersPage from './Pages/purchaseOrdersPage'
-import OrdersPage from './Pages/ordersPage'
+import OrdersGridPage from './Pages/ordersGrid'
 import TestingPage, {
   loader as getAllDeliveryMethods,
 } from './Pages/testingPage'
@@ -31,6 +31,7 @@ import PlanningPage, {
 } from './Pages/Deliveries/planningPage'
 import EditDelivery, {
   loader as getDeliveryById,
+  createLoader as getCreateDeliveryFormData,
 } from './Pages/Deliveries/editDelivery'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
@@ -55,8 +56,22 @@ const router = createBrowserRouter(
       <Route path="database" element={<DatabasePage />} />
       <Route path="po" element={<PurchaseOrdersPage />} />
       <Route path="containers" element={<ContainersPage />} />
-      <Route path="order" element={<OrderPage />} />
-      <Route path="orders" element={<OrdersPage />} />
+      {/* <Route path="order">
+        <Route
+          path=":orderId/deliverycreate"
+          element={<EditDelivery />}
+          loader={getCreateDeliveryFormData}
+        />
+      </Route> */}
+      <Route path="orders">
+        <Route index element={<OrdersGridPage />} />
+        <Route path="table" element={<OrderPage />} />
+        <Route
+          path=":orderId/deliverycreate"
+          element={<EditDelivery />}
+          loader={getCreateDeliveryFormData}
+        />
+      </Route>
       <Route path="multicheckbox" element={<MultiCheckboxPage />} />
       <Route path="customer">
         <Route index element={<CustomersPage />} loader={getAllCustomers} />
