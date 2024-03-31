@@ -13,6 +13,8 @@ import {
 } from './Magento/magentoAPIContext'
 import { ColorModeContext, useMode } from './theme'
 import { SnackBarProvider } from './Components/GlobalSnackBar'
+
+import 'mapbox-gl/dist/mapbox-gl.css'
 // import type
 
 // import React from 'react'

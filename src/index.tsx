@@ -33,6 +33,7 @@ import EditDelivery, {
   loader as getDeliveryById,
   createLoader as getCreateDeliveryFormData,
 } from './Pages/Deliveries/editDelivery'
+import Map from './Pages/map'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -120,6 +121,7 @@ const router = createBrowserRouter(
         element={<TestingPage />}
         loader={getAllDeliveryMethods}
       />
+      <Route path="map" element={<Map />} />
     </Route>
   )
 )

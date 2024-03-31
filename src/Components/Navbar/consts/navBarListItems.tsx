@@ -60,12 +60,12 @@ export const mainNavbarItems = [
     path: '/deliveries/planning',
     icon: <BugReportIcon />,
   },
-  // {
-  //   id: 10,
-  //   label: 'Authentication',
-  //   path: 'signin',
-  //   icon: <PeopleIcon />,
-  // },
+  {
+    id: 15,
+    label: 'Map',
+    path: 'map',
+    icon: <PeopleIcon />,
+  },
   // {
   //   id: 11,
   //   label: 'Database',
