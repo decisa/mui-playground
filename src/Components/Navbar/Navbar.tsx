@@ -140,7 +140,7 @@ export default function Navbar({ className }: NavbarProps) {
   const darkColors = tokens('dark')
   const { toggleColorMode } = useContext(ColorModeContext)
 
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const toggleOpen = () => {
     setOpen((prev) => !prev)
@@ -187,9 +187,16 @@ export default function Navbar({ className }: NavbarProps) {
         sx={{
           color: darkTheme.palette.text.primary,
           px: 2,
+          flexDirection: open ? 'row' : 'column',
+          justifyContent: 'space-between',
         }}
       >
-        <IconButton type="button" onClick={toggleColorMode} color="inherit">
+        <IconButton
+          type="button"
+          onClick={toggleColorMode}
+          color="inherit"
+          sx={{ marginLeft: open ? -1 : undefined }}
+        >
           {globalTheme.palette.mode === 'dark' ? (
             <LightModeOutlinedIcon color="warning" />
           ) : (
@@ -202,7 +209,8 @@ export default function Navbar({ className }: NavbarProps) {
           onClick={toggleOpen}
           edge="start"
           sx={{
-            marginRight: 5,
+            marginRight: 0, // open ? 5 : 0,
+            marginLeft: open ? undefined : 0,
             // ...(open && { display: 'none' }),
           }}
         >
