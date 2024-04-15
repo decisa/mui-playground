@@ -296,7 +296,9 @@ export default function Comments({ comments }: CommentsProps) {
   // console.log(highlightedComments)
   return (
     <Box>
-      <Typography variant="h5">order comments</Typography>
+      <Typography variant="h5" p={2}>
+        order comments
+      </Typography>
       <Timeline
         sx={{
           [`& .${timelineOppositeContentClasses.root}`]: {
