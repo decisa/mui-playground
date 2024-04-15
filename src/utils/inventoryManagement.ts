@@ -37,7 +37,7 @@ function isServerError(obj: unknown): obj is ResponseError {
   )
 }
 
-const safeJsonFetch = <T>(
+export const safeJsonFetch = <T>(
   input: RequestInfo | URL,
   init?: RequestInit | undefined
 ) =>
@@ -72,6 +72,14 @@ const safeJsonFetch = <T>(
             // re-throw the original error
             throw err
           })
+      }
+      // check if it's the mapbox response
+      if (
+        response.headers
+          .get('content-type')
+          ?.includes('application/vnd.geo+json')
+      ) {
+        return response.json() as Promise<T>
       }
       // check if the body is empty
       const bodyLength = Number(response.headers.get('content-length')) || 0
