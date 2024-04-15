@@ -222,18 +222,34 @@ export default function MagentoPage() {
           </Button>
         ) : null}
       </Stack>
-      <Box display="flex" gap={2} flexWrap="wrap" alignItems="start">
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          flexWrap: 'wrap',
+          alignItems: 'flex-start',
+          // flex: '1 1',
+        }}
+      >
         <Paper
           sx={{
             maxWidth: 840,
             // minWidth: 690,
-            flex: '2 2 690px',
+            flex: '1 1',
           }}
           className="printable-paper"
         >
           {order ? <OrderConfirmation order={order} /> : null}
         </Paper>
-        <Box>
+        <Box
+          sx={{
+            flex: '1 1',
+            gap: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            maxWidth: 840,
+          }}
+        >
           <Paper>
             {order ? (
               <CommentsEditor
