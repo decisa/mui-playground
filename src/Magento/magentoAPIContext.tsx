@@ -19,7 +19,7 @@ type MagentoProviderProps = {
   tokenExpiration?: number
 }
 
-const TOKEN_EXPIRATION = 4 * 60 // 4 hours default Magento setting.
+const TOKEN_EXPIRATION = 1 * 60 // 4 hours default Magento setting.
 
 const MagentoProviderNeverthrow = ({
   children,
@@ -45,14 +45,21 @@ const MagentoProviderNeverthrow = ({
       renewToken,
       getToken: () => {
         // if ()
-        const hrsSinceLastToken = differenceInMinutes(
+        const minsSinceLastToken = differenceInMinutes(
           new Date(),
           dateRef.current
         )
-        if (hrsSinceLastToken < expirationInMinutes) {
+
+        // fixme: remove these logs when tokens are working flawlessly
+        console.log(`age of token is ${minsSinceLastToken} mins`)
+        console.log('last token fetched on', dateRef.current)
+        console.log('expirationInMinutes', expirationInMinutes)
+
+        if (minsSinceLastToken < expirationInMinutes) {
+          console.log('token still valid', tokenRef.current)
           return tokenRef.current
         }
-        // console.log('token expired')
+        console.log('token expired')
         return ''
       },
     }),
