@@ -6,6 +6,7 @@ import { Outlet } from 'react-router'
 import { styled, ThemeProvider } from '@mui/material/styles'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+
 import Navbar, { drawerMenuWidth } from './Components/Navbar/Navbar'
 import {
   // MagentoProvider,
@@ -15,6 +16,7 @@ import { ColorModeContext, useMode } from './theme'
 import { SnackBarProvider } from './Components/GlobalSnackBar'
 
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { MapProvider } from './Components/Maps/useMap'
 // import type
 
 // import React from 'react'
@@ -74,22 +76,24 @@ function App({ children }: Props) {
               }}
             >
               <Navbar className="nav" />
-              <SnackBarProvider>
-                <Box
-                  // sx={{
-                  //   marginLeft: {
-                  //     xs: 0,
-                  //     sm: `${drawerMenuWidth}px`,
-                  //   },
-                  //   p: 2,
-                  // }}
-                  width="100%"
-                  className="main"
-                >
-                  <Outlet />
-                  {children || null}
-                </Box>
-              </SnackBarProvider>
+              <MapProvider>
+                <SnackBarProvider>
+                  <Box
+                    // sx={{
+                    //   marginLeft: {
+                    //     xs: 0,
+                    //     sm: `${drawerMenuWidth}px`,
+                    //   },
+                    //   p: 2,
+                    // }}
+                    width="100%"
+                    className="main"
+                  >
+                    <Outlet />
+                    {children || null}
+                  </Box>
+                </SnackBarProvider>
+              </MapProvider>
             </AppContainer>
           </LocalizationProvider>
         </ThemeProvider>
