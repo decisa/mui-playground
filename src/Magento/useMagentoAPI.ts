@@ -25,11 +25,13 @@ import {
 } from './magentoParsers'
 import { OrderComment, OrderCommentCreate } from '../Types/dbtypes'
 import { apiPath } from './magentoAuthorize'
+import { NewProductRequest } from '../Pages/createMagentoProduct'
+import { CreateProductResponse } from './responseTypes'
 
 // const domain = 'https://stage.roomservice360.com'
 // const apiPath = `${domain}/rest/default`
 
-function getProductAttributeByCodeUrl(attributeCode: string) {
+export function getProductAttributeByCodeUrl(attributeCode: string) {
   return `${apiPath}/V1/products/attributes/${attributeCode}`
 }
 
@@ -96,6 +98,14 @@ function getAttributesByIdUrl(productIds: string): string {
   return encodeURI(`${apiPath}/V1/products/attributes?${searchCriteria}`)
 }
 
+function getCreateProductUrl(): string {
+  return encodeURI(`${apiPath}/V1/products`)
+}
+
+function getUploadImageURL(sku: string): string {
+  return encodeURI(`${apiPath}/V1/products/${sku}/media`)
+}
+
 function getOrdersByIdUrl(orderIds: string): string {
   // %25 is encoding for % - wildcard for search result
   const searchCriteria = createSearchFilter(orderIds, 'increment_id', 'like')
@@ -160,7 +170,6 @@ export const useMagentoAPI = () => {
           }
           if (data) {
             fetchOptions.body = JSON.stringify(data)
-            // console.log('fetchOptions.body', fetchOptions.body)
           }
           return ResultAsync.fromPromise(
             fetch(url, fetchOptions),
@@ -325,6 +334,71 @@ export const useMagentoAPI = () => {
     [getProductsById, getAttributesById]
   )
 
+  const createProduct = useCallback(
+    (product: NewProductRequest) => {
+      // get all attribute IDs that we need to fetch
+      const url = getCreateProductUrl()
+      return fetchWithToken<CreateProductResponse>({
+        url,
+        method: 'POST',
+        name: 'createProduct',
+        data: product,
+      }) // .andThen((parseMagentoOrderResponse))
+    },
+    [fetchWithToken]
+  )
+
+  const uploadImage = useCallback(
+    (productSKU: string, imageAlt: string, imageBase64: string) => {
+      // get all attribute IDs that we need to fetch
+      const url = getUploadImageURL(productSKU)
+      const data = {
+        entry: {
+          media_type: 'image',
+          label: imageAlt,
+          position: 1,
+          disabled: false,
+          types: ['image', 'small_image', 'thumbnail'],
+          content: {
+            name: `${productSKU}.jpeg`,
+            type: 'image/jpeg',
+            base64_encoded_data: imageBase64.replace(
+              'data:image/jpeg;base64,',
+              ''
+            ),
+          },
+        },
+      }
+
+      // console.log('data', data)
+
+      return fetchWithToken<{
+        // fixme: this is not the correct type
+        items: MagentoAttributeRaw[]
+        total_count: number
+      }>({
+        url,
+        method: 'POST',
+        name: 'uploadImage',
+        data,
+      }) // .andThen((parseMagentoOrderResponse))
+    },
+    [fetchWithToken]
+  )
+
+  const getAllBrands = useCallback(() => {
+    // get all attribute IDs that we need to fetch
+    const url = getProductAttributeByCodeUrl('product_brand')
+    return fetchWithToken<{
+      items: MagentoAttributeRaw[]
+      total_count: number
+    }>({
+      url,
+      method: 'GET',
+      name: 'getAllBrands',
+    }) // .andThen((parseMagentoOrderResponse))
+  }, [fetchWithToken])
+
   const magentoAPI = useMemo(
     () => ({
       getAttributeByCode,
@@ -334,6 +408,9 @@ export const useMagentoAPI = () => {
       getOrderDetails,
       addOrderComment,
       getOrderComments,
+      createProduct,
+      getAllBrands,
+      uploadImage,
     }),
     [
       addOrderComment,
@@ -343,6 +420,9 @@ export const useMagentoAPI = () => {
       getOrderComments,
       getOrderDetails,
       getProductsById,
+      createProduct,
+      getAllBrands,
+      uploadImage,
     ]
   )
   return magentoAPI
