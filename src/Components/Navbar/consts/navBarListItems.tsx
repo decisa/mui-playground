@@ -1,4 +1,5 @@
 import PeopleIcon from '@mui/icons-material/People'
+import AddIcon from '@mui/icons-material/Add'
 import ImageIcon from '@mui/icons-material/Image'
 import PublicIcon from '@mui/icons-material/Public'
 import WarehouseIcon from '@mui/icons-material/Warehouse'
@@ -65,6 +66,12 @@ export const mainNavbarItems = [
     label: 'Map',
     path: 'map',
     icon: <PeopleIcon />,
+  },
+  {
+    id: 16,
+    label: 'Add Product',
+    path: 'add-product',
+    icon: <AddIcon />,
   },
   // {
   //   id: 11,

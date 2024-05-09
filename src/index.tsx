@@ -34,6 +34,9 @@ import EditDelivery, {
   createLoader as getCreateDeliveryFormData,
 } from './Pages/Deliveries/editDelivery'
 import Map from './Pages/map'
+import CreateMagentoProduct, {
+  loader as getAllBrands,
+} from './Pages/createMagentoProduct'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -122,6 +125,11 @@ const router = createBrowserRouter(
         loader={getAllDeliveryMethods}
       />
       <Route path="map" element={<Map />} />
+      <Route
+        path="add-product"
+        element={<CreateMagentoProduct />}
+        loader={getAllBrands}
+      />
     </Route>
   )
 )
