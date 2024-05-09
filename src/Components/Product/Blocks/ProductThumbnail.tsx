@@ -2,13 +2,31 @@ import { Box, SxProps } from '@mui/material'
 import { ProductCreate } from '../../../Types/dbtypes'
 import { cacheFolder, domain } from '../../../Magento/magentoAuthorize'
 
-type ThumbnailProps = {
-  product: Pick<ProductCreate, 'image' | 'name'>
-  sx?: SxProps
-}
+type ThumbnailProps =
+  | {
+      product: Pick<ProductCreate, 'image' | 'name'>
+      sx?: SxProps
+      src?: undefined
+      alt?: undefined
+      borderColor?: string
+    }
+  | {
+      // option to use a different src, not just product record
+      product?: undefined
+      sx?: SxProps
+      src: string
+      alt?: string
+      borderColor?: string
+    }
 
-const ProductThumbnail = ({ product, sx }: ThumbnailProps) => {
-  const { image, name } = product
+const ProductThumbnail = ({
+  product,
+  sx,
+  src,
+  alt,
+  borderColor,
+}: ThumbnailProps) => {
+  const { image, name } = product || {}
   const url = `${domain}${cacheFolder}/${image || 'noimage.jpg'}`
   // <Avatar src={image} variant="rounded" sx={{ width: 130 }} />
   return (
@@ -19,13 +37,15 @@ const ProductThumbnail = ({ product, sx }: ThumbnailProps) => {
         minWidth: 80,
         aspectRatio: '3/2',
         position: 'relative',
+        overflow: 'clip',
+        border: borderColor ? `1px solid ${borderColor}` : undefined,
         ...sx,
         // mb: 'auto',
       }}
     >
       <img
-        src={url}
-        alt={name}
+        src={src || url}
+        alt={alt || name}
         style={{
           position: 'absolute', // Needed to fill the Box
           top: 0,
