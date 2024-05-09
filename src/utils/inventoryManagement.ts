@@ -3,6 +3,7 @@ import { parseISO } from 'date-fns'
 import {
   Address,
   AddressCreate,
+  Brand,
   Carrier,
   Delivery,
   DeliveryMethod,
@@ -613,6 +614,19 @@ export const createDelivery = (delivery: DeliveryFormValues) => {
   }
   return safeJsonFetch<Delivery>(`${dbHost}/delivery`, request).andThen(
     (newDelivery) => okAsync(newDelivery)
+  )
+}
+
+export const getAllBrands = () => {
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<Brand[]>(`${dbHost}/brand/all`, request).andThen(
+    (allBrands) => okAsync(allBrands)
   )
 }
 
