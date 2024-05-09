@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { Result, ResultAsync } from 'neverthrow'
 import { useLoaderData, useNavigate, useParams } from 'react-router'
 import { Box, Button, Paper, TextField } from '@mui/material'
@@ -11,6 +11,7 @@ import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import Comments from '../Components/Order/Comments'
 import CommentsEditor from '../Components/Order/CommentsEditor'
 import { useSnackBar } from '../Components/GlobalSnackBar'
+import useKeyboardShortcuts from '../utils/useKeyboardShortcuts'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -35,6 +36,25 @@ export default function MagentoPage() {
   // console.log('location', orderId)
   const [order, setOrder] = React.useState<FullOrderCreate | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState(orderId)
+
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  const focusSearchBar = useCallback(() => {
+    if (searchRef.current) {
+      const input = searchRef.current.querySelector('input')
+      // select all
+      if (input) {
+        input.selectionStart = 0
+        input.selectionEnd = input.value.length
+        input.focus()
+      }
+    }
+  }, [])
+
+  useKeyboardShortcuts({
+    onCtrlSpace: focusSearchBar,
+    debugSource: 'magentoSearchOrder',
+  })
 
   useEffect(() => {
     if (!order) {
@@ -156,6 +176,7 @@ export default function MagentoPage() {
         className="no-print"
       >
         <TextField
+          ref={searchRef}
           id="filled-basic"
           label="order #s"
           variant="standard"
@@ -222,52 +243,52 @@ export default function MagentoPage() {
           </Button>
         ) : null}
       </Stack>
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 2,
-          flexWrap: 'wrap',
-          alignItems: 'flex-start',
-          // flex: '1 1',
-        }}
-      >
-        <Paper
-          sx={{
-            maxWidth: 840,
-            // minWidth: 690,
-            flex: '1 1',
-          }}
-          className="printable-paper"
-        >
-          {order ? <OrderConfirmation order={order} /> : null}
-        </Paper>
+      {order && (
         <Box
           sx={{
-            flex: '1 1',
-            gap: 2,
             display: 'flex',
-            flexDirection: 'column',
-            maxWidth: 840,
+            gap: 2,
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            // flex: '1 1',
           }}
         >
-          <Paper>
-            {order ? (
+          <Paper
+            sx={{
+              maxWidth: 840,
+              // minWidth: 690,
+              flex: '1 1',
+            }}
+            className="printable-paper"
+          >
+            <OrderConfirmation order={order} />
+          </Paper>
+          <Box
+            sx={{
+              flex: '1 1',
+              gap: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              maxWidth: 840,
+            }}
+          >
+            <Paper>
               <CommentsEditor
                 orderStatus={order?.magento?.status || 'unknown'}
                 orderId={order?.magento?.externalId || 0}
                 addNewComment={addNewComment}
                 refreshComments={refetchComments}
               />
-            ) : null}
-          </Paper>
-          <Paper
-            sx={{ maxWidth: 840, minWidth: 400, flex: '3 3 400px' }}
-            className="no-print"
-          >
-            {order ? <Comments comments={order.comments} /> : null}
-          </Paper>
+            </Paper>
+            <Paper
+              sx={{ maxWidth: 840, minWidth: 400, flex: '3 3 400px' }}
+              className="no-print"
+            >
+              <Comments comments={order.comments} />
+            </Paper>
+          </Box>
         </Box>
-      </Box>
+      )}
     </Box>
   )
 }
