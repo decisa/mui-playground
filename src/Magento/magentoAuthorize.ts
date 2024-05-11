@@ -6,10 +6,17 @@ import { reportNetworkError } from './useMagentoAPI'
 
 const usr = process.env.REACT_APP_MAGENTO_USER || ''
 const pass = process.env.REACT_APP_MAGENTO_PASS || ''
-export const apidomain =
-  process.env.REACT_APP_MAGENTOAPI_DOMAIN || 'https://www.roomservice360.com'
-export const domain =
-  process.env.REACT_APP_MAGENTO_DOMAIN || 'https://www.roomservice360.com'
+
+const forceDevelopmentEnv = false
+
+export const apidomain = forceDevelopmentEnv
+  ? 'http://localhost:8080/2031361'
+  : process.env.REACT_APP_MAGENTOAPI_DOMAIN || 'https://www.roomservice360.com'
+
+export const domain = forceDevelopmentEnv
+  ? 'https://dev2.roomservice360.com'
+  : process.env.REACT_APP_MAGENTO_DOMAIN || 'https://www.roomservice360.com'
+
 export const apiPath = `${apidomain}/rest/default`
 export const cacheFolder = process.env.REACT_APP_MAGENTO_IMAGE_CACHE || ''
 

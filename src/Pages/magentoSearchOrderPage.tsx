@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { ResultAsync } from 'neverthrow'
 import { useNavigate } from 'react-router'
 import { Box, Button, Paper, TextField } from '@mui/material'
@@ -10,6 +10,7 @@ import OrderConfirmation from '../Components/Order/OrderConfirmation'
 import Comments from '../Components/Order/Comments'
 import CommentsEditor from '../Components/Order/CommentsEditor'
 import { useSnackBar } from '../Components/GlobalSnackBar'
+import useKeyboardShortcuts from '../utils/useKeyboardShortcuts'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 const pageTitle = 'Search Magento Order'
@@ -29,6 +30,25 @@ export default function MagentoPage() {
   //   })
   //   .unwrapOr({} as DeliveryMethodsAsObject)
   // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
+
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  const focusSearchBar = useCallback(() => {
+    if (searchRef.current) {
+      const input = searchRef.current.querySelector('input')
+      // select all
+      if (input) {
+        input.selectionStart = 0
+        input.selectionEnd = input.value.length
+        input.focus()
+      }
+    }
+  }, [])
+
+  useKeyboardShortcuts({
+    onCtrlSpace: focusSearchBar,
+    // debugSource: 'magentoSearchOrder',
+  })
 
   const [order, setOrder] = React.useState<FullOrderCreate | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState('')
@@ -90,6 +110,7 @@ export default function MagentoPage() {
         className="no-print"
       >
         <TextField
+          ref={searchRef}
           id="filled-basic"
           label="order #s"
           variant="standard"

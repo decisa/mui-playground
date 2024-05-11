@@ -30,6 +30,12 @@ export default function OrderTotalsFooter({ order }: OrderTotalsFooterProps) {
 
   const total = subtotal - discount + shippingCost + tax
 
+  // console.log('subtotal', subtotal)
+  // console.log('discount', discount)
+  // console.log('tax', tax)
+  // console.log('total', total)
+  // console.log('shippingCost', shippingCost)
+
   return (
     <Box
       sx={{

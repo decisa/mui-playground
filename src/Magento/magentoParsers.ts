@@ -643,7 +643,7 @@ function parseOneOrder<T extends TMagentoOrder>(
     items,
     billing_address: rawBillingAddress,
     payment: paymentInfo,
-    tax_amount: taxAmount,
+    tax_amount: taxAmount = 0,
     grand_total: grandTotal,
     status_histories: comments,
     updated_at: updatedAt,
@@ -671,6 +671,8 @@ function parseOneOrder<T extends TMagentoOrder>(
   // Taxes parsing:
   // calculate tax percent rounded to 3 decimal places
   // 5234
+  // console.log('taxAmount', taxAmount)
+  // console.log('grandTotal', grandTotal)
   const taxRate =
     Math.round((taxAmount * 100000) / (grandTotal - taxAmount)) / 1000
 

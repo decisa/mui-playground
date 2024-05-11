@@ -49,14 +49,12 @@ const MagentoProviderNeverthrow = ({
           new Date(),
           dateRef.current
         )
-
-        // fixme: remove these logs when tokens are working flawlessly
-        console.log(`age of token is ${minsSinceLastToken} mins`)
-        console.log('last token fetched on', dateRef.current)
-        console.log('expirationInMinutes', expirationInMinutes)
+        // console.log(`age of token is ${minsSinceLastToken} mins`)
+        // console.log('last token fetched on', dateRef.current)
+        // console.log('expirationInMinutes', expirationInMinutes)
 
         if (minsSinceLastToken < expirationInMinutes) {
-          console.log('token still valid', tokenRef.current)
+          // console.log('token still valid', tokenRef.current)
           return tokenRef.current
         }
         console.log('token expired')
