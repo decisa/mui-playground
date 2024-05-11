@@ -47,7 +47,7 @@ export default function MagentoPage() {
 
   useKeyboardShortcuts({
     onCtrlSpace: focusSearchBar,
-    debugSource: 'magentoSearchOrder',
+    // debugSource: 'magentoSearchOrder',
   })
 
   const [order, setOrder] = React.useState<FullOrderCreate | undefined>()
