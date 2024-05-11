@@ -1,8 +1,14 @@
 import { okAsync } from 'neverthrow'
 import { safeJsonFetch } from '../../utils/inventoryManagement'
+import { Address } from '../../Types/dbtypes'
 
 const getGeoCodeURL = (address: string, limit = 1) =>
   `https://api.mapbox.com/search/geocode/v6/forward?q=${address}&limit=${limit}&proximity=ip&access_token=${
+    process.env.REACT_APP_MAPBOX_TOKEN || ''
+  }`
+
+const getGeoCodeBatchURL = () =>
+  `https://api.mapbox.com/search/geocode/v6/batch?access_token=${
     process.env.REACT_APP_MAPBOX_TOKEN || ''
   }`
 
@@ -171,6 +177,12 @@ const types = [
   'address',
 ]
 
+type BatchRequest = {
+  types: ['address']
+  q: string
+  limit: number
+}
+
 // address,postcode,place
 
 export const parseAddressResult = (result?: AddressDetailResult) => {
@@ -225,3 +237,29 @@ export type ParsedAddressCheck = ReturnType<typeof parseAddressResult>
 // altPhone: string | null
 // notes: string | null
 // coordinates: [number, number] | null
+
+type BatchResult = {
+  batch: AddressDetailResult[]
+}
+
+export function getAddressDetailsBatch(addresses: Address[]) {
+  const batchRequest: BatchRequest[] = addresses.map((address) => ({
+    types: ['address'],
+    q: `${address.street[0]}, ${address.city}, ${address.state} ${address.zipCode} ${address.country}`,
+    limit: 1,
+  }))
+  const request = {
+    method: 'POST',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(batchRequest),
+  }
+  return safeJsonFetch<BatchResult>(getGeoCodeBatchURL(), request).andThen(
+    (searchResult) => {
+      console.log('got result:', searchResult)
+      return okAsync(searchResult)
+    }
+  )
+}
