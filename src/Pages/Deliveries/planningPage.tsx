@@ -16,6 +16,10 @@ import OrderAddress from '../../Components/Order/Blocks/OrderAddress'
 import { useRowActionDialog } from '../../Components/DataGrid/RowActionDialog'
 import DeliveryMethodChip from '../../Components/Order/DeliveryMethodChip'
 import TimeInterval from '../../Components/Common/TimeInterval'
+import {
+  getAddressDetailsBatch,
+  parseAddressResult,
+} from '../../Components/Maps/utils'
 
 const pageTitle = 'Delivery Planning'
 
@@ -46,6 +50,30 @@ export default function PlanningPage() {
     const result = deliveryResults.items
     // console.log('result', result)
     return result
+  }, [deliveryResults])
+
+  useEffect(() => {
+    console.log('checking deliveryResults', deliveryResults)
+    const addresses = deliveryResults.items
+      .map((d) => d.shippingAddress)
+      .filter((address) => !address.coordinates)
+    if (addresses.length === 0) return
+
+    getAddressDetailsBatch(addresses)
+      .map((batchResult) => {
+        console.log('address details batch', batchResult)
+        return batchResult.batch.map(parseAddressResult)
+      })
+      .map((parsed) => {
+        console.log('parsed', parsed)
+
+        return parsed
+      })
+      .mapErr((e) => {
+        console.error('address details batch error', e)
+        return e
+      })
+    console.log('addresses without coordinates', addresses)
   }, [deliveryResults])
 
   const columns: GridColDef<Delivery>[] = [
