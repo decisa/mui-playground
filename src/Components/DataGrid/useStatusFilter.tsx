@@ -184,13 +184,12 @@ const renderStatus = <TableData extends GridValidRowModel, StatusValues>(
   const badges = [...statuses].map((status, ind) => {
     if (status === 'ready') {
       return (
-        <Link href={`/orders/${Number(row.id)}/deliverycreate/`}>
+        <Link href={`/orders/${Number(row.id)}/deliverycreate/`} key={ind}>
           <Chip
             size="small"
             variant="outlined"
             color={getStatusColor(status)}
             label={String(status)}
-            key={ind}
             sx={{ cursor: 'pointer' }}
           />
         </Link>
