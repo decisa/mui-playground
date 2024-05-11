@@ -53,7 +53,7 @@ export default function MagentoPage() {
 
   useKeyboardShortcuts({
     onCtrlSpace: focusSearchBar,
-    debugSource: 'magentoSearchOrder',
+    // debugSource: 'magentoSearchOrder',
   })
 
   useEffect(() => {
