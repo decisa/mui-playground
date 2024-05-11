@@ -142,7 +142,7 @@ export default function FileInput<TForm extends FieldValues>({
             if (!e?.target?.files) return
             const file = e.target.files[0] as Blob
             const base64 = await convertToBase64(file)
-            setImage(base64 as string)
+            // setImage(base64 as string)
             console.log('image:', base64)
           }}
         />
