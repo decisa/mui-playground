@@ -73,17 +73,9 @@ export const safeJsonFetch = <T>(
             throw err
           })
       }
-      // check if it's the mapbox response
-      if (
-        response.headers
-          .get('content-type')
-          ?.includes('application/vnd.geo+json')
-      ) {
-        return response.json() as Promise<T>
-      }
-      // check if the body is empty
-      const bodyLength = Number(response.headers.get('content-length')) || 0
-      if (bodyLength === 0) {
+
+      // const bodyLength = Number(response.headers.get('content-length')) || 0
+      if (response.status === 204) {
         // if body is empty, then return undefined as unknown as Promise<T>
         // The cast to `undefined as unknown as Promise<T>` ensures a consistent return type for `safeJsonFetch`.
         // This approach enables the use of `safeJsonFetch<void>` for API calls expected to return nothing,
@@ -96,8 +88,18 @@ export const safeJsonFetch = <T>(
         // in the type signature.
         return undefined as unknown as Promise<T>
       }
-      // parse json and convert all dates to Date objects:
-      return response.json().then((data) => handleDates(data) as Promise<T>)
+      // check if it's the mapbox response
+      const contentType = response.headers.get('content-type')
+      if (
+        contentType &&
+        (contentType.includes('application/vnd.geo+json') ||
+          contentType.includes('application/json'))
+      ) {
+        return response.json().then((data) => handleDates(data) as Promise<T>)
+      }
+
+      // otherwise process as text
+      return response.text() as Promise<T>
     }),
     (error) => error
   ).mapErr((err) => {
