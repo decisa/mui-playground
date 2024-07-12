@@ -17,7 +17,8 @@ import { SnackBarProvider } from './Components/GlobalSnackBar'
 
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { MapProvider } from './Components/Maps/useMap'
-// import type
+
+export const dbVersion = '2.0'
 
 // import React from 'react'
 // import logo from './logo.svg';

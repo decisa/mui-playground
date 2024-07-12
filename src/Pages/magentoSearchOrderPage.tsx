@@ -11,6 +11,7 @@ import Comments from '../Components/Order/Comments'
 import CommentsEditor from '../Components/Order/CommentsEditor'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 import useKeyboardShortcuts from '../utils/useKeyboardShortcuts'
+import { dbVersion } from '../App'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 const pageTitle = 'Search Magento Order'
@@ -213,7 +214,13 @@ type DeliveryMethodsAsObject = {
 
 const getDeliveryMethodsAsObject =
   async (): Promise<DeliveryMethodsAsObject> => {
-    const result = await fetch(`${dbHost}/deliverymethod/all`)
+    const result = await fetch(`${dbHost}/deliverymethod/all`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'db-version': dbVersion,
+      },
+      mode: 'cors',
+    })
     if (!result.ok) {
       throw new Error(`Failed throw to get delivery methods`)
     }
@@ -230,7 +237,7 @@ const getDeliveryMethodsAsObject =
     return methodsAsObject
   }
 
-const safeGetCustomerById = async () =>
+const safeGetALlDeliveryMethods = async () =>
   ResultAsync.fromPromise(
     getDeliveryMethodsAsObject(),
     () => new Error('database error neverthrow')
@@ -239,5 +246,5 @@ const safeGetCustomerById = async () =>
 export async function loader(): Promise<
   ResultAsync<DeliveryMethodsAsObject, Error>
 > {
-  return safeGetCustomerById()
+  return safeGetALlDeliveryMethods()
 }

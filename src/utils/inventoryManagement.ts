@@ -22,6 +22,7 @@ import {
   isValidationError,
 } from './errorHandling'
 import { DeliveryFormValues } from '../Forms/DeliveryForm'
+import { dbVersion } from '../App'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
@@ -125,12 +126,18 @@ export const searchShortOrders = (search: string) =>
   safeJsonFetch<SearchResponse>(`${dbHost}/order?search=${search}`, {
     method: 'GET',
     mode: 'cors',
+    headers: {
+      'db-version': dbVersion,
+    },
   }).andThen((res) => okAsync(res.results))
 
 export const getPurchaseOrder = (id: number) =>
   safeJsonFetch<PurchaseOrderFullData>(`${dbHost}/purchaseorder/${id}`, {
     method: 'GET',
     mode: 'cors',
+    headers: {
+      'db-version': dbVersion,
+    },
   })
 
 export const updatePurchaseOrder = (
@@ -142,6 +149,7 @@ export const updatePurchaseOrder = (
     mode: 'cors',
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
     body: JSON.stringify(poData),
   })
@@ -154,6 +162,9 @@ export const getPurchaseOrders = () =>
   safeJsonFetch<PurchaseOrderFullData[]>(`${dbHost}/purchaseorder/all`, {
     method: 'GET',
     mode: 'cors',
+    headers: {
+      'db-version': dbVersion,
+    },
   })
 
 const createPurchaseOrder = (po: PurchaseOrderRequest) =>
@@ -162,6 +173,7 @@ const createPurchaseOrder = (po: PurchaseOrderRequest) =>
     mode: 'cors',
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
     body: JSON.stringify(po),
   }).andThen((res) => okAsync(res))
@@ -170,6 +182,9 @@ export const getOrderByNumber = (orderNumber: string) =>
   safeJsonFetch<FullOrder>(`${dbHost}/order/number/${orderNumber}`, {
     method: 'GET',
     mode: 'cors',
+    headers: {
+      'db-version': dbVersion,
+    },
   }).andThen((order) =>
     // console.log('order = ', order)
     okAsync(order)
@@ -179,6 +194,9 @@ export const getOrderAddresses = (id: number) =>
   safeJsonFetch<Address[]>(`${dbHost}/order/${id}/address/all`, {
     method: 'GET',
     mode: 'cors',
+    headers: {
+      'db-version': dbVersion,
+    },
   }).andThen((order) =>
     // console.log('order = ', order)
     okAsync(order)
@@ -190,6 +208,7 @@ export const createOrderAddress = (order: AddressCreate) =>
     mode: 'cors',
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
     body: JSON.stringify(order),
   }).andThen((newOrderAddress) =>
@@ -411,6 +430,9 @@ export const getAllCarriers = () =>
   safeJsonFetch<Carrier[]>(`${dbHost}/carrier/all`, {
     method: 'GET',
     mode: 'cors',
+    headers: {
+      'db-version': dbVersion,
+    },
   }).andThen((res) =>
     // console.log('carriers = ', res)
     okAsync(res)
@@ -452,6 +474,7 @@ export const getPOShipments = (poId: number) => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
   }
   return safeJsonFetch<POShipmentResponseRaw[]>(
@@ -492,6 +515,7 @@ export const receiveItems = (items: ReceivingItem[]) => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
     body: JSON.stringify(items),
   }
@@ -510,6 +534,7 @@ export const getAllOrders = () => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
   }
   return safeJsonFetch<SearchResponse>(`${dbHost}/order/all`, request).andThen(
@@ -525,6 +550,7 @@ export const deletePO = (id: number) => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
   }
   return safeJsonFetch<PurchaseOrderFullData>(
@@ -542,6 +568,7 @@ export const getDeliveryMethods = () => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
   }
   return safeJsonFetch<DeliveryMethod[]>(
@@ -562,6 +589,7 @@ export const getAllDeliveries = (limit = 1000) => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
   }
   return safeJsonFetch<DeliverySearchResult>(
@@ -576,6 +604,7 @@ export const getDeliveryById = (id: number) => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
   }
   return safeJsonFetch<Delivery>(`${dbHost}/delivery/${id}`, request).andThen(
@@ -592,6 +621,7 @@ export const updateDelivery = (
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
     body: JSON.stringify(delivery),
   }
@@ -611,6 +641,7 @@ export const createDelivery = (delivery: DeliveryFormValues) => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
     body: JSON.stringify(createData),
   }
@@ -625,6 +656,7 @@ export const getAllBrands = () => {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
   }
   return safeJsonFetch<Brand[]>(`${dbHost}/brand/all`, request).andThen(
@@ -669,6 +701,7 @@ export function getDeliveryEditFormData(props: {
     mode: 'cors' as RequestMode,
     headers: {
       'Content-Type': 'application/json',
+      'db-version': dbVersion,
     },
   }
   return safeJsonFetch<DeliveryEditFormData>(url, request).andThen(

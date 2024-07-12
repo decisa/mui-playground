@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useLoaderData } from 'react-router'
 import { Link, json } from 'react-router-dom'
+import { dbVersion } from '../App'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 const pageTitle = 'All Customers'
@@ -18,7 +19,13 @@ interface Customer {
 
 export async function loader() {
   try {
-    const allCustomers = await fetch(`${dbHost}/customer/all`)
+    const allCustomers = await fetch(`${dbHost}/customer/all`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'db-version': dbVersion,
+      },
+      mode: 'cors',
+    })
     if (allCustomers.status !== 200) {
       console.log(
         `error caught, returning empty array. status code = ${allCustomers.status}`
