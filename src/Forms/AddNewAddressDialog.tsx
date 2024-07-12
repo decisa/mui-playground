@@ -129,6 +129,9 @@ type AddNewAddressDialogProps = {
   orderId: number
   onSuccess?: (newAddress: Address) => void
 }
+
+// todo: add option to save address to user's address book
+
 export default function AddNewAddressDialog({
   open,
   handleClose,
