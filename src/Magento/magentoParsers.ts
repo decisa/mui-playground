@@ -487,8 +487,8 @@ const parseMagentoOrderAddress = (
 
   const magento = {
     externalId,
-    externalCustomerAddressId,
-    externalOrderId,
+    // externalCustomerAddressId,
+    // externalOrderId,
     addressType,
   }
 
@@ -504,6 +504,7 @@ const parseMagentoOrderAddress = (
   }
 
   return {
+    type: 'order',
     altPhone: null,
     coordinates: null,
     // createdAt,
