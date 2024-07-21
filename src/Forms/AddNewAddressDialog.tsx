@@ -179,6 +179,7 @@ export default function AddNewAddressDialog({
     const coordinates = latLangToCoordinates(data.latitude, data.longitude)
 
     const newAddress: AddressCreate = {
+      type: 'order',
       orderId,
       firstName: data.firstName,
       lastName: data.lastName,
