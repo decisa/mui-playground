@@ -19,6 +19,14 @@ type MatchCode =
   | 'inferred' // only returned for the country component
   | 'plausible' // 	Only relevant for the address_number component. The value matches the user's input, but it was interpolated. This means that the geocoder found the street and, based on the surrounding known addresses, was able to confidently estimate the location of the building with that address_number.
 
+export type ConfidenceLevelMapBox =
+  | 'exact' // No components are unmatched (up to 2 may be inferred)
+  | 'high' // One component (excluding house_number or region) may have been corrected
+  | 'medium' // Two components (excluding house_number or region) may have changed
+  | 'low' // House Number, Region, or more than 2 other components have been corrected.
+
+export type ConfidenceLevel = ConfidenceLevelMapBox | 'none' // No address components could be matched
+
 type AddressDetailResult = {
   type: string
   features: {
@@ -70,11 +78,7 @@ type AddressDetailResult = {
         region: MatchCode
         locality: MatchCode
         country: MatchCode
-        confidence:
-          | 'exact' // No components are unmatched (up to 2 may be inferred)
-          | 'high' // One component (excluding house_number or region) may have been corrected
-          | 'medium' // Two components (excluding house_number or region) may have changed
-          | 'low' // House Number, Region, or more than 2 other components have been corrected.
+        confidence: ConfidenceLevelMapBox
       }
       context: {
         // may include a sub-object for any of the following properties: country, region, postcode, district, place, locality, neighborhood, street
@@ -185,12 +189,81 @@ type BatchRequest = {
 
 // address,postcode,place
 
-export const parseAddressResult = (result?: AddressDetailResult) => {
+// export type ParsedAddressCheck = ReturnType<typeof parseAddressResult>
+type GoodParsedAddress = {
+  street: string
+  city: string
+  state: string
+  zipCode: string
+  country: string
+  coordinates: [number, number]
+  match: {
+    street: boolean
+    city: boolean
+    state: boolean
+    zipCode: boolean
+    country: boolean
+  }
+  confidence: Exclude<ConfidenceLevel, 'none'>
+}
+
+type BadParsedAddress = {
+  street: null
+  city: null
+  state: null
+  zipCode: null
+  country: null
+  coordinates: null
+  match: {
+    street: false
+    city: false
+    state: false
+    zipCode: false
+    country: false
+  }
+  // confidence: 'none'
+  confidence: Extract<ConfidenceLevel, 'none'>
+}
+export type ParsedAddressCheck = GoodParsedAddress | BadParsedAddress
+
+export const parseAddressResult = (
+  result?: AddressDetailResult
+): ParsedAddressCheck => {
   if (!result) {
-    return null
+    return {
+      street: null,
+      city: null,
+      state: null,
+      zipCode: null,
+      country: null,
+      coordinates: null,
+      match: {
+        street: false,
+        city: false,
+        state: false,
+        zipCode: false,
+        country: false,
+      },
+      confidence: 'none',
+    } satisfies BadParsedAddress
   }
   if (result.features.length === 0) {
-    return null
+    return {
+      street: null,
+      city: null,
+      state: null,
+      zipCode: null,
+      country: null,
+      coordinates: null,
+      match: {
+        street: false,
+        city: false,
+        state: false,
+        zipCode: false,
+        country: false,
+      },
+      confidence: 'none',
+    } satisfies BadParsedAddress
   }
   const feature = result.features[0]
   const address = feature.properties
@@ -223,10 +296,8 @@ export const parseAddressResult = (result?: AddressDetailResult) => {
     coordinates,
     match,
     confidence: feature.properties.match_code.confidence,
-  }
+  } satisfies GoodParsedAddress
 }
-
-export type ParsedAddressCheck = ReturnType<typeof parseAddressResult>
 
 // street: string[]
 // city: string
