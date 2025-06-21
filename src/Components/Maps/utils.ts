@@ -1,9 +1,16 @@
-import { okAsync } from 'neverthrow'
+import { okAsync, ResultAsync } from 'neverthrow'
 import { safeJsonFetch } from '../../utils/inventoryManagement'
 import { Address } from '../../Types/dbtypes'
 
 const getGeoCodeURL = (address: string, limit = 1) =>
   `https://api.mapbox.com/search/geocode/v6/forward?q=${address}&limit=${limit}&proximity=ip&access_token=${
+    process.env.REACT_APP_MAPBOX_TOKEN || ''
+  }`
+
+const getReverseGeoCodeURL = (coordinates: [number, number]) =>
+  `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${coordinates[0].toFixed(
+    4
+  )}&latitude=${coordinates[1].toFixed(4)}&access_token=${
     process.env.REACT_APP_MAPBOX_TOKEN || ''
   }`
 
@@ -25,9 +32,9 @@ export type ConfidenceLevelMapBox =
   | 'medium' // Two components (excluding house_number or region) may have changed
   | 'low' // House Number, Region, or more than 2 other components have been corrected.
 
-export type ConfidenceLevel = ConfidenceLevelMapBox | 'none' // No address components could be matched
+export type ConfidenceLevel = ConfidenceLevelMapBox | 'none' | 'user' // No address components could be matched
 
-type AddressDetailResult = {
+export type AddressDetailResponse = {
   type: string
   features: {
     type: 'Feature'
@@ -160,7 +167,7 @@ export function getAddressDetails(address: string) {
       'Content-Type': 'application/json',
     },
   }
-  return safeJsonFetch<AddressDetailResult>(
+  return safeJsonFetch<AddressDetailResponse>(
     getGeoCodeURL(address),
     request
   ).andThen((searchResult) => {
@@ -197,6 +204,8 @@ type GoodParsedAddress = {
   zipCode: string
   country: string
   coordinates: [number, number]
+  latitude: number
+  longitude: number
   match: {
     street: boolean
     city: boolean
@@ -214,6 +223,8 @@ type BadParsedAddress = {
   zipCode: null
   country: null
   coordinates: null
+  latitude: null
+  longitude: null
   match: {
     street: false
     city: false
@@ -226,8 +237,39 @@ type BadParsedAddress = {
 }
 export type ParsedAddressCheck = GoodParsedAddress | BadParsedAddress
 
+export const extractAddress = (address?: AddressDetailResponse | null) => {
+  if (!address) {
+    return null
+  }
+  if (address.features.length === 0) {
+    return null
+  }
+  const feature = address.features[0]
+  const addressData = feature.properties
+  const { context } = addressData
+
+  const street = context.address.name
+  const city = context.place.name
+  const state = context.region.region_code
+  const zipCode = context.postcode.name
+  const country = context.country.country_code
+
+  const { coordinates } = feature.geometry
+
+  return {
+    street,
+    city,
+    state,
+    zipCode,
+    country,
+    coordinates,
+    latitude: coordinates[1],
+    longitude: coordinates[0],
+  }
+}
+
 export const parseAddressResult = (
-  result?: AddressDetailResult
+  result?: AddressDetailResponse
 ): ParsedAddressCheck => {
   if (!result) {
     return {
@@ -237,6 +279,8 @@ export const parseAddressResult = (
       zipCode: null,
       country: null,
       coordinates: null,
+      latitude: null,
+      longitude: null,
       match: {
         street: false,
         city: false,
@@ -255,6 +299,8 @@ export const parseAddressResult = (
       zipCode: null,
       country: null,
       coordinates: null,
+      latitude: null,
+      longitude: null,
       match: {
         street: false,
         city: false,
@@ -268,8 +314,9 @@ export const parseAddressResult = (
   const feature = result.features[0]
   const address = feature.properties
   const { context } = address
+  // console.log('context:', context)
 
-  const street = context.address.name
+  const street = context?.address?.name || context?.street?.name || ''
   const city = context.place.name
   const state = context.region.region_code
   const zipCode = context.postcode.name
@@ -280,10 +327,10 @@ export const parseAddressResult = (
   const matchCodes = feature.properties.match_code
 
   const match = {
-    street: matchCodes.street === 'matched',
-    city: matchCodes.place === 'matched',
-    state: matchCodes.region === 'matched',
-    zipCode: matchCodes.postcode === 'matched',
+    street: matchCodes?.street === 'matched',
+    city: matchCodes?.place === 'matched',
+    state: matchCodes?.region === 'matched',
+    zipCode: matchCodes?.postcode === 'matched',
     country: true,
   }
 
@@ -294,8 +341,10 @@ export const parseAddressResult = (
     zipCode,
     country,
     coordinates,
+    latitude: coordinates[1],
+    longitude: coordinates[0],
     match,
-    confidence: feature.properties.match_code.confidence,
+    confidence: feature?.properties?.match_code?.confidence || 'user',
   } satisfies GoodParsedAddress
 }
 
@@ -310,7 +359,7 @@ export const parseAddressResult = (
 // coordinates: [number, number] | null
 
 type BatchResult = {
-  batch: AddressDetailResult[]
+  batch: AddressDetailResponse[]
 }
 
 export function getAddressDetailsBatch(addresses: Address[]) {
@@ -330,7 +379,33 @@ export function getAddressDetailsBatch(addresses: Address[]) {
   return safeJsonFetch<BatchResult>(getGeoCodeBatchURL(), request).andThen(
     (searchResult) => {
       console.log('got result:', searchResult)
-      return okAsync(searchResult)
+      if (!searchResult || !searchResult.batch) {
+        return okAsync([])
+      }
+      return okAsync(searchResult.batch)
     }
+  )
+}
+
+export function getReverseGeoCode(
+  coordinates: number[] | null
+): ResultAsync<AddressDetailResponse | null, string> {
+  if (!coordinates) {
+    return okAsync(null)
+  }
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  const latLang = coordinates as [number, number]
+  return safeJsonFetch<AddressDetailResponse>(
+    getReverseGeoCodeURL(latLang),
+    request
+  ).andThen((searchResult) =>
+    // console.log('got result:', searchResult)
+    okAsync(searchResult)
   )
 }
