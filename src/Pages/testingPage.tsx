@@ -1,129 +1,191 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box } from '@mui/material'
-import { Result, ResultAsync } from 'neverthrow'
-import { useLoaderData } from 'react-router'
-import { create } from 'domain'
-import { Address, DeliveryMethod, FullOrder } from '../Types/dbtypes'
-import {
-  createDelivery,
-  getDeliveryMethods,
-  getOrderAddresses,
-  getOrderByNumber,
-} from '../utils/inventoryManagement'
-import { useSnackBar } from '../Components/GlobalSnackBar'
-import DeliveryForm, { prepareDeliveryFormData } from '../Forms/DeliveryForm'
-import { getDeliveryName, isCoiRequired } from '../utils/scheduleUtils'
+import { parseISO } from 'date-fns'
+import { ResultAsync } from 'neverthrow'
+import { ParsedAddressCheck } from '../Components/Maps/utils'
+import { Address, DeliveryMethod } from '../Types/dbtypes'
+import MapAddressEditor from '../Components/Maps/MapAddressEditor'
+import { getDeliveryMethods } from '../utils/inventoryManagement'
 
-const pageTitle = 'Testing Page'
-let orderNumber = '100005081'
-orderNumber = '100008122'
-orderNumber = '100008039'
-orderNumber = '100007450' // mila kushnir
-orderNumber = '100008184'
+export type AdvancedAddress = Address & {
+  mapData?: ParsedAddressCheck
+}
+
+const testAddress: AdvancedAddress = {
+  coordinates: null,
+  street: ['3021 SW 130th Ave'],
+  type: 'order',
+  id: 246,
+  firstName: 'Samlis',
+  lastName: 'Samuel',
+  company: null,
+  city: 'Miami',
+  state: 'FL',
+  zipCode: '33175-2511',
+  country: 'US',
+  phone: '7869147719',
+  altPhone: null,
+  notes: null,
+  customerId: null,
+  orderId: 5,
+  customerAddressId: null,
+  createdAt: parseISO('2024-01-27T06:36:35.000Z'),
+  updatedAt: parseISO('2024-01-27T06:36:35.000Z'),
+  mapData: {
+    street: '3021 Southwest 130th Avenue',
+    city: 'Miami',
+    state: 'FL',
+    zipCode: '33175',
+    country: 'US',
+    latitude: 25.73967,
+    longitude: -80.405489,
+    coordinates: [-80.405489, 25.73967],
+    match: {
+      street: true,
+      city: true,
+      state: true,
+      zipCode: true,
+      country: true,
+    },
+    confidence: 'exact',
+  },
+}
 
 export default function TestingPage() {
-  useEffect(() => {
-    document.title = pageTitle
-  }, [])
-  const snack = useSnackBar()
-  const deliveryMethods = (useLoaderData() as Result<DeliveryMethod[], string>)
-    .mapErr((e) => {
-      snack.error(`Delivery Methods Error: ${e}`)
-      return e
-    })
-    .unwrapOr([])
+  console.log('testAddress', testAddress)
 
-  console.log('deliveryMethods', deliveryMethods)
+  // todo: make a crosshair marker
+  // todo: make a reverse geocoding to get full address from coordinates
+  // todo: display the geocoded address on map
+  // todo: offer to update original address with geocoded address
 
-  // state to store Order
-  const [order, setOrder] = useState<FullOrder>()
-  const [orderAddresses, setOrderAddresses] = useState<Address[]>([])
-
-  const onNewAddress = useCallback((address: Address) => {
-    setOrderAddresses((prev) => [...prev, address])
-  }, [])
-
-  // get order by number
-  useEffect(() => {
-    getOrderByNumber(orderNumber)
-      .map((result) => {
-        setOrder(result)
-        return result
-      })
-      .mapErr((err) => {
-        snack.error(err)
-        return err
-      })
-  }, [snack])
-
-  // get all order addresses
-  useEffect(() => {
-    if (!order?.id) return
-
-    getOrderAddresses(order.id)
-      .map((addresses) => {
-        // shoud check if current shippingAddressId is a valid selection ?
-        setOrderAddresses(addresses)
-        return addresses
-      })
-      .mapErr((err) => {
-        snack.error(err)
-        return err
-      })
-  }, [order?.id, snack])
-
-  const initValues = useMemo(
-    () =>
-      prepareDeliveryFormData({
-        order,
-        addresses: orderAddresses,
-        defaultValues: {
-          coiNotes: 'test',
-          coiRequired: false,
-          amountDue: '$0.00',
-          deliveryMethodId: 7,
-          estimatedDuration: {
-            start: 120,
-            end: 240,
-          },
-          // title: 'test',
-          notes: 'please call 30 min in advance',
-        },
-        deliveryMethods,
-      }),
-    [order, orderAddresses, deliveryMethods]
-  )
-
-  if (!order) {
-    return <div>Loading...</div>
-  }
-  console.log('order', order)
-  return (
-    <Box p={2}>
-      <DeliveryForm
-        comments={initValues.comments}
-        products={initValues.products}
-        initValues={initValues.initValues}
-        addresses={initValues.addresses}
-        deliveryMethods={initValues.deliveryMethods}
-        onNewAddress={onNewAddress}
-        onSubmit={(data) => {
-          console.log('submitting data', data)
-          createDelivery(data)
-            .map((newDelivery) => {
-              console.log('newDelivery', newDelivery)
-              snack.success('Delivery created')
-              return newDelivery
-            })
-            .mapErr((err) => {
-              snack.error(String(err))
-              return err
-            })
-        }}
-      />
-    </Box>
-  )
+  return <MapAddressEditor address={testAddress} />
 }
+
+// import { useCallback, useEffect, useMemo, useState } from 'react'
+// import { Box } from '@mui/material'
+// import { Result, ResultAsync } from 'neverthrow'
+// import { useLoaderData } from 'react-router'
+// import { create } from 'domain'
+// import { Address, DeliveryMethod, FullOrder } from '../Types/dbtypes'
+// import {
+//   createDelivery,
+//   getDeliveryMethods,
+//   getOrderAddresses,
+//   getOrderByNumber,
+// } from '../utils/inventoryManagement'
+// import { useSnackBar } from '../Components/GlobalSnackBar'
+// import DeliveryForm, { prepareDeliveryFormData } from '../Forms/DeliveryForm'
+// import { getDeliveryName, isCoiRequired } from '../utils/scheduleUtils'
+
+// const pageTitle = 'Testing Page'
+// let orderNumber = '100005081'
+// orderNumber = '100008122'
+// orderNumber = '100008039'
+// orderNumber = '100007450' // mila kushnir
+// orderNumber = '100008184'
+
+// export default function TestingPage() {
+//   useEffect(() => {
+//     document.title = pageTitle
+//   }, [])
+//   const snack = useSnackBar()
+//   const deliveryMethods = (useLoaderData() as Result<DeliveryMethod[], string>)
+//     .mapErr((e) => {
+//       snack.error(`Delivery Methods Error: ${e}`)
+//       return e
+//     })
+//     .unwrapOr([])
+
+//   console.log('deliveryMethods', deliveryMethods)
+
+//   // state to store Order
+//   const [order, setOrder] = useState<FullOrder>()
+//   const [orderAddresses, setOrderAddresses] = useState<Address[]>([])
+
+//   const onNewAddress = useCallback((address: Address) => {
+//     setOrderAddresses((prev) => [...prev, address])
+//   }, [])
+
+//   // get order by number
+//   useEffect(() => {
+//     getOrderByNumber(orderNumber)
+//       .map((result) => {
+//         setOrder(result)
+//         return result
+//       })
+//       .mapErr((err) => {
+//         snack.error(err)
+//         return err
+//       })
+//   }, [snack])
+
+//   // get all order addresses
+//   useEffect(() => {
+//     if (!order?.id) return
+
+//     getOrderAddresses(order.id)
+//       .map((addresses) => {
+//         // shoud check if current shippingAddressId is a valid selection ?
+//         setOrderAddresses(addresses)
+//         return addresses
+//       })
+//       .mapErr((err) => {
+//         snack.error(err)
+//         return err
+//       })
+//   }, [order?.id, snack])
+
+//   const initValues = useMemo(
+//     () =>
+//       prepareDeliveryFormData({
+//         order,
+//         addresses: orderAddresses,
+//         defaultValues: {
+//           coiNotes: 'test',
+//           coiRequired: false,
+//           amountDue: '$0.00',
+//           deliveryMethodId: 7,
+//           estimatedDuration: {
+//             start: 120,
+//             end: 240,
+//           },
+//           // title: 'test',
+//           notes: 'please call 30 min in advance',
+//         },
+//         deliveryMethods,
+//       }),
+//     [order, orderAddresses, deliveryMethods]
+//   )
+
+//   if (!order) {
+//     return <div>Loading...</div>
+//   }
+//   console.log('order', order)
+//   return (
+//     <Box p={2}>
+//       <DeliveryForm
+//         comments={initValues.comments}
+//         products={initValues.products}
+//         initValues={initValues.initValues}
+//         addresses={initValues.addresses}
+//         deliveryMethods={initValues.deliveryMethods}
+//         onNewAddress={onNewAddress}
+//         onSubmit={(data) => {
+//           console.log('submitting data', data)
+//           createDelivery(data)
+//             .map((newDelivery) => {
+//               console.log('newDelivery', newDelivery)
+//               snack.success('Delivery created')
+//               return newDelivery
+//             })
+//             .mapErr((err) => {
+//               snack.error(String(err))
+//               return err
+//             })
+//         }}
+//       />
+//     </Box>
+//   )
+// }
 
 export async function loader(): Promise<ResultAsync<DeliveryMethod[], string>> {
   return getDeliveryMethods()
