@@ -14,7 +14,7 @@ import {
 } from 'react'
 import { useTheme } from '@mui/material/styles'
 // create reducer
-import MapMarker, { MapMarkerProps } from './MapMarker'
+import MapMarker, { MapMarkerProps, Marker } from './MapMarker'
 import { MapReducerActions, mapReducer } from './mapsReducer'
 
 const mapboxToken = process.env.REACT_APP_MAPBOX_TOKEN || ''
@@ -24,10 +24,7 @@ export type MapState = {
     ViewState,
     'longitude' | 'latitude' | 'zoom' | 'pitch' | 'bearing'
   >
-  markers: (Pick<
-    MapMarkerProps,
-    'latitude' | 'longitude' | 'label' | 'number'
-  > & { color?: MapMarkerProps['color'] })[]
+  markers: Marker[]
 }
 
 // create context
@@ -101,14 +98,15 @@ export function Map() {
         <MapMarker
           key={index}
           size="large"
-          latitude={marker.latitude}
-          longitude={marker.longitude}
-          label={marker.label}
-          number={marker.number}
-          color={marker?.color || theme.palette.primary.dark}
+          marker={marker}
+          // latitude={marker.latitude}
+          // longitude={marker.longitude}
+          // label={marker.label}
+          // number={marker.number}
+          // color={marker?.color || theme.palette.primary.dark}
         />
       )),
-    [mapState.markers, theme]
+    [mapState.markers]
   )
 
   return (
