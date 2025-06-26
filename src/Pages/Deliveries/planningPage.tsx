@@ -62,7 +62,7 @@ export default function PlanningPage() {
     getAddressDetailsBatch(addresses)
       .map((batchResult) => {
         console.log('address details batch', batchResult)
-        return batchResult.batch.map(parseAddressResult)
+        return batchResult.map(parseAddressResult)
       })
       .map((parsed) => {
         console.log('parsed', parsed)
