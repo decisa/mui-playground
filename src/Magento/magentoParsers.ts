@@ -568,7 +568,10 @@ function getPaymentMethod(paymentInfo: MagentoPaymentInfo): string {
     }
     case 'stripe_payments_express': {
       let stripePaymentInfo = ''
-      if (paymentInfo.additional_information.length >= 6) {
+      if (paymentInfo.additional_information.length === 20) {
+        stripePaymentInfo += 'Stripe'
+        stripePaymentInfo += `: ${paymentInfo.additional_information[7]}`
+      } else if (paymentInfo.additional_information.length >= 6) {
         stripePaymentInfo += paymentInfo.additional_information[5] // wallet payment method
         stripePaymentInfo += ` (${paymentInfo.additional_information[2]})` // apple pay or google pay
       }
