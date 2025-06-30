@@ -355,9 +355,15 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
           success: {
             main: teal[300],
             contrastText: colors.grey[900],
-            light: teal[200],
-            dark: teal[500],
-            lightest: teal[100],
+            // light: teal[200],
+            // dark: teal[500],
+            // lightest: teal[100],
+            light: teal[500],
+            dark: teal[200],
+            lightest: teal[600],
+          },
+          danger: {
+            main: colors.redAccent[400],
           },
         }
       : {
@@ -393,6 +399,9 @@ export const themeSettings = (mode: PaletteMode): ThemeOptions => {
           },
           info: {
             main: colors.blueAccent[500],
+          },
+          danger: {
+            main: colors.redAccent[500],
           },
           warning: {
             main: colors.yellowAccent[200],
