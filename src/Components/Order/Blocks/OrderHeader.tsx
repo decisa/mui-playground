@@ -15,12 +15,14 @@ type OrderHeaderProps = {
     FullOrderCreate,
     'orderNumber' | 'customer' | 'orderDate' | 'magento'
   >
+  label?: string
 }
 
-export default function OrderHeader({ order }: OrderHeaderProps) {
+export default function OrderHeader({ order, label }: OrderHeaderProps) {
   const theme = useTheme()
   const colors = tokens(theme.palette.mode)
   const { orderDate: orderDateOrString } = order
+  const gridSize = label ? 4 : 6
   const orderDate =
     typeof orderDateOrString === 'string'
       ? parseISO(orderDateOrString)
@@ -28,7 +30,7 @@ export default function OrderHeader({ order }: OrderHeaderProps) {
   return (
     <Card sx={{ p: 2, border: 'none', boxShadow: 'none' }}>
       <Grid container alignItems="center">
-        <Grid xs={6}>
+        <Grid xs={gridSize}>
           <Box
             sx={{
               height: 1,
@@ -51,7 +53,25 @@ export default function OrderHeader({ order }: OrderHeaderProps) {
             />
           </Box>
         </Grid>
-        <Grid xs={6} textAlign="right">
+        {label && (
+          <Grid xs={gridSize} textAlign="center">
+            <Chip
+              size="medium"
+              variant="outlined"
+              sx={{
+                userSelect: 'none',
+                fontSize: '1.5rem', // Adjust the font size as needed
+                fontWeight: 500,
+                height: '2rem',
+                lineHeight: '2rem',
+                padding: '5px 10px',
+              }}
+              label={label}
+              color="secondary"
+            />
+          </Grid>
+        )}
+        <Grid xs={gridSize} textAlign="right">
           <Typography
             variant="body2"
             component="span"
