@@ -25,6 +25,8 @@ export const carrierTypes = ['container', 'freight', 'parcel', 'auto'] as const
 
 export type CarrierType = (typeof carrierTypes)[number]
 
+export type Coordinates = [number, number]
+
 type CarrierSchema = {
   name: string
   type: CarrierType
@@ -60,7 +62,7 @@ type AddressSchema = {
   phone: string
   altPhone: string | null
   notes: string | null
-  coordinates: [number, number] | null
+  coordinates: Coordinates | null
 }
 
 type CustomerAddressFields = {
