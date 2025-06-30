@@ -7,6 +7,7 @@ export const mapActions = [
   'SET_VIEW',
   'SET_MARKERS',
   'SET_CROSSHAIR_MARKER',
+  'SET_DIRECTIONS',
 ] as const
 export type MapActions = (typeof mapActions)[number]
 
@@ -19,10 +20,15 @@ type SetViewAction = Action<'SET_VIEW', Partial<MapState['viewState']>>
 
 type SetMarkersAction = Action<'SET_MARKERS', MapState['markers']>
 
+type SetDirectionsAction = Action<'SET_DIRECTIONS', MapState['directions']>
 // set 1 marker and zoom to it
 type SetMarker = Action<'SET_CROSSHAIR_MARKER', MapState['markers'][0] | null>
 
-export type MapReducerActions = SetViewAction | SetMarkersAction | SetMarker
+export type MapReducerActions =
+  | SetViewAction
+  | SetMarkersAction
+  | SetMarker
+  | SetDirectionsAction
 
 export function mapReducer(
   state: MapState,
@@ -55,6 +61,11 @@ export function mapReducer(
           zoom: action.payload ? 17 : 6,
           pitch: 0,
         },
+      }
+    case 'SET_DIRECTIONS':
+      return {
+        ...state,
+        directions: action.payload,
       }
     default:
       return state

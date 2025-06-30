@@ -3,19 +3,26 @@ import {
   FullscreenControl,
   ViewStateChangeEvent,
   ViewState,
+  // LngLat,
 } from 'react-map-gl'
+
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   useRef,
 } from 'react'
 import { useTheme } from '@mui/material/styles'
 // create reducer
+import Source from 'react-map-gl/dist/esm/components/source'
+import Layer from 'react-map-gl/dist/esm/components/layer'
 import MapMarker, { MapMarkerProps, Marker } from './MapMarker'
 import { MapReducerActions, mapReducer } from './mapsReducer'
+import { getDirections } from './utils'
+import { Coordinates } from '../../Types/dbtypes'
 
 const mapboxToken = process.env.REACT_APP_MAPBOX_TOKEN || ''
 
@@ -25,6 +32,23 @@ export type MapState = {
     'longitude' | 'latitude' | 'zoom' | 'pitch' | 'bearing'
   >
   markers: Marker[]
+  directions: Coordinates[] // array of coordinates for the route
+}
+
+// route style
+const linestyle = {
+  id: 'driveDirectionsStyleID',
+  type: 'line',
+  source: 'driveDirections',
+  layout: {
+    'line-join': 'round',
+    'line-cap': 'round',
+  },
+  paint: {
+    'line-color': '#cd2027',
+    'line-width': 4,
+    'line-opacity': 0.5,
+  },
 }
 
 // create context
@@ -47,7 +71,8 @@ export const MapProvider = ({ children }: MapProviderProps) => {
     viewState: {
       latitude: 40.1110498,
       longitude: -75.0036599,
-      zoom: 16,
+      // zoom: 16,
+      zoom: 30, // zoom out to see more area
       pitch: 0,
       bearing: 0,
     },
@@ -60,6 +85,7 @@ export const MapProvider = ({ children }: MapProviderProps) => {
         number: 1,
       },
     ],
+    directions: [], // array of coordinates for the route
   })
 
   const context = useMemo(
@@ -79,6 +105,32 @@ export function Map() {
   const { mapState, dispatchMap } = useMap()
   const theme = useTheme()
 
+  useEffect(() => {
+    // create array of 2 lnglat pairs
+    const waypoints: Coordinates[] = []
+
+    // {
+    //   coordinates: [40.1110498, -75.0036599],
+    //   label: 'room service 360',
+    // },
+    // {
+    //   label: 'stella oti',
+    //   coordinates: [41.0540549, -73.535688],
+    // },
+
+    waypoints.push(
+      [40.1110498, -75.0036599], // room service 360
+      [41.0540549, -73.535688] // stella oti
+    )
+    getDirections(waypoints).map((directionPoints) => {
+      dispatchMap({
+        type: 'SET_DIRECTIONS',
+        payload: directionPoints,
+      })
+      return directionPoints
+    })
+  }, [dispatchMap])
+
   // disable pitch and bearing and update viewState when map is moved
   const onMove = useCallback(
     (evt: ViewStateChangeEvent) =>
@@ -88,6 +140,26 @@ export function Map() {
         payload: { ...evt.viewState, pitch: 0, bearing: 0 },
       }),
     [dispatchMap]
+  )
+
+  useEffect(() => {
+    console.log('directions changed', mapState.directions)
+  }, [mapState.directions])
+
+  const geoJson = useMemo(
+    () => ({
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [...mapState.directions],
+          },
+        },
+      ],
+    }),
+    [mapState.directions]
   )
 
   // recalculate markers whenever markers change:
@@ -119,6 +191,9 @@ export function Map() {
       mapStyle="mapbox://styles/atelesh/cluee6vv500m301pd7ryt1w7k"
       onMove={onMove}
     >
+      <Source id="driveDirections" type="geojson" data={geoJson}>
+        <Layer {...linestyle} />
+      </Source>
       {markers}
       <FullscreenControl position="top-left" />
     </MapBoxMap>
