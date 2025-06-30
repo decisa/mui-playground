@@ -39,6 +39,18 @@ export function getStatusIconInfo(status?: string): {
       label = 'closed'
       chipColor = 'error'
       break
+    case 'backordered':
+      label = 'backordered'
+      chipColor = 'warning'
+      break
+    case 'dispute':
+      label = 'dispute in progress'
+      chipColor = 'error'
+      break
+    case 'canceled':
+      label = 'canceled'
+      chipColor = 'error'
+      break
     default:
       label = 'unknown'
       chipColor = 'warning'
@@ -70,6 +82,8 @@ const orderStatuses: Record<OrderStatus, string> = {
   payment_review: 'payment review',
   production: 'production',
   fraud: 'suspected fraud',
+  dispute: 'dispute in progress',
+  backordered: 'backordered',
   unknown: 'unknown',
 }
 
@@ -88,12 +102,16 @@ export function getPossibleOrderStatuses(
     case 'in_production':
     case 'in_transit':
     case 'preparing_shipment':
+    case 'backordered':
+    case 'dispute':
       possibleStatuses = [
         'pending',
         'processing',
         'in_production',
         'in_transit',
         'preparing_shipment',
+        'backordered',
+        'dispute',
       ]
       break
     default:
