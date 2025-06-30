@@ -41,9 +41,9 @@ export type NewProductRequest = {
     type_id: 'simple' | 'configurable'
     weight: number
     attribute_set_id: number
-    extension_attributes: {
-      website_ids: number[]
-    }
+    // extension_attributes: {
+    //   website_ids: number[]
+    // }
     // options: [
     //   {
     //     product_sku: 'TESTAPI'
@@ -311,8 +311,6 @@ export default function CreateMagentoProduct() {
         snackBar.error(error.message)
         return error
       })
-
-    console.log('submitting data: ', newProduct)
   }
 
   return (
@@ -333,6 +331,10 @@ export default function CreateMagentoProduct() {
                 })}
                 label="Product Name"
                 required
+                // onBlur={(e) => {
+                //   console.log('field:', e.target.value)
+
+                // }}
               />
             </Grid>
             <Grid xs={12} sm={4}>
@@ -658,9 +660,9 @@ function parseProductData(data: CreateProductFormData) {
         },
       ],
 
-      extension_attributes: {
-        website_ids: [1],
-      },
+      // extension_attributes: {
+      //   website_ids: [1],
+      // },
       custom_attributes: [
         {
           attribute_code: 'product_brand',
