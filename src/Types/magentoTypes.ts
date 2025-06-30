@@ -19,6 +19,8 @@ export const orderStatuses = [
   'pending_payment',
   'production',
   'fraud',
+  'backordered',
+  'dispute',
   'unknown',
 ] as const
 
