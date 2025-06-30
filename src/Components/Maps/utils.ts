@@ -1,10 +1,67 @@
-import { okAsync } from 'neverthrow'
+import { errAsync, okAsync, ResultAsync } from 'neverthrow'
+// import { GeoJSON } from 'mapbox-gl'
+
+import { GeoJSONSourceRaw } from 'mapbox-gl'
 import { safeJsonFetch } from '../../utils/inventoryManagement'
+import { Address, Coordinates } from '../../Types/dbtypes'
 
 const getGeoCodeURL = (address: string, limit = 1) =>
   `https://api.mapbox.com/search/geocode/v6/forward?q=${address}&limit=${limit}&proximity=ip&access_token=${
     process.env.REACT_APP_MAPBOX_TOKEN || ''
   }`
+
+const getReverseGeoCodeURL = (coordinates: [number, number]) =>
+  `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${coordinates[0].toFixed(
+    4
+  )}&latitude=${coordinates[1].toFixed(4)}&access_token=${
+    process.env.REACT_APP_MAPBOX_TOKEN || ''
+  }`
+
+const getGeoCodeBatchURL = () =>
+  `https://api.mapbox.com/search/geocode/v6/batch?access_token=${
+    process.env.REACT_APP_MAPBOX_TOKEN || ''
+  }`
+
+// The routing profile to use. Possible values are mapbox/driving-traffic, mapbox/driving, mapbox/walking, or mapbox/cycling.
+type DirectionsProfile =
+  | 'mapbox/driving-traffic'
+  | 'mapbox/driving'
+  | 'mapbox/walking'
+  | 'mapbox/cycling'
+
+type DirectionsURLParams = {
+  overview?: 'full' | 'simplified' | 'false' // detailed geometry, simplified (default) or no overview geometry.
+  access_token: string // The access token to use for the request.
+  geometries?: 'geojson' | 'polyline' | 'polyline6' // default is polyline
+}
+
+const getDirectionsURL = (
+  coordinates: Coordinates[],
+  profile: DirectionsProfile = 'mapbox/driving'
+) => {
+  // waypoints is a stirng of waypoints in the format "longitude,latitude;longitude,latitude; ..."
+  const directionsParams: DirectionsURLParams = {
+    overview: 'full', // default is simplified
+    access_token: process.env.REACT_APP_MAPBOX_TOKEN || '',
+    // geometries: 'geojson', // default is polyline
+    geometries: 'geojson', // default is polyline
+  }
+
+  const waypoints = coordinates
+    .map((waypoint) => {
+      const [latitude, longitude] = waypoint
+      // 5 decimal places → ~1.1 meters accuracy
+      return `${longitude.toFixed(5)},${latitude.toFixed(5)}`
+    })
+    .join(';')
+  // console.log('waypoints:', waypoints)
+
+  // convert the params to a query string
+  const params = new URLSearchParams(directionsParams as Record<string, string>)
+  console.log('params:', params.toString())
+
+  return `https://api.mapbox.com/directions/v5/${profile}/${waypoints}?${params.toString()}`
+}
 
 type MatchCode =
   | 'matched' // The component matches the input query.
@@ -13,7 +70,15 @@ type MatchCode =
   | 'inferred' // only returned for the country component
   | 'plausible' // 	Only relevant for the address_number component. The value matches the user's input, but it was interpolated. This means that the geocoder found the street and, based on the surrounding known addresses, was able to confidently estimate the location of the building with that address_number.
 
-type AddressDetailResult = {
+export type ConfidenceLevelMapBox =
+  | 'exact' // No components are unmatched (up to 2 may be inferred)
+  | 'high' // One component (excluding house_number or region) may have been corrected
+  | 'medium' // Two components (excluding house_number or region) may have changed
+  | 'low' // House Number, Region, or more than 2 other components have been corrected.
+
+export type ConfidenceLevel = ConfidenceLevelMapBox | 'none' | 'user' // No address components could be matched
+
+export type AddressDetailResponse = {
   type: string
   features: {
     type: 'Feature'
@@ -64,11 +129,7 @@ type AddressDetailResult = {
         region: MatchCode
         locality: MatchCode
         country: MatchCode
-        confidence:
-          | 'exact' // No components are unmatched (up to 2 may be inferred)
-          | 'high' // One component (excluding house_number or region) may have been corrected
-          | 'medium' // Two components (excluding house_number or region) may have changed
-          | 'low' // House Number, Region, or more than 2 other components have been corrected.
+        confidence: ConfidenceLevelMapBox
       }
       context: {
         // may include a sub-object for any of the following properties: country, region, postcode, district, place, locality, neighborhood, street
@@ -150,7 +211,7 @@ export function getAddressDetails(address: string) {
       'Content-Type': 'application/json',
     },
   }
-  return safeJsonFetch<AddressDetailResult>(
+  return safeJsonFetch<AddressDetailResponse>(
     getGeoCodeURL(address),
     request
   ).andThen((searchResult) => {
@@ -171,20 +232,135 @@ const types = [
   'address',
 ]
 
+type BatchRequest = {
+  types: ['address']
+  q: string
+  limit: number
+}
+
 // address,postcode,place
 
-export const parseAddressResult = (result?: AddressDetailResult) => {
-  if (!result) {
+// export type ParsedAddressCheck = ReturnType<typeof parseAddressResult>
+type GoodParsedAddress = {
+  street: string
+  city: string
+  state: string
+  zipCode: string
+  country: string
+  coordinates: [number, number]
+  latitude: number
+  longitude: number
+  match: {
+    street: boolean
+    city: boolean
+    state: boolean
+    zipCode: boolean
+    country: boolean
+  }
+  confidence: Exclude<ConfidenceLevel, 'none'>
+}
+
+type BadParsedAddress = {
+  street: null
+  city: null
+  state: null
+  zipCode: null
+  country: null
+  coordinates: null
+  latitude: null
+  longitude: null
+  match: {
+    street: false
+    city: false
+    state: false
+    zipCode: false
+    country: false
+  }
+  // confidence: 'none'
+  confidence: Extract<ConfidenceLevel, 'none'>
+}
+export type ParsedAddressCheck = GoodParsedAddress | BadParsedAddress
+
+export const extractAddress = (address?: AddressDetailResponse | null) => {
+  if (!address) {
     return null
   }
-  if (result.features.length === 0) {
+  if (address.features.length === 0) {
     return null
+  }
+  const feature = address.features[0]
+  const addressData = feature.properties
+  const { context } = addressData
+
+  const street = context.address.name
+  const city = context.place.name
+  const state = context.region.region_code
+  const zipCode = context.postcode.name
+  const country = context.country.country_code
+
+  const { coordinates } = feature.geometry
+
+  return {
+    street,
+    city,
+    state,
+    zipCode,
+    country,
+    coordinates,
+    latitude: coordinates[1],
+    longitude: coordinates[0],
+  }
+}
+
+export const parseAddressResult = (
+  result?: AddressDetailResponse
+): ParsedAddressCheck => {
+  if (!result) {
+    return {
+      street: null,
+      city: null,
+      state: null,
+      zipCode: null,
+      country: null,
+      coordinates: null,
+      latitude: null,
+      longitude: null,
+      match: {
+        street: false,
+        city: false,
+        state: false,
+        zipCode: false,
+        country: false,
+      },
+      confidence: 'none',
+    } satisfies BadParsedAddress
+  }
+  if (result.features.length === 0) {
+    return {
+      street: null,
+      city: null,
+      state: null,
+      zipCode: null,
+      country: null,
+      coordinates: null,
+      latitude: null,
+      longitude: null,
+      match: {
+        street: false,
+        city: false,
+        state: false,
+        zipCode: false,
+        country: false,
+      },
+      confidence: 'none',
+    } satisfies BadParsedAddress
   }
   const feature = result.features[0]
   const address = feature.properties
   const { context } = address
+  // console.log('context:', context)
 
-  const street = context.address.name
+  const street = context?.address?.name || context?.street?.name || ''
   const city = context.place.name
   const state = context.region.region_code
   const zipCode = context.postcode.name
@@ -195,10 +371,10 @@ export const parseAddressResult = (result?: AddressDetailResult) => {
   const matchCodes = feature.properties.match_code
 
   const match = {
-    street: matchCodes.street === 'matched',
-    city: matchCodes.place === 'matched',
-    state: matchCodes.region === 'matched',
-    zipCode: matchCodes.postcode === 'matched',
+    street: matchCodes?.street === 'matched',
+    city: matchCodes?.place === 'matched',
+    state: matchCodes?.region === 'matched',
+    zipCode: matchCodes?.postcode === 'matched',
     country: true,
   }
 
@@ -209,12 +385,12 @@ export const parseAddressResult = (result?: AddressDetailResult) => {
     zipCode,
     country,
     coordinates,
+    latitude: coordinates[1],
+    longitude: coordinates[0],
     match,
-    confidence: feature.properties.match_code.confidence,
-  }
+    confidence: feature?.properties?.match_code?.confidence || 'user',
+  } satisfies GoodParsedAddress
 }
-
-export type ParsedAddressCheck = ReturnType<typeof parseAddressResult>
 
 // street: string[]
 // city: string
@@ -225,3 +401,141 @@ export type ParsedAddressCheck = ReturnType<typeof parseAddressResult>
 // altPhone: string | null
 // notes: string | null
 // coordinates: [number, number] | null
+
+type BatchResult = {
+  batch: AddressDetailResponse[]
+}
+
+export function getAddressDetailsBatch(addresses: Address[]) {
+  const batchRequest: BatchRequest[] = addresses.map((address) => ({
+    types: ['address'],
+    q: `${address.street[0]}, ${address.city}, ${address.state} ${address.zipCode} ${address.country}`,
+    limit: 1,
+  }))
+  const request = {
+    method: 'POST',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(batchRequest),
+  }
+  return safeJsonFetch<BatchResult>(getGeoCodeBatchURL(), request).andThen(
+    (searchResult) => {
+      console.log('got result:', searchResult)
+      if (!searchResult || !searchResult.batch) {
+        return okAsync([])
+      }
+      return okAsync(searchResult.batch)
+    }
+  )
+}
+
+export function getReverseGeoCode(
+  coordinates: number[] | null
+): ResultAsync<AddressDetailResponse | null, string> {
+  if (!coordinates) {
+    return okAsync(null)
+  }
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  const latLang = coordinates as [number, number]
+  return safeJsonFetch<AddressDetailResponse>(
+    getReverseGeoCodeURL(latLang),
+    request
+  ).andThen((searchResult) =>
+    // console.log('got result:', searchResult)
+    okAsync(searchResult)
+  )
+}
+
+type GetDirectionsResponseRaw = {
+  routes: RouteRaw[]
+  // waypoints: [] // legacy, not used
+  code: string
+  // uuid: string
+}
+
+type RouteRaw = {
+  weight_name: 'auto' | 'pedestrian'
+  weight: number // desirability of a route, lower - more favorable route
+  duration: number // estimated travel time through the waypoints, in seconds.
+  duration_typical?: number // when traffic is enabled, this is duration with typical traffic
+  distance: number // distance traveled through the waypoints, in meters.
+  geometry?:
+    | {
+        coordinates: [number, number][]
+        type: 'LineString'
+      }
+    | string // polyline encoded string
+  // legs: LegRaw[]
+}
+
+export function getDirections(
+  coordinates: Coordinates[],
+  profile: DirectionsProfile = 'mapbox/driving'
+): ResultAsync<Coordinates[], string> {
+  if (coordinates.length < 2) {
+    errAsync('Not enough waypoints to calculate directions')
+  }
+  // const coordinates = waypoints.map((w) => w.toArray()).join(';')
+  const url = getDirectionsURL(coordinates, profile)
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<GetDirectionsResponseRaw>(url, request)
+    .andThen((searchResult) => {
+      console.log('got result:', searchResult)
+      return okAsync(searchResult)
+    })
+    .andThen((searchResult) => {
+      // output coordinate array:
+      if (
+        !searchResult ||
+        !searchResult.routes ||
+        searchResult.routes.length === 0
+      ) {
+        return errAsync('No routes found')
+      }
+      const { geometry } = searchResult.routes[0]
+      console.log('type of geometry:', typeof geometry)
+      if (typeof geometry === 'string') {
+        // polyline encoded string
+        console.warn('Polyline encoded string is not supported yet')
+        return errAsync('Polyline encoded string is not supported yet')
+      }
+      if (!geometry) {
+        console.warn('No geometry found in the route')
+        return errAsync('No geometry found in the route')
+      }
+      if (!geometry.coordinates || geometry.coordinates.length === 0) {
+        return errAsync('No coordinates found in the route geometry')
+      }
+      const { coordinates: directionsLineCoordinates } = geometry
+      console.log('Route coordinates:', directionsLineCoordinates)
+      // convert coordinates to GeoJSONSourceRaw
+      const geoJsonSource: GeoJSONSourceRaw = {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: directionsLineCoordinates,
+          },
+          properties: {},
+        },
+      }
+      console.log('GeoJSONSourceRaw:', geoJsonSource)
+
+      return okAsync(directionsLineCoordinates)
+    })
+}

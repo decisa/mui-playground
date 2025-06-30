@@ -25,6 +25,8 @@ export const carrierTypes = ['container', 'freight', 'parcel', 'auto'] as const
 
 export type CarrierType = (typeof carrierTypes)[number]
 
+export type Coordinates = [number, number]
+
 type CarrierSchema = {
   name: string
   type: CarrierType
@@ -46,8 +48,9 @@ export const countries = ['US', 'CA', 'unknown'] as const
 
 export type Country = (typeof countries)[number]
 
-type OrderAddressSchema = {
+type AddressSchema = {
   // email?: string
+  // type: 'order' | 'customer'
   firstName: string
   lastName: string
   company: string | null
@@ -59,46 +62,75 @@ type OrderAddressSchema = {
   phone: string
   altPhone: string | null
   notes: string | null
-  coordinates: [number, number] | null
+  coordinates: Coordinates | null
+}
+
+type CustomerAddressFields = {
+  type: 'customer'
+  customerId: number
+  customerAddressId: null
+  orderId: null
+}
+
+type CustomerAddressFieldsCreate = {
+  type: 'customer'
+  customerId?: number
+  customerAddressId?: null
+  orderId?: null
+}
+
+type OrderAddressFields = {
+  type: 'order'
+  orderId: number
+  customerAddressId: number | null
+  customerId: null
+}
+type OrderAddressFieldsCreate = {
+  type: 'order'
+  orderId?: number
+  customerAddressId?: number | null
+  customerId?: null
 }
 
 type OrderAddressIDs = {
   id: number
-  orderId: number
-  customerAddressId: number | null // foreign key to keep record which address it was copied from.
+  // orderId: number | null
+  // customerId: number | null
+  // customerAddressId: number | null // foreign key to keep record which address it was copied from.
 }
 
 export const magentoAddressTypes = ['billing', 'shipping'] as const
 
 export type MagentoAddressType = (typeof magentoAddressTypes)[number]
 
-type MagentoOrderAddressCreate = {
-  externalId: number // 4583
-  externalCustomerAddressId: number | null // 5972
-  externalOrderId: number // 2292
+type MagentoAddressCreate = {
+  externalId: number
   addressType: MagentoAddressType
+  addressId?: number
 }
 
 // there are no IDs for magento record, so Read and Create are the same
-type MagentoOrderAddress = MagentoOrderAddressCreate
+type MagentoAddress = Required<MagentoAddressCreate>
 
-type OrderAddressAssociations = {
-  magento?: MagentoOrderAddress
+type AddressAssociations = {
+  magento?: MagentoAddress
 }
 
-type OrderAddressCreateAssociations = {
-  magento?: MagentoOrderAddressCreate
+type AddressCreateAssociations = {
+  magento?: MagentoAddressCreate
 }
 
-export type AddressCreate = OrderAddressSchema &
-  OrderAddressCreateAssociations &
+export type AddressCreate = AddressSchema &
+  OrderAddressFieldsCreate &
+  AddressCreateAssociations &
   Partial<TimeStamps> &
   Partial<OrderAddressIDs>
 
-export type Address = OrderAddressSchema &
+export type Address = AddressSchema &
+  OrderAddressFields &
   OrderAddressIDs &
   TimeStamps &
-  OrderAddressAssociations
+  AddressAssociations
 
 export type CustomerSchema = {
   firstName: string

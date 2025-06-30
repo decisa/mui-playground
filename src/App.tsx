@@ -1,4 +1,8 @@
 import './index.css'
+import '@fontsource/roboto/100.css'
+import '@fontsource/roboto/300.css'
+import '@fontsource/roboto/500.css'
+import '@fontsource/roboto/700.css'
 import { CssBaseline, Box } from '@mui/material'
 import { ReactNode } from 'react'
 import { Outlet } from 'react-router'
@@ -17,7 +21,8 @@ import { SnackBarProvider } from './Components/GlobalSnackBar'
 
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { MapProvider } from './Components/Maps/useMap'
-// import type
+
+export const dbVersion = '2.0'
 
 // import React from 'react'
 // import logo from './logo.svg';

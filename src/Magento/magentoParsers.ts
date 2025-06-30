@@ -487,8 +487,8 @@ const parseMagentoOrderAddress = (
 
   const magento = {
     externalId,
-    externalCustomerAddressId,
-    externalOrderId,
+    // externalCustomerAddressId,
+    // externalOrderId,
     addressType,
   }
 
@@ -504,6 +504,7 @@ const parseMagentoOrderAddress = (
   }
 
   return {
+    type: 'order',
     altPhone: null,
     coordinates: null,
     // createdAt,
@@ -544,6 +545,7 @@ type MagentoPaymentInfo = {
 }
 
 function getPaymentMethod(paymentInfo: MagentoPaymentInfo): string {
+  console.log('getting payment method:', paymentInfo)
   switch (paymentInfo.method) {
     case 'affirm_gateway': {
       return 'Affirm'
@@ -571,6 +573,18 @@ function getPaymentMethod(paymentInfo: MagentoPaymentInfo): string {
       if (paymentInfo.additional_information.length === 20) {
         stripePaymentInfo += 'Stripe'
         stripePaymentInfo += `: ${paymentInfo.additional_information[7]}`
+      } else if (paymentInfo.additional_information.length === 19) {
+        stripePaymentInfo += paymentInfo.additional_information[13] // wallet payment
+        try {
+          const paymentMethod = JSON.parse(
+            paymentInfo.additional_information[17]
+          ) as Record<string, string>
+          if (paymentMethod) {
+            stripePaymentInfo += `: (${String(paymentMethod.Card)})`
+          }
+        } catch (error) {
+          console.error('error parsing stripe payment method:', error)
+        }
       } else if (paymentInfo.additional_information.length >= 6) {
         stripePaymentInfo += paymentInfo.additional_information[5] // wallet payment method
         stripePaymentInfo += ` (${paymentInfo.additional_information[2]})` // apple pay or google pay

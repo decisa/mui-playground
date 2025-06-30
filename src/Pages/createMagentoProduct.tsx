@@ -29,7 +29,7 @@ import parsedCategories from '../Magento/categories'
 import Checkbox from '../Components/FormComponents/CheckBox'
 import { CreateProductResponse } from '../Magento/responseTypes'
 import { useSnackBar } from '../Components/GlobalSnackBar'
-import FormattedNumberInput from '../Components/FormComponents/FormattedNumberInput'
+// import FormattedNumberInput from '../Components/FormComponents/FormattedNumberInput'
 
 export type NewProductRequest = {
   product: {
@@ -498,10 +498,6 @@ export default function CreateMagentoProduct() {
                   ),
                 }}
                 type="number"
-              />
-              <FormattedNumberInput
-                // type="number"
-                {...registerTextField({ name: 'price', register, errors })}
               />
             </Grid>
             <Grid xs={12} sm={12}>

@@ -129,6 +129,9 @@ type AddNewAddressDialogProps = {
   orderId: number
   onSuccess?: (newAddress: Address) => void
 }
+
+// todo: add option to save address to user's address book
+
 export default function AddNewAddressDialog({
   open,
   handleClose,
@@ -176,6 +179,7 @@ export default function AddNewAddressDialog({
     const coordinates = latLangToCoordinates(data.latitude, data.longitude)
 
     const newAddress: AddressCreate = {
+      type: 'order',
       orderId,
       firstName: data.firstName,
       lastName: data.lastName,

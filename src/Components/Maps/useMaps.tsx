@@ -66,13 +66,19 @@ export default function useMaps() {
       <MapMarker
         key={index}
         size="large"
-        latitude={marker.coordinates[0]}
-        longitude={marker.coordinates[1]}
-        label={marker.label}
-        number={index}
+        marker={{
+          label: marker.label,
+          latitude: marker.coordinates[0],
+          longitude: marker.coordinates[1],
+          number: index,
+        }}
+        // latitude={marker.coordinates[0]}
+        // longitude={marker.coordinates[1]}
+        // label={marker.label}
+        // number={index}
       />
     ))
-  }, [markers])
+  }, [])
   const onMove = useCallback(
     (evt: ViewStateChangeEvent) =>
       // disable pitch and bearing

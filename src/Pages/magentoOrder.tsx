@@ -20,22 +20,26 @@ import Comments from '../Components/Order/Comments'
 import CommentsEditor from '../Components/Order/CommentsEditor'
 import { useSnackBar } from '../Components/GlobalSnackBar'
 import useKeyboardShortcuts from '../utils/useKeyboardShortcuts'
+import { dbVersion } from '../App'
 
 const dbHost = process.env.REACT_APP_DB_HOST || 'http://localhost:8080'
 
 const pageTitle = 'Magento Order'
 
 export default function MagentoPage() {
-  const deliveryMethods = (
+  console.log('rendering MagentoPage')
+  const deliveryMethods: DeliveryMethodsAsObject | null = (
     useLoaderData() as Result<DeliveryMethodsAsObject, Error>
   )
     .mapErr((e) => {
       console.log('there was error in chain')
-      console.dir(e)
+      // console.dir(e)
       return 'error'
     })
-    .unwrapOr({} as DeliveryMethodsAsObject)
+    .unwrapOr(null)
   // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
+
+  console.log('deliveryMethods', deliveryMethods)
 
   const { orderId } = useParams()
   const [showPrices, setShowPrices] = React.useState(true)
@@ -337,7 +341,13 @@ type DeliveryMethodsAsObject = {
 }
 
 const getDeliveryMethods = async (): Promise<DeliveryMethodsAsObject> => {
-  const result = await fetch(`${dbHost}/deliverymethod/all`)
+  const result = await fetch(`${dbHost}/deliverymethod/all`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'db-version': dbVersion,
+    },
+    mode: 'cors',
+  })
   if (!result.ok) {
     throw new Error(`Failed throw to get delivery methods`)
   }
@@ -352,7 +362,7 @@ const getDeliveryMethods = async (): Promise<DeliveryMethodsAsObject> => {
   return methodsAsObject
 }
 
-const safeGetCustomerById = async () =>
+const safeGetAllDeliveryMethods = async () =>
   ResultAsync.fromPromise(
     getDeliveryMethods(),
     () => new Error('database error neverthrow')
@@ -361,5 +371,6 @@ const safeGetCustomerById = async () =>
 export async function loader(): Promise<
   ResultAsync<DeliveryMethodsAsObject, Error>
 > {
-  return safeGetCustomerById()
+  console.log('loader running')
+  return safeGetAllDeliveryMethods()
 }

@@ -104,7 +104,7 @@ export const useRowActionDialog = <RowData extends GridValidRowModel>(
   apiRef: React.MutableRefObject<GridApiCommunity>,
   dialogId: string
 ) => {
-  console.log('use RowActionDialog called')
+  // console.log('use RowActionDialog called')
   const [actionDialog, setActionDialog] = useState({
     open: false,
     rowParams: undefined as GridRowParams<RowData> | undefined,
