@@ -504,6 +504,15 @@ const categories = [
     product_count: 24275,
     children_data: [
       {
+        id: 160,
+        parent_id: 2,
+        name: 'decor',
+        is_active: true,
+        position: 34,
+        level: 2,
+        product_count: 24275,
+      },
+      {
         id: 612,
         parent_id: 160,
         name: 'mirrors',
