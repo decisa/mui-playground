@@ -22,9 +22,11 @@ import Price from '../Common/Price'
 import Qty from './Qty'
 import { tokens } from '../../theme'
 import ProductCard from '../Product/ProductCard'
+import QtyDetailed from './QtyDetailed'
 
 type ProductsTableProps = {
   products: ProductCreate[]
+  prices?: boolean
 }
 
 // type Product = {
@@ -50,6 +52,9 @@ const RowMui = ({ row }: RowProps<ProductCreate>) => (
         sx={{
           // maxWidth: cell.column.columnDef.id === 'image' ? 150 : undefined,
           // width: cell.column.getSize() === 20 ? 'auto' : cell.column.getSize(),
+          minWidth: cell.column.columnDef.minSize
+            ? `${cell.column.columnDef.minSize}px`
+            : undefined,
           p: {
             xs: 1,
             sm: 1.5,
@@ -62,7 +67,7 @@ const RowMui = ({ row }: RowProps<ProductCreate>) => (
   </TableRow>
 )
 
-const ProductsTable = ({ products }: ProductsTableProps) => {
+const ProductsTable = ({ products, prices = true }: ProductsTableProps) => {
   // const columnHelper = createColumnHelper<Product>()
   const theme = useTheme()
   const colors = tokens(theme.palette.mode)
@@ -101,8 +106,13 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
           </Typography>
         ),
         cell: (info) => (
-          <Qty qty={info.row.original.configuration.qtyOrdered} />
+          <>
+            {/* <Qty qty={info.row.original.configuration.qtyOrdered} /> */}
+            <QtyDetailed configuration={info.row.original.configuration} />
+          </>
         ),
+        minSize: 100,
+        size: 20, // auto
         // maxSize: 70,
       },
       {
@@ -132,6 +142,11 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
     data,
     columns,
     debugTable: true,
+    state: {
+      columnVisibility: {
+        price: prices,
+      },
+    },
     getCoreRowModel: getCoreRowModel(),
   })
 

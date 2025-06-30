@@ -20,16 +20,22 @@ type OrderConfirmationProps = {
     | 'products'
     | 'shippingAddress'
   >
+  prices?: boolean
+  label?: string
 }
 
-const OrderConfirmation = ({ order }: OrderConfirmationProps) => (
+const OrderConfirmation = ({
+  order,
+  label,
+  prices = true,
+}: OrderConfirmationProps) => (
   <>
-    <OrderHeader order={order} />
+    <OrderHeader order={order} label={label} />
     <Hr />
     <OrderInfo order={order} />
-    <ProductsTable products={order.products} />
-    <Hr />
-    <OrderTotalsFooter order={order} />
+    <ProductsTable products={order.products} prices={prices} />
+    {prices && <Hr />}
+    {prices && <OrderTotalsFooter order={order} />}
   </>
 )
 

@@ -1,7 +1,15 @@
 import React, { useCallback, useEffect, useRef } from 'react'
 import { Result, ResultAsync } from 'neverthrow'
 import { useLoaderData, useNavigate, useParams } from 'react-router'
-import { Box, Button, Paper, TextField } from '@mui/material'
+import {
+  Box,
+  Button,
+  FormControlLabel,
+  FormGroup,
+  Paper,
+  Switch,
+  TextField,
+} from '@mui/material'
 import { Stack } from '@mui/system'
 import SearchIcon from '@mui/icons-material/Search'
 
@@ -30,12 +38,17 @@ export default function MagentoPage() {
   // const [order, setOrder] = React.useState<Order | undefined>(initOrder)
 
   const { orderId } = useParams()
+  const [showPrices, setShowPrices] = React.useState(true)
+
+  const toggleShowPrices = () => setShowPrices((prev) => !prev)
   useEffect(() => {
     document.title = pageTitle + (orderId ? `: ${orderId}` : '')
   }, [orderId])
   // console.log('location', orderId)
   const [order, setOrder] = React.useState<FullOrderCreate | undefined>()
   const [orderNumbers, setOrderNumbers] = React.useState(orderId)
+
+  const [label, setLabel] = React.useState('')
 
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -194,7 +207,23 @@ export default function MagentoPage() {
         >
           search
         </Button>
-
+        <FormGroup sx={{ ml: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch checked={showPrices} onChange={toggleShowPrices} />
+            }
+            label="prices"
+          />
+        </FormGroup>
+        <TextField
+          // ref={searchRef}
+          id="filled-basic"
+          label="label"
+          variant="standard"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          onKeyDown={handleKeyboard}
+        />
         {order ? (
           <Button
             variant="contained"
@@ -261,7 +290,11 @@ export default function MagentoPage() {
             }}
             className="printable-paper"
           >
-            <OrderConfirmation order={order} />
+            <OrderConfirmation
+              order={order}
+              prices={showPrices}
+              label={label}
+            />
           </Paper>
           <Box
             sx={{
