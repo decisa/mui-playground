@@ -44,7 +44,14 @@ type ContainerTrackingResponse = {
 }
 const getContainerInfo = (tracking: string) =>
   ResultAsync.fromPromise(
-    fetch(trackUrl(tracking), { method: 'GET' }),
+    fetch(trackUrl(tracking), {
+      method: 'GET',
+      // mode: 'cors',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    }),
     (error) => {
       if (error instanceof TypeError) {
         return err(new Error('network error. wrong URL? CORS?'))
