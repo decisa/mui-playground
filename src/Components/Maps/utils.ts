@@ -1,6 +1,9 @@
-import { okAsync, ResultAsync } from 'neverthrow'
+import { errAsync, okAsync, ResultAsync } from 'neverthrow'
+// import { GeoJSON } from 'mapbox-gl'
+
+import { GeoJSONSourceRaw } from 'mapbox-gl'
 import { safeJsonFetch } from '../../utils/inventoryManagement'
-import { Address } from '../../Types/dbtypes'
+import { Address, Coordinates } from '../../Types/dbtypes'
 
 const getGeoCodeURL = (address: string, limit = 1) =>
   `https://api.mapbox.com/search/geocode/v6/forward?q=${address}&limit=${limit}&proximity=ip&access_token=${
@@ -18,6 +21,47 @@ const getGeoCodeBatchURL = () =>
   `https://api.mapbox.com/search/geocode/v6/batch?access_token=${
     process.env.REACT_APP_MAPBOX_TOKEN || ''
   }`
+
+// The routing profile to use. Possible values are mapbox/driving-traffic, mapbox/driving, mapbox/walking, or mapbox/cycling.
+type DirectionsProfile =
+  | 'mapbox/driving-traffic'
+  | 'mapbox/driving'
+  | 'mapbox/walking'
+  | 'mapbox/cycling'
+
+type DirectionsURLParams = {
+  overview?: 'full' | 'simplified' | 'false' // detailed geometry, simplified (default) or no overview geometry.
+  access_token: string // The access token to use for the request.
+  geometries?: 'geojson' | 'polyline' | 'polyline6' // default is polyline
+}
+
+const getDirectionsURL = (
+  coordinates: Coordinates[],
+  profile: DirectionsProfile = 'mapbox/driving'
+) => {
+  // waypoints is a stirng of waypoints in the format "longitude,latitude;longitude,latitude; ..."
+  const directionsParams: DirectionsURLParams = {
+    overview: 'full', // default is simplified
+    access_token: process.env.REACT_APP_MAPBOX_TOKEN || '',
+    // geometries: 'geojson', // default is polyline
+    geometries: 'geojson', // default is polyline
+  }
+
+  const waypoints = coordinates
+    .map((waypoint) => {
+      const [latitude, longitude] = waypoint
+      // 5 decimal places → ~1.1 meters accuracy
+      return `${longitude.toFixed(5)},${latitude.toFixed(5)}`
+    })
+    .join(';')
+  // console.log('waypoints:', waypoints)
+
+  // convert the params to a query string
+  const params = new URLSearchParams(directionsParams as Record<string, string>)
+  console.log('params:', params.toString())
+
+  return `https://api.mapbox.com/directions/v5/${profile}/${waypoints}?${params.toString()}`
+}
 
 type MatchCode =
   | 'matched' // The component matches the input query.
@@ -408,4 +452,90 @@ export function getReverseGeoCode(
     // console.log('got result:', searchResult)
     okAsync(searchResult)
   )
+}
+
+type GetDirectionsResponseRaw = {
+  routes: RouteRaw[]
+  // waypoints: [] // legacy, not used
+  code: string
+  // uuid: string
+}
+
+type RouteRaw = {
+  weight_name: 'auto' | 'pedestrian'
+  weight: number // desirability of a route, lower - more favorable route
+  duration: number // estimated travel time through the waypoints, in seconds.
+  duration_typical?: number // when traffic is enabled, this is duration with typical traffic
+  distance: number // distance traveled through the waypoints, in meters.
+  geometry?:
+    | {
+        coordinates: [number, number][]
+        type: 'LineString'
+      }
+    | string // polyline encoded string
+  // legs: LegRaw[]
+}
+
+export function getDirections(
+  coordinates: Coordinates[],
+  profile: DirectionsProfile = 'mapbox/driving'
+): ResultAsync<Coordinates[], string> {
+  if (coordinates.length < 2) {
+    errAsync('Not enough waypoints to calculate directions')
+  }
+  // const coordinates = waypoints.map((w) => w.toArray()).join(';')
+  const url = getDirectionsURL(coordinates, profile)
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+  return safeJsonFetch<GetDirectionsResponseRaw>(url, request)
+    .andThen((searchResult) => {
+      console.log('got result:', searchResult)
+      return okAsync(searchResult)
+    })
+    .andThen((searchResult) => {
+      // output coordinate array:
+      if (
+        !searchResult ||
+        !searchResult.routes ||
+        searchResult.routes.length === 0
+      ) {
+        return errAsync('No routes found')
+      }
+      const { geometry } = searchResult.routes[0]
+      console.log('type of geometry:', typeof geometry)
+      if (typeof geometry === 'string') {
+        // polyline encoded string
+        console.warn('Polyline encoded string is not supported yet')
+        return errAsync('Polyline encoded string is not supported yet')
+      }
+      if (!geometry) {
+        console.warn('No geometry found in the route')
+        return errAsync('No geometry found in the route')
+      }
+      if (!geometry.coordinates || geometry.coordinates.length === 0) {
+        return errAsync('No coordinates found in the route geometry')
+      }
+      const { coordinates: directionsLineCoordinates } = geometry
+      console.log('Route coordinates:', directionsLineCoordinates)
+      // convert coordinates to GeoJSONSourceRaw
+      const geoJsonSource: GeoJSONSourceRaw = {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: directionsLineCoordinates,
+          },
+          properties: {},
+        },
+      }
+      console.log('GeoJSONSourceRaw:', geoJsonSource)
+
+      return okAsync(directionsLineCoordinates)
+    })
 }
