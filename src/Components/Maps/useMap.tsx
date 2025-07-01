@@ -19,6 +19,7 @@ import { useTheme } from '@mui/material/styles'
 // create reducer
 import Source from 'react-map-gl/dist/esm/components/source'
 import Layer from 'react-map-gl/dist/esm/components/layer'
+import { th } from 'date-fns/locale'
 import MapMarker, { MapMarkerProps, Marker } from './MapMarker'
 import { MapReducerActions, mapReducer } from './mapsReducer'
 import { getDirections } from './utils'
@@ -67,6 +68,8 @@ type MapProviderProps = {
 }
 
 export const MapProvider = ({ children }: MapProviderProps) => {
+  const theme = useTheme()
+  // console.log('MapProvider rendered !!!!!!!!!!!!!!', theme.palette.primary.dark)
   const [mapState, dispatchMap] = useReducer(mapReducer, {
     viewState: {
       latitude: 40.1110498,
@@ -80,8 +83,7 @@ export const MapProvider = ({ children }: MapProviderProps) => {
       {
         latitude: 40.1110498,
         longitude: -75.0036599,
-        label: 'room service 360',
-        color: '#cd2027',
+        label: theme.palette.primary.dark,
         number: 1,
       },
     ],
@@ -104,32 +106,6 @@ export const MapProvider = ({ children }: MapProviderProps) => {
 export function Map() {
   const { mapState, dispatchMap } = useMap()
   const theme = useTheme()
-
-  useEffect(() => {
-    // create array of 2 lnglat pairs
-    const waypoints: Coordinates[] = []
-
-    // {
-    //   coordinates: [40.1110498, -75.0036599],
-    //   label: 'room service 360',
-    // },
-    // {
-    //   label: 'stella oti',
-    //   coordinates: [41.0540549, -73.535688],
-    // },
-
-    waypoints.push(
-      [40.1110498, -75.0036599], // room service 360
-      [41.0540549, -73.535688] // stella oti
-    )
-    getDirections(waypoints).map((directionPoints) => {
-      dispatchMap({
-        type: 'SET_DIRECTIONS',
-        payload: directionPoints,
-      })
-      return directionPoints
-    })
-  }, [dispatchMap])
 
   // disable pitch and bearing and update viewState when map is moved
   const onMove = useCallback(
