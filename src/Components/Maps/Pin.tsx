@@ -85,6 +85,9 @@ function Pin(props: {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            marginTop: '-10px',
+            position: 'relative',
+            top: '20px',
           }}
         >
           <Box
@@ -102,6 +105,7 @@ function Pin(props: {
             sx={{
               ...markerStyle[size].label,
               color,
+              textShadow: '1px 1px 3px white, -1px -1px 2px white',
             }}
           >
             {label}

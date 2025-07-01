@@ -6,6 +6,7 @@ import {
   MarkerProps as ReactMapMarkerProps,
 } from 'react-map-gl'
 import Pin, { MarkerSize } from './Pin'
+import { tokens } from '../../theme'
 
 export type MarkerType = 'crosshair' | 'circle'
 
@@ -37,10 +38,12 @@ export type MapMarkerProps = {
 
 function MapMarker({ size = 'large', marker }: MapMarkerProps) {
   const theme = useTheme()
-  console.log(`render MapMarker ${marker.label}`, marker)
+  const colors = tokens(theme.palette.mode)
+
+  // console.log(`render MapMarker ${marker.label}`, marker)
   const { label, latitude, longitude, number, color, onDragEnd } = marker
   // console.log(`render MapMarker ${label}`)
-  console.log(`render MapMarker`)
+  // console.log(`render MapMarker`)
   return (
     <ReactMapMarker
       latitude={latitude !== undefined ? latitude : 40.11105997742595}
@@ -56,7 +59,7 @@ function MapMarker({ size = 'large', marker }: MapMarkerProps) {
         size={size}
         label={label}
         number={number}
-        color={color || theme.palette.primary.dark}
+        color={color || colors.background[700]}
         type={marker.type}
       />
     </ReactMapMarker>
