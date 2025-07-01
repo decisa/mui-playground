@@ -19,10 +19,8 @@ import { useTheme } from '@mui/material/styles'
 // create reducer
 import Source from 'react-map-gl/dist/esm/components/source'
 import Layer from 'react-map-gl/dist/esm/components/layer'
-import { th } from 'date-fns/locale'
-import MapMarker, { MapMarkerProps, Marker } from './MapMarker'
+import MapMarker, { Marker } from './MapMarker'
 import { MapReducerActions, mapReducer } from './mapsReducer'
-import { getDirections } from './utils'
 import { Coordinates } from '../../Types/dbtypes'
 
 const mapboxToken = process.env.REACT_APP_MAPBOX_TOKEN || ''
