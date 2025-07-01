@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { useTheme } from '@mui/material/styles'
 
 import { Map, useMap } from '../Components/Maps/useMap'
 import {
@@ -15,6 +16,7 @@ import {
   ParsedAddressCheck,
   getAddressDetails,
   getDirections,
+  getDirectionsHighVolume,
   parseAddressResult,
 } from '../Components/Maps/utils'
 import { useSnackBar } from '../Components/GlobalSnackBar'
@@ -25,69 +27,291 @@ import { Address } from '../Types/dbtypes'
 // import useMaps from '../Components/Maps/useMaps'
 // import MapMarker from '../Components/Maps/MapMarker'
 
-const startMarkers = [
+const startMarkers2 = [
+  { label: 'home', longitude: -75.0999608, latitude: 40.1569202 },
   {
     label: 'room service 360',
-    coordinates: [40.1110498, -75.0036599],
     longitude: -75.0036599,
+    latitude: 40.1110498,
+  },
+]
+const startMarkers1 = [
+  {
+    label: 'room service 360',
+    longitude: -75.0036499,
     latitude: 40.1110498,
   },
   {
     label: 'stella oti',
-    coordinates: [41.0540549, -73.535688],
     longitude: -73.535688,
     latitude: 41.0540549,
   },
   {
     label: 'Alexander Banker',
-    coordinates: [41.3118143, -72.70721939],
     longitude: -72.70721939,
     latitude: 41.3118143,
   },
-  {
-    label: 'Nathan Kahn',
-    coordinates: [41.36168213, -71.62406605],
-    longitude: -71.62406605,
-    latitude: 41.36168213,
-  },
+  // {
+  //   label: 'Nathan Kahn',
+  //   longitude: -71.62406605,
+  //   latitude: 41.36168213,
+  // },
   {
     label: 'Lisa Scalzo',
-    coordinates: [42.2924609, -71.1854705],
     longitude: -71.1854705,
     latitude: 42.2924609,
   },
   {
     label: 'Maria Connor',
-    coordinates: [42.3587246, -71.2006751],
     longitude: -71.2006751,
     latitude: 42.3587246,
   },
   {
     label: 'Yusun Riley',
-    coordinates: [42.3540293, -71.0446406],
     longitude: -71.0446406,
     latitude: 42.3540293,
   },
   {
     label: 'Lidia Szydlowska',
-    coordinates: [42.674504, -70.940128],
     longitude: -70.940128,
     latitude: 42.674504,
   },
   {
     label: 'Thutrang Chang',
-    coordinates: [42.331527, -71.699363],
     longitude: -71.699363,
     latitude: 42.331527,
   },
   {
     label: 'room service 360',
-    coordinates: [40.1110498, -75.0036599],
     longitude: -75.0036599,
     latitude: 40.1110498,
   },
+  {
+    label: 'room service 360',
+    longitude: -75.0036599,
+    latitude: 40.1110498,
+  },
+  {
+    label: 'stella oti',
+    longitude: -73.535688,
+    latitude: 41.0540549,
+  },
+  {
+    label: 'Alexander Banker',
+    longitude: -72.70721939,
+    latitude: 41.3118143,
+  },
+  {
+    label: 'room service 360',
+    longitude: -75.0036599,
+    latitude: 40.1110498,
+  },
+  {
+    label: 'room service 360',
+    longitude: -75.0036599,
+    latitude: 40.1110498,
+  },
+  {
+    label: 'stella oti',
+    longitude: -73.535688,
+    latitude: 41.0540549,
+  },
+  {
+    label: 'Alexander Banker',
+    longitude: -72.70721939,
+    latitude: 41.3118143,
+  },
+  {
+    label: 'room service 360',
+    longitude: -75.0036599,
+    latitude: 40.1110498,
+  },
+  {
+    label: 'room service 360',
+    longitude: -75.0036599,
+    latitude: 40.1110498,
+  },
+  {
+    label: 'stella oti',
+    longitude: -73.535688,
+    latitude: 41.0540549,
+  },
+  {
+    label: 'Alexander Banker',
+    longitude: -72.70721939,
+    latitude: 41.311143,
+  },
+
+  // {
+  //   label: 'Nathan Kahn',
+  //   longitude: -71.62406605,
+  //   latitude: 41.36168213,
+  // },
 ]
 
+const startMarkers = [
+  {
+    label: 'room service 360°',
+    longitude: -75.0036599,
+    latitude: 40.1110498,
+  },
+  {
+    label: 'Marina Tourkova',
+    longitude: -82.6706378,
+    latitude: 27.4306418,
+  },
+  {
+    label: 'Eric Smith',
+    longitude: -82.471741,
+    latitude: 27.2085497,
+  },
+  {
+    label: 'naomi cohen',
+    longitude: -80.1593292,
+    latitude: 26.3802612,
+  },
+  {
+    label: 'Vicky Goldstein',
+    longitude: -80.1677947,
+    latitude: 26.4124962,
+  },
+  {
+    label: 'Craig Wertkin',
+    longitude: -80.1560029,
+    latitude: 26.4189655,
+  },
+  {
+    label: 'Stewart Davis',
+    longitude: -80.1990207,
+    latitude: 26.4170372,
+  },
+  {
+    label: 'Pamela J. Buder',
+    longitude: -80.1912918,
+    latitude: 26.5273262,
+  },
+  {
+    label: 'Susan Weber',
+    longitude: -80.2258494,
+    latitude: 26.8017769,
+  },
+  {
+    label: 'Irina Zhukovsky',
+    longitude: -80.0342557,
+    latitude: 26.8028391,
+  },
+  {
+    label:
+      'James  Goetz / Charlotte Dunagan / Dunagan Diverio Design Group / DDDG',
+    longitude: -80.1337209,
+    latitude: 25.7712747,
+  },
+  {
+    label: 'Alex Meshechok / Jacob Lapp',
+    longitude: -80.18589857,
+    latitude: 25.80231448,
+  },
+  {
+    label: 'Elijah Norton ',
+    longitude: -80.1277287,
+    latitude: 25.7989766,
+  },
+  {
+    label: 'Marina Yakovleva',
+    longitude: -80.1201585,
+    latitude: 25.9442,
+  },
+  {
+    label: 'Victor Du Plooy',
+    longitude: -80.1832065,
+    latitude: 25.969937,
+  },
+  {
+    label: 'elliot kessler',
+    longitude: -80.4082191,
+    latitude: 26.0964934,
+  },
+  {
+    label: 'Sisi Enriquez',
+    longitude: -80.3306046,
+    latitude: 25.7131083,
+  },
+  {
+    label: 'elizabeth  rodda',
+    longitude: -80.289137,
+    latitude: 25.6972766,
+  },
+  {
+    label: 'Eric Sheldon / Charlotte Dunagan',
+    longitude: -80.1808318,
+    latitude: 25.8283499,
+  },
+  {
+    label: 'Harris Hafeez',
+    longitude: -80.1486976,
+    latitude: 25.934294,
+  },
+  {
+    label: 'room service 360°',
+    longitude: -75.0036599,
+    latitude: 40.1110498,
+  },
+  {
+    label: 'BEAU - Hela Chatti',
+    longitude: -81.2545904,
+    latitude: 28.3582938,
+  },
+  {
+    label: 'BEAU - Elnaz Torabi / Elnaz & Mario Design',
+    longitude: -80.1194834,
+    latitude: 26.1186281,
+  },
+  {
+    label: 'BEAU - Liliya Kara / Vera Kara',
+    longitude: -82.3024378,
+    latitude: 27.0095048,
+  },
+  {
+    label: 'BEAU - meri miller',
+    longitude: -80.1204156,
+    latitude: 25.8536599,
+  },
+  {
+    label: 'BEAU - Monica Tassan / Orballo Studio',
+    longitude: -80.255925,
+    latitude: 25.701373,
+  },
+  {
+    label: 'BEAU - Vivian Sansalone',
+    longitude: -80.0512045,
+    latitude: 26.8741461,
+  },
+  {
+    label: 'BEAU - Cortney Danner',
+    longitude: -80.842343,
+    latitude: 35.1226008,
+  },
+  {
+    label: 'BEAU - Andrew Duren',
+    longitude: -82.4623385,
+    latitude: 27.9662323,
+  },
+  {
+    label: 'Cheryl Smith / Robert Chamberlain / Cheryl Smith Associates',
+    longitude: -82.582378,
+    latitude: 35.468898,
+  },
+  {
+    label: 'Cheryl  Smith / Robert Chamberlain / Cheryl Smith Associates ',
+    longitude: -82.582378,
+    latitude: 35.468898,
+  },
+  {
+    label: 'Claudia Tamburro',
+    longitude: -87.2049516,
+    latitude: 30.4137637,
+  },
+]
 // const startMarkers = [
 //   {
 //     longitude: -117.0684956920479,
@@ -204,6 +428,10 @@ export default function MapPage() {
   )
 
   const [markers, setMarkers] = useState<MarkerX[]>(startMarkers)
+
+  const theme = useTheme()
+  // theme.palette.primary.dark
+
   const onChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setAddress(e.target.value)
   }, [])
@@ -314,7 +542,7 @@ export default function MapPage() {
         longitude: mark.longitude,
         latitude: mark.latitude,
         label: mark.label,
-        color: '#cd2027',
+        // color: theme.palette.primary.dark,
         number: i,
       }))
       dispatchMap({
@@ -336,20 +564,29 @@ export default function MapPage() {
     )
 
   useEffect(() => {
-    const directionsPoints = markers.map((marker) => [
-      marker.longitude,
-      marker.latitude,
-    ])
+    const directionsPoints = markers.map(
+      (marker) => [marker.longitude, marker.latitude] as [number, number]
+    )
     if (directionsPoints.length > 1) {
-      getDirections(directionsPoints).map((directionPoints) => {
+      console.log('number of markers:', directionsPoints.length)
+      getDirectionsHighVolume(directionsPoints).map((directionPoints) => {
         console.log('directionPoints', directionPoints)
-
         dispatchMap({
           type: 'SET_DIRECTIONS',
-          payload: directionPoints,
+          payload: directionPoints.directionsLineCoordinates,
         })
         return directionPoints
       })
+
+      // getDirections(directionsPoints).map((directionPoints) => {
+      //   console.log('directionPoints', directionPoints)
+
+      //   dispatchMap({
+      //     type: 'SET_DIRECTIONS',
+      //     payload: directionPoints,
+      //   })
+      //   return directionPoints
+      // })
     } else {
       dispatchMap({
         type: 'SET_DIRECTIONS',
