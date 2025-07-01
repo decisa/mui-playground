@@ -28,28 +28,27 @@ type DirectionsProfile =
   | 'mapbox/driving'
   | 'mapbox/walking'
   | 'mapbox/cycling'
+// | 'mapbox/truck'
 
 type DirectionsURLParams = {
   overview?: 'full' | 'simplified' | 'false' // detailed geometry, simplified (default) or no overview geometry.
   access_token: string // The access token to use for the request.
   geometries?: 'geojson' | 'polyline' | 'polyline6' // default is polyline
+  max_height?: number //	 max_height must be between 0 and 10 meters. The default value is 1.6 meters.
+  max_width?: number // max_width must be between 0 and 10 meters. The default value is 1.9 meters.
+  max_weight?: number // max_weight must be between 0 and 100 metric tons. The default value is 2.5 metric tons
 }
 
 const getDirectionsURL = (
-  coordinates: Coordinates[],
+  coordinates: Coordinates[], // [lng, lat]
+  directionsParams: DirectionsURLParams,
   profile: DirectionsProfile = 'mapbox/driving'
 ) => {
   // waypoints is a stirng of waypoints in the format "longitude,latitude;longitude,latitude; ..."
-  const directionsParams: DirectionsURLParams = {
-    overview: 'full', // default is simplified
-    access_token: process.env.REACT_APP_MAPBOX_TOKEN || '',
-    // geometries: 'geojson', // default is polyline
-    geometries: 'geojson', // default is polyline
-  }
 
   const waypoints = coordinates
     .map((waypoint) => {
-      const [latitude, longitude] = waypoint
+      const [longitude, latitude] = waypoint
       // 5 decimal places → ~1.1 meters accuracy
       return `${longitude.toFixed(5)},${latitude.toFixed(5)}`
     })
@@ -57,11 +56,20 @@ const getDirectionsURL = (
   // console.log('waypoints:', waypoints)
 
   // convert the params to a query string
-  const params = new URLSearchParams(directionsParams as Record<string, string>)
-  console.log('params:', params.toString())
+  const params = Object.entries(directionsParams)
+    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+    .join('&')
+  console.log('params:', params)
+  console.log('profile:', profile)
 
   return `https://api.mapbox.com/directions/v5/${profile}/${waypoints}?${params.toString()}`
 }
+
+const getDirectionsPostURL = (
+  directionsParams: DirectionsURLParams,
+  profile: DirectionsProfile = 'mapbox/driving'
+) =>
+  `https://api.mapbox.com/directions/v5/${profile}?access_token=${directionsParams.access_token}`
 
 type MatchCode =
   | 'matched' // The component matches the input query.
@@ -461,6 +469,17 @@ type GetDirectionsResponseRaw = {
   // uuid: string
 }
 
+type LegRaw = {
+  weight: number // desirability of a route, lower - more favorable route
+  duration: number // estimated travel time through the waypoints, in seconds.
+  distance: number // distance traveled through the waypoints, in meters.
+  summary: string // summary of the route, e.g. "via Main St"
+  // notifications: []
+  // via_waypoints: []
+  // admins: []
+  // steps: []
+}
+
 type RouteRaw = {
   weight_name: 'auto' | 'pedestrian'
   weight: number // desirability of a route, lower - more favorable route
@@ -473,25 +492,60 @@ type RouteRaw = {
         type: 'LineString'
       }
     | string // polyline encoded string
-  // legs: LegRaw[]
+  legs: LegRaw[]
 }
 
-export function getDirections(
-  coordinates: Coordinates[],
-  profile: DirectionsProfile = 'mapbox/driving'
+export function getDirectionsViaPost(
+  coordinates: Coordinates[], // [lng, lat]
+  profile: DirectionsProfile = 'mapbox/driving' // default is driving
 ): ResultAsync<Coordinates[], string> {
   if (coordinates.length < 2) {
     errAsync('Not enough waypoints to calculate directions')
   }
+  if (coordinates.length > 25) {
+    errAsync('Too many waypoints to calculate directions')
+  }
   // const coordinates = waypoints.map((w) => w.toArray()).join(';')
-  const url = getDirectionsURL(coordinates, profile)
+  const directionsParams: DirectionsURLParams = {
+    overview: 'full', // default is simplified
+    access_token: process.env.REACT_APP_MAPBOX_TOKEN || '',
+    // geometries: 'geojson', // default is polyline
+    geometries: 'geojson', // default is polyline
+    // max weight: convert gvw 26000 to metric tons
+    // 1 lb ≈ 0.000453592 metric tons
+    // 26,000 lbs × 0.000453592 ≈ 11.79 metric tons
+    max_weight: 11.79, // 11.79 metric tons
+    // convert 12ft 6in to meters
+    // 1 ft = 0.3048 m
+    // 12 ft 6 in = 12 * 0.3048 + 6 * 0.0254 = 3.81024 m
+    max_height: 3.81024, // 3.81024 meters
+  }
+
+  const url = getDirectionsPostURL(directionsParams, profile)
+
+  const waypoints = coordinates
+    .map((waypoint) => {
+      const [longitude, latitude] = waypoint
+      // 5 decimal places → ~1.1 meters accuracy
+      return `${longitude.toFixed(5)},${latitude.toFixed(5)}`
+    })
+    .join(';')
+  const params = Object.entries(directionsParams)
+    .filter(([key, value]) => key !== 'access_token') // access_token is already in the URL
+    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+    .join('&')
+  console.log('params:', params)
+  console.log('profile:', profile)
+
   const request = {
-    method: 'GET',
+    method: 'POST',
     mode: 'cors' as RequestMode,
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
+    body: `coordinates=${waypoints}&${params}`,
   }
+
   return safeJsonFetch<GetDirectionsResponseRaw>(url, request)
     .andThen((searchResult) => {
       console.log('got result:', searchResult)
@@ -506,8 +560,9 @@ export function getDirections(
       ) {
         return errAsync('No routes found')
       }
-      const { geometry } = searchResult.routes[0]
-      console.log('type of geometry:', typeof geometry)
+      const { geometry, legs } = searchResult.routes[0]
+
+      // determine the geometry of the route lines
       if (typeof geometry === 'string') {
         // polyline encoded string
         console.warn('Polyline encoded string is not supported yet')
@@ -521,21 +576,166 @@ export function getDirections(
         return errAsync('No coordinates found in the route geometry')
       }
       const { coordinates: directionsLineCoordinates } = geometry
-      console.log('Route coordinates:', directionsLineCoordinates)
-      // convert coordinates to GeoJSONSourceRaw
-      const geoJsonSource: GeoJSONSourceRaw = {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: directionsLineCoordinates,
-          },
-          properties: {},
-        },
+
+      // figure out the time and distance between the waypoints
+      if (legs.length === 0) {
+        return errAsync('No legs found in the route')
       }
-      console.log('GeoJSONSourceRaw:', geoJsonSource)
+      const metaData = legs.map((leg) => ({
+        // convert m to miles
+        distance: leg.distance / 1609.34, // miles
+        // convert seconds to minutes
+        duration: Math.floor(leg.duration / 60), // minutes
+        summary: leg.summary,
+      }))
+
+      console.log(
+        'Route metadata:',
+        metaData.map(
+          (m) =>
+            `${m.distance.toFixed(2)} miles, ${Math.floor(
+              m.duration / 60
+            )}h:${Math.floor(m.duration % 60)}m - ${m.summary} `
+        )
+      )
 
       return okAsync(directionsLineCoordinates)
     })
+}
+
+type DirectionsResponse = {
+  directionsLineCoordinates: Coordinates[] // array of coordinates for the route
+  waypointsData: {
+    distance: number // distance in miles
+    duration: number // duration in minutes
+    summary: string // summary of the route
+  }[]
+}
+
+export function getDirections(
+  coordinates: Coordinates[], // [lng, lat]
+  profile: DirectionsProfile = 'mapbox/driving' // default is driving
+): ResultAsync<DirectionsResponse, string> {
+  if (coordinates.length < 2) {
+    errAsync('Not enough waypoints to calculate directions')
+  }
+  // const coordinates = waypoints.map((w) => w.toArray()).join(';')
+  const directionsParams: DirectionsURLParams = {
+    overview: 'full', // default is simplified
+    access_token: process.env.REACT_APP_MAPBOX_TOKEN || '',
+    // geometries: 'geojson', // default is polyline
+    geometries: 'geojson', // default is polyline
+    // max weight: convert gvw 26000 to metric tons
+    // 1 lb ≈ 0.000453592 metric tons
+    // 26,000 lbs × 0.000453592 ≈ 11.79 metric tons
+    max_weight: 11.79, // 11.79 metric tons
+    // convert 12ft 6in to meters
+    // 1 ft = 0.3048 m
+    // 12 ft 6 in = 12 * 0.3048 + 6 * 0.0254 = 3.81024 m
+    max_height: 3.81024, // 3.81024 meters
+  }
+
+  const url = getDirectionsURL(coordinates, directionsParams, profile)
+  const request = {
+    method: 'GET',
+    mode: 'cors' as RequestMode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }
+
+  return safeJsonFetch<GetDirectionsResponseRaw>(url, request)
+    .andThen((searchResult) => {
+      console.log('got result:', searchResult)
+      return okAsync(searchResult)
+    })
+    .andThen((searchResult) => {
+      // output coordinate array:
+      if (
+        !searchResult ||
+        !searchResult.routes ||
+        searchResult.routes.length === 0
+      ) {
+        return errAsync('No routes found')
+      }
+      const { geometry, legs } = searchResult.routes[0]
+
+      // determine the geometry of the route lines
+      if (typeof geometry === 'string') {
+        // polyline encoded string
+        console.warn('Polyline encoded string is not supported yet')
+        return errAsync('Polyline encoded string is not supported yet')
+      }
+      if (!geometry) {
+        console.warn('No geometry found in the route')
+        return errAsync('No geometry found in the route')
+      }
+      if (!geometry.coordinates || geometry.coordinates.length === 0) {
+        return errAsync('No coordinates found in the route geometry')
+      }
+      const { coordinates: directionsLineCoordinates } = geometry
+
+      // figure out the time and distance between the waypoints
+      if (legs.length === 0) {
+        return errAsync('No legs found in the route')
+      }
+      const metaData = legs.map((leg) => ({
+        // convert m to miles
+        distance: leg.distance / 1609.34, // miles
+        // convert seconds to minutes
+        duration: Math.floor(leg.duration / 60), // minutes
+        summary: leg.summary,
+      }))
+
+      console.log(
+        'Route metadata:',
+        metaData.map(
+          (m) =>
+            `${m.distance.toFixed(2)} miles, ${Math.floor(
+              m.duration / 60
+            )}h:${Math.floor(m.duration % 60)}m - ${m.summary} `
+        )
+      )
+
+      return okAsync({
+        directionsLineCoordinates,
+        waypointsData: metaData,
+      } satisfies DirectionsResponse)
+    })
+}
+
+export function getDirectionsHighVolume(
+  coordinates: Coordinates[], // [lng, lat]
+  profile: DirectionsProfile = 'mapbox/driving' // default is driving
+): ResultAsync<DirectionsResponse, string> {
+  if (coordinates.length < 2) {
+    return errAsync('Not enough waypoints to calculate directions')
+  }
+
+  // split the coordinates into chunks of 25
+  const chunkSize = 25
+  const chunks: Coordinates[][] = []
+  for (let i = 0; i < coordinates.length; i += chunkSize - 1) {
+    chunks.push(coordinates.slice(i, i + chunkSize))
+  }
+  // console.log('chunks:', chunks)
+  // get directions for each chunk
+  // todo: fix the getDirectionsViaPost to return correct type.
+  // todo: check how to split chunks into smaller chunks if they are too big so that they can actually overlap.
+  const directionsChunks = chunks.map((chunk) => getDirections(chunk, profile))
+
+  return ResultAsync.combine(directionsChunks).map((results) => {
+    // console.log('results:', results)
+    // combine the results into one array of coordinates
+    const combinedDirections: DirectionsResponse = {
+      directionsLineCoordinates: [],
+      waypointsData: [],
+    }
+    results.reduce((acc, result) => {
+      acc.directionsLineCoordinates.push(...result.directionsLineCoordinates)
+      acc.waypointsData.push(...result.waypointsData)
+      return acc
+    }, combinedDirections)
+    return combinedDirections
+  })
 }
